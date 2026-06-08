@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Gestor · Cleantabaco</title>
+<style>
+  :root {
+    --purple: #533AB7;
+    --purple-light: #EEEDFE;
+    --purple-mid: #7F77DD;
+    --mint: #1D9E75;
+    --mint-light: #E1F5EE;
+    --orange: #D85A30;
+    --orange-light: #FAECE7;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --cream: #FAF9F5;
+    --border: #D3D1C7;
+    --text: #2C2C2A;
+    --text-muted: #5F5E5A;
+    --white: #fff;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); font-size: 15px; }
+
+  .header { background: var(--purple); color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-size: 17px; font-weight: 800; letter-spacing: 0.3px; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .btn-refresh { background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-refresh:hover { background: rgba(255,255,255,0.25); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  /* FILTROS */
+  .filtros { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .filtro-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
+  .filtro-group label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filtro-group select, .filtro-group input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: #fff; font-family: inherit; }
+  .filtro-group select:focus, .filtro-group input:focus { outline: none; border-color: var(--purple-mid); }
+  .btn-filtrar { background: var(--purple); color: #fff; border: none; padding: 9px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .btn-filtrar:hover { background: #3C3489; }
+  .btn-limpar { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 9px 16px; border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; }
+
+  /* CARDS RESUMO */
+  .resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .resumo-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
+  .resumo-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+  .resumo-valor { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+  .resumo-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .resumo-card.purple .resumo-valor { color: var(--purple); }
+  .resumo-card.mint .resumo-valor { color: var(--mint); }
+  .resumo-card.orange .resumo-valor { color: var(--orange); }
+  .resumo-card.amber .resumo-valor { color: var(--amber); }
+
+  /* GRID PRINCIPAL */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 18px 20px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+
+  /* PROMOTOR RANKING */
+  .promotor-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #F1EFE8; }
+  .promotor-row:last-child { border-bottom: none; }
+  .promotor-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--purple); flex-shrink: 0; }
+  .promotor-nome { font-size: 14px; font-weight: 600; flex: 1; }
+  .promotor-count { font-size: 13px; color: var(--text-muted); }
+  .promotor-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .promotor-bar { height: 100%; background: var(--purple); border-radius: 3px; transition: width 0.5s; }
+
+  /* SKU BARS */
+  .sku-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .sku-label { font-size: 13px; font-weight: 700; width: 32px; flex-shrink: 0; }
+  .sku-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .sku-bar { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .sku-pct { font-size: 12px; color: var(--text-muted); width: 36px; text-align: right; }
+
+  /* CONCORRENTES */
+  .conc-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #F1EFE8; font-size: 14px; }
+  .conc-row:last-child { border-bottom: none; }
+  .conc-badge { background: var(--orange-light); color: var(--orange); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+  /* TABELA VISITAS */
+  .tabela-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid #F1EFE8; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--cream); cursor: pointer; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .badge-green { background: var(--mint-light); color: var(--mint); }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; overflow-y: auto; padding: 20px; }
+  .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .modal { background: #fff; border-radius: 20px; width: 100%; max-width: 560px; overflow: hidden; }
+  .modal-header { background: var(--purple); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; line-height: 1; }
+  .modal-body { padding: 20px; max-height: 80vh; overflow-y: auto; }
+  .rel-section { margin-bottom: 18px; }
+  .rel-title { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .rel-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F1EFE8; font-size: 14px; }
+  .rel-row:last-child { border-bottom: none; }
+  .rel-key { color: var(--text-muted); }
+  .rel-val { font-weight: 600; text-align: right; max-width: 60%; }
+  .rel-fotos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .rel-fotos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; cursor: pointer; }
+  .rel-obs { font-size: 14px; background: var(--cream); padding: 10px; border-radius: var(--radius-sm); margin-top: 6px; }
+
+  .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .spinner-wrap { text-align: center; padding: 48px; color: var(--text-muted); }
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .last-update { font-size: 12px; color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Cleantabaco · Painel Gestor</div>
+    <div class="last-update" id="lastUpdate">Carregando...</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-refresh" onclick="carregar()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-group">
+      <label>Promotor</label>
+      <select id="filtroPromotor">
+        <option value="">Todos</option>
+        <option>Francisco</option>
+        <option>Anderson</option>
+        <option>André</option>
+        <option>Cristiano</option>
+        <option>Jarbas</option>
+        <option>Kayan</option>
+        <option>Wil</option>
+      </select>
+    </div>
+    <div class="filtro-group">
+      <label>De</label>
+      <input type="date" id="filtroDe">
+    </div>
+    <div class="filtro-group">
+      <label>Até</label>
+      <input type="date" id="filtroAte">
+    </div>
+    <div class="filtro-group">
+      <label>Tipo PDV</label>
+      <select id="filtroTipo">
+        <option value="">Todos</option>
+        <option>Bar</option>
+        <option>Mercearia / Mercadinho</option>
+        <option>Supermercado</option>
+        <option>Restaurante</option>
+        <option>Lanchonete</option>
+        <option>Distribuidora</option>
+        <option>Atacado</option>
+        <option>Conveniência</option>
+        <option>Tabacaria</option>
+        <option>Outros</option>
+      </select>
+    </div>
+    <div class="filtro-group">
+      <label>Buscar PDV</label>
+      <input type="text" id="filtroBusca" placeholder="Nome ou cidade...">
+    </div>
+    <button class="btn-filtrar" onclick="aplicarFiltros()">Filtrar</button>
+    <button class="btn-limpar" onclick="limparFiltros()">Limpar</button>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="resumo-grid">
+    <div class="resumo-card purple">
+      <div class="resumo-label">Total de visitas</div>
+      <div class="resumo-valor" id="totalVisitas">—</div>
+      <div class="resumo-sub">no período filtrado</div>
+    </div>
+    <div class="resumo-card mint">
+      <div class="resumo-label">Com produto</div>
+      <div class="resumo-valor" id="pctProduto">—</div>
+      <div class="resumo-sub">% dos PDVs visitados</div>
+    </div>
+    <div class="resumo-card orange">
+      <div class="resumo-label">Pedidos feitos</div>
+      <div class="resumo-valor" id="totalPedidos">—</div>
+      <div class="resumo-sub">visitas com pedido gerado</div>
+    </div>
+    <div class="resumo-card amber">
+      <div class="resumo-label">Ruptura</div>
+      <div class="resumo-valor" id="totalRuptura">—</div>
+      <div class="resumo-sub">PDVs com falta de produto</div>
+    </div>
+  </div>
+
+  <!-- RANKING + SKUs -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Visitas por promotor</div>
+      <div id="rankingPromotor"><div class="empty">Sem dados</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Presença por SKU</div>
+      <div id="skuPresenca"><div class="empty">Sem dados</div></div>
+    </div>
+  </div>
+
+  <!-- CONCORRENTES + RESISTÊNCIA -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Concorrentes mais frequentes</div>
+      <div id="concorrentes"><div class="empty">Sem dados</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Motivo de resistência</div>
+      <div id="resistencia"><div class="empty">Sem dados</div></div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="card">
+    <div class="card-title">Todas as visitas</div>
+    <div class="tabela-wrap">
+      <div id="tabelaVisitas"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modalDetalhe">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Detalhe da Visita</h3>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://promotor-cleantabaco.vercel.app';
+let todasVisitas = [];
+let visitasFiltradas = [];
+
+async function carregar() {
+  document.getElementById('tabelaVisitas').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  try {
+    const promotor = document.getElementById('filtroPromotor').value;
+    const de = document.getElementById('filtroDe').value;
+    const ate = document.getElementById('filtroAte').value;
+
+    let url = `${API}/api/listar?`;
+    if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+    if (de) url += `de=${de}T00:00:00Z&`;
+    if (ate) url += `ate=${ate}T23:59:59Z&`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    todasVisitas = data.visitas || [];
+    aplicarFiltros();
+    document.getElementById('lastUpdate').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+  } catch(e) {
+    document.getElementById('tabelaVisitas').innerHTML = '<div class="empty">❌ Erro ao carregar. Verifique a conexão.</div>';
+  }
+}
+
+function aplicarFiltros() {
+  const busca = document.getElementById('filtroBusca').value.toLowerCase();
+  const tipo = document.getElementById('filtroTipo').value;
+
+  visitasFiltradas = todasVisitas.filter(v => {
+    const d = v.dados || {};
+    const txt = ((d.pdv?.nomeFantasia||'') + (d.pdv?.cidade||'')).toLowerCase();
+    const tipoOk = !tipo || d.pdv?.tipo === tipo;
+    const buscaOk = !busca || txt.includes(busca);
+    return tipoOk && buscaOk;
+  });
+
+  renderResumo();
+  renderRanking();
+  renderSKUs();
+  renderConcorrentes();
+  renderResistencia();
+  renderTabela();
+}
+
+function limparFiltros() {
+  document.getElementById('filtroPromotor').value = '';
+  document.getElementById('filtroDe').value = '';
+  document.getElementById('filtroAte').value = '';
+  document.getElementById('filtroTipo').value = '';
+  document.getElementById('filtroBusca').value = '';
+  carregar();
+}
+
+function renderResumo() {
+  const total = visitasFiltradas.length;
+  const comProduto = visitasFiltradas.filter(v => (v.dados?.presenca?.temProduto||'') === 'Sim').length;
+  const pedidos = visitasFiltradas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').length;
+  const ruptura = visitasFiltradas.filter(v => v.dados?.presenca?.ruptura).length;
+
+  document.getElementById('totalVisitas').textContent = total;
+  document.getElementById('pctProduto').textContent = total ? Math.round(comProduto/total*100) + '%' : '—';
+  document.getElementById('totalPedidos').textContent = pedidos;
+  document.getElementById('totalRuptura').textContent = ruptura;
+}
+
+function renderRanking() {
+  const contagem = {};
+  visitasFiltradas.forEach(v => { contagem[v.promotor] = (contagem[v.promotor]||0) + 1; });
+  const sorted = Object.entries(contagem).sort((a,b) => b[1]-a[1]);
+  const max = sorted[0]?.[1] || 1;
+
+  if (!sorted.length) { document.getElementById('rankingPromotor').innerHTML = '<div class="empty">Sem dados</div>'; return; }
+
+  document.getElementById('rankingPromotor').innerHTML = sorted.map(([nome, qtd]) => `
+    <div class="promotor-row">
+      <div class="promotor-avatar">${nome.charAt(0)}</div>
+      <div class="promotor-nome">${nome}</div>
+      <div class="promotor-bar-wrap"><div class="promotor-bar" style="width:${Math.round(qtd/max*100)}%"></div></div>
+      <div class="promotor-count">${qtd}</div>
+    </div>
+  `).join('');
+}
+
+function renderSKUs() {
+  const skus = ['GR','GM','CM','CC'];
+  const nomes = { GR:'Gudang Red', GM:'Gudang Menta', CM:'Cretec Menta', CC:'Cretec Cereja' };
+  const cores = { GR:'#533AB7', GM:'#1D9E75', CM:'#D85A30', CC:'#BA7517' };
+  const total = visitasFiltradas.length || 1;
+
+  const contagem = { GR:0, GM:0, CM:0, CC:0 };
+  visitasFiltradas.forEach(v => {
+    (v.dados?.presenca?.skusPresentes||[]).forEach(s => { if(contagem[s]!==undefined) contagem[s]++; });
+  });
+
+  document.getElementById('skuPresenca').innerHTML = skus.map(s => {
+    const pct = Math.round(contagem[s]/total*100);
+    return `
+      <div class="sku-row">
+        <div class="sku-label">${s}</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">${nomes[s]}</div>
+          <div class="sku-bar-wrap"><div class="sku-bar" style="width:${pct}%;background:${cores[s]}"></div></div>
+        </div>
+        <div class="sku-pct">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderConcorrentes() {
+  const contagem = {};
+  visitasFiltradas.forEach(v => {
+    (v.dados?.mercado?.concorrentes||[]).forEach(c => {
+      if (c !== 'Nenhum') contagem[c] = (contagem[c]||0) + 1;
+    });
+  });
+  const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (!sorted.length) { document.getElementById('concorrentes').innerHTML = '<div class="empty">Sem dados</div>'; return; }
+  document.getElementById('concorrentes').innerHTML = sorted.map(([nome,qtd]) => `
+    <div class="conc-row"><span>${nome}</span><span class="conc-badge">${qtd}x</span></div>
+  `).join('');
+}
+
+function renderResistencia() {
+  const contagem = {};
+  visitasFiltradas.forEach(v => {
+    const m = v.dados?.mercado?.motivoResistencia;
+    if (m && m !== 'N/A') contagem[m] = (contagem[m]||0) + 1;
+  });
+  const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+  if (!sorted.length) { document.getElementById('resistencia').innerHTML = '<div class="empty">Sem ocorrências</div>'; return; }
+  document.getElementById('resistencia').innerHTML = sorted.map(([nome,qtd]) => `
+    <div class="conc-row"><span>${nome}</span><span class="conc-badge" style="background:var(--red-light);color:var(--red);">${qtd}x</span></div>
+  `).join('');
+}
+
+function renderTabela() {
+  if (!visitasFiltradas.length) {
+    document.getElementById('tabelaVisitas').innerHTML = '<div class="empty">Nenhuma visita encontrada</div>';
+    return;
+  }
+  document.getElementById('tabelaVisitas').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Promotor</th>
+          <th>PDV</th>
+          <th>Tipo</th>
+          <th>Cidade/UF</th>
+          <th>Produto</th>
+          <th>SKUs</th>
+          <th>Pedido</th>
+          <th>Receptividade</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${visitasFiltradas.map((v,i) => {
+          const d = v.dados || {};
+          const data = new Date(v.criado_em);
+          const dataStr = data.toLocaleDateString('pt-BR');
+          const hora = data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+          const skus = (d.presenca?.skusPresentes||[]).join(', ') || '—';
+          const temProduto = d.presenca?.temProduto || '—';
+          const pedido = d.comercial?.pedidoFeito || '—';
+          const rec = (d.comercial?.receptividade||'').replace(/[🥶😐🤝]/g,'').trim();
+          const prodBadge = temProduto === 'Sim' ? 'badge-green' : temProduto === 'Não' ? 'badge-red' : 'badge-amber';
+          const pedBadge = pedido === 'Sim' ? 'badge-orange' : '';
+          const recBadge = rec === 'Parceiro' ? 'badge-green' : rec === 'Frio' ? 'badge-red' : 'badge-purple';
+          return `
+            <tr onclick="abrirDetalhe(${i})">
+              <td><div>${dataStr}</div><div style="font-size:11px;color:var(--text-muted);">${hora}</div></td>
+              <td><strong>${v.promotor}</strong></td>
+              <td>${d.pdv?.nomeFantasia||'—'}</td>
+              <td>${d.pdv?.tipo||'—'}</td>
+              <td>${d.pdv?.cidade||'—'} ${d.pdv?.uf?'/'+d.pdv.uf:''}</td>
+              <td><span class="badge ${prodBadge}">${temProduto}</span></td>
+              <td style="font-size:12px;">${skus}</td>
+              <td><span class="badge ${pedBadge}">${pedido}</span></td>
+              <td><span class="badge ${recBadge}">${rec||'—'}</span></td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function abrirDetalhe(i) {
+  const v = visitasFiltradas[i];
+  const d = v.dados || {};
+  const data = new Date(v.criado_em);
+  const dataStr = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modalTitulo').textContent = d.pdv?.nomeFantasia || 'Visita';
+
+  const pedidos = d.comercial?.pedidoFeito === 'Sim' ? `
+    <div class="rel-row"><span class="rel-key">GR</span><span class="rel-val">${d.comercial.pedidoQty?.GR||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">GM</span><span class="rel-val">${d.comercial.pedidoQty?.GM||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">CM</span><span class="rel-val">${d.comercial.pedidoQty?.CM||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">CC</span><span class="rel-val">${d.comercial.pedidoQty?.CC||0} cx</span></div>
+  ` : '<div style="font-size:13px;color:var(--text-muted);">Sem pedido gerado</div>';
+
+  const fotosArr = v.fotos || [];
+  const fotosHTML = fotosArr.length
+    ? `<div class="rel-fotos">${fotosArr.map(f=>`<img src="${f}" onclick="window.open('${f}','_blank')">`).join('')}</div>`
+    : '<div style="font-size:13px;color:var(--text-muted);">Sem fotos</div>';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="rel-section">
+      <div class="rel-title">Geral</div>
+      <div class="rel-row"><span class="rel-key">Data</span><span class="rel-val">${dataStr}</span></div>
+      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${v.promotor}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">PDV</div>
+      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${d.pdv?.tipo||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${d.pdv?.cnpj||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${d.pdv?.ie||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${d.pdv?.endereco||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${d.pdv?.cidade||'—'} ${d.pdv?.uf||''}</span></div>
+      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${d.pdv?.nomeComprador||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${d.pdv?.telefone||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${d.pdv?.distribuidor||'—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Presença de Marca</div>
+      <div class="rel-row"><span class="rel-key">Tem produto</span><span class="rel-val">${d.presenca?.temProduto||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">SKUs presentes</span><span class="rel-val">${(d.presenca?.skusPresentes||[]).join(', ')||'Nenhum'}</span></div>
+      <div class="rel-row"><span class="rel-key">Destaque</span><span class="rel-val">${d.presenca?.destaque||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Ruptura</span><span class="rel-val">${d.presenca?.ruptura?'⚠️ Sim':'Não'}</span></div>
+      <div class="rel-row"><span class="rel-key">Material PDV</span><span class="rel-val">${d.presenca?.materialPDV?'Sim':'Não'}</span></div>
+      <div class="rel-row"><span class="rel-key">Precificador</span><span class="rel-val">${d.presenca?.precificador?'Sim':'Não'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Checklist Comercial</div>
+      <div class="rel-row"><span class="rel-key">Preço de tabela</span><span class="rel-val">${d.comercial?.precoTabela||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Frequência</span><span class="rel-val">${d.comercial?.frequencia||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Pedido feito</span><span class="rel-val">${d.comercial?.pedidoFeito||'—'}</span></div>
+      ${pedidos}
+      <div class="rel-row"><span class="rel-key">Receptividade</span><span class="rel-val">${d.comercial?.receptividade||'—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Inteligência de Mercado</div>
+      <div class="rel-row"><span class="rel-key">Concorrentes</span><span class="rel-val">${(d.mercado?.concorrentes||[]).join(', ')||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Dominante</span><span class="rel-val">${d.mercado?.concDominante||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Motivo resistência</span><span class="rel-val">${d.mercado?.motivoResistencia||'—'}</span></div>
+    </div>
+    <div class="rel-section"><div class="rel-title">Fotos</div>${fotosHTML}</div>
+    ${d.observacoes ? `<div class="rel-section"><div class="rel-title">Observações</div><div class="rel-obs">${d.observacoes}</div></div>` : ''}
+  `;
+  document.getElementById('modalDetalhe').classList.add('open');
+}
+
+function fecharModal() { document.getElementById('modalDetalhe').classList.remove('open'); }
+document.getElementById('modalDetalhe').addEventListener('click', function(e) { if(e.target===this) fecharModal(); });
+
+// Datas padrão: últimos 30 dias
+const hoje = new Date();
+const trintaDias = new Date();
+trintaDias.setDate(hoje.getDate() - 30);
+document.getElementById('filtroAte').value = hoje.toISOString().split('T')[0];
+document.getElementById('filtroDe').value = trintaDias.toISOString().split('T')[0];
+
+carregar();
+</script>
+</body>
+</html>
