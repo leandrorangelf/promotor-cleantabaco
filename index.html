@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cleantabaco · PDV</title>
+<style>
+:root {
+  --purple: #533AB7; --purple-light: #EEEDFE; --purple-mid: #7F77DD;
+  --mint: #1D9E75; --mint-light: #E1F5EE;
+  --orange: #D85A30; --orange-light: #FAECE7;
+  --red: #A32D2D; --red-light: #FCEBEB;
+  --amber: #BA7517; --amber-light: #FAEEDA;
+  --cream: #FAF9F5; --border: #D3D1C7;
+  --text: #2C2C2A; --text-muted: #5F5E5A;
+  --radius: 14px; --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); font-size: 15px; min-height: 100vh; }
+
+/* LOGIN */
+.login-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; background: var(--purple); }
+.login-logo { font-size: 30px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+.login-sub { color: rgba(255,255,255,0.65); font-size: 13px; margin-bottom: 36px; }
+.login-card { background: #fff; border-radius: 20px; padding: 24px 20px; width: 100%; max-width: 360px; }
+.login-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.promotor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.promotor-btn { padding: 14px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: #fff; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.15s; min-height: 52px; }
+.promotor-btn:active { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+.promotor-btn.gestor { grid-column: 1 / -1; background: var(--purple-light); border-color: var(--purple-mid); color: var(--purple); }
+
+/* MODAL SENHA */
+.senha-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+.senha-overlay.open { display: flex; }
+.senha-card { background: #fff; border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 320px; }
+.senha-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.senha-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.senha-input { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; letter-spacing: 2px; margin-bottom: 12px; }
+.senha-input:focus { outline: none; border-color: var(--purple-mid); box-shadow: 0 0 0 3px var(--purple-light); }
+.senha-erro { color: var(--red); font-size: 13px; margin-bottom: 10px; display: none; }
+.btn-confirmar { width: 100%; padding: 13px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 8px; }
+.btn-cancelar { width: 100%; padding: 10px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; }
+
+/* HEADER */
+.header { background: var(--purple); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header-title { font-size: 15px; font-weight: 800; }
+.header-sub { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+.header-badge { background: var(--mint); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.btn-sair { background: none; border: none; color: rgba(255,255,255,0.65); font-size: 13px; cursor: pointer; padding: 4px 8px; }
+
+/* NAV */
+.nav { display: flex; background: #fff; border-bottom: 1px solid var(--border); }
+.nav-btn { flex: 1; padding: 13px 6px; font-size: 12px; font-weight: 700; color: var(--text-muted); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
+.nav-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* PROGRESS BAR */
+.progress-wrap { background: #fff; border-bottom: 1px solid var(--border); padding: 10px 16px; }
+.progress-steps { display: flex; gap: 4px; }
+.progress-step { flex: 1; height: 4px; border-radius: 2px; background: var(--border); cursor: pointer; transition: background 0.3s; }
+.progress-step.done { background: var(--mint); }
+.progress-step.active { background: var(--purple); }
+.progress-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+/* FORM SECTIONS */
+.form-section { display: none; padding: 16px; }
+.form-section.active { display: block; }
+.card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field select, .field textarea { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: #fff; appearance: none; -webkit-appearance: none; font-family: inherit; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--purple-mid); box-shadow: 0 0 0 3px var(--purple-light); }
+.field textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* NAV FORM */
+.form-nav { display: flex; gap: 10px; padding: 0 16px 24px; }
+.btn-prev { flex: 1; padding: 14px; border-radius: var(--radius-sm); border: 2px solid var(--purple); background: transparent; color: var(--purple); font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-next { flex: 2; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--purple); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-salvar { flex: 2; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--mint); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-salvar:disabled { opacity: 0.5; }
+
+/* CHECKLIST */
+.check-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: #fff; margin-bottom: 8px; cursor: pointer; }
+.check-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--purple); flex-shrink: 0; }
+.check-label { font-size: 14px; flex: 1; line-height: 1.3; }
+.check-item.checked { background: var(--purple-light); border-color: var(--purple-mid); }
+.check-item.checked .check-label { color: var(--purple); font-weight: 600; }
+
+/* SKU GRID */
+.sku-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sku-item { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+.sku-item.active { border-color: var(--mint); background: var(--mint-light); }
+.sku-name { font-size: 15px; font-weight: 800; }
+.sku-item.active .sku-name { color: var(--mint); }
+.sku-full { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* RADIO */
+.radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio-pill { padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px; cursor: pointer; background: #fff; transition: all 0.15s; min-height: 44px; display: flex; align-items: center; }
+.radio-pill.active { background: var(--purple); color: #fff; border-color: var(--purple); font-weight: 700; }
+
+/* CONCORRENTES */
+.conc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.conc-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; text-align: center; font-size: 13px; background: #fff; min-height: 44px; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+.conc-item.active { border-color: var(--orange); background: var(--orange-light); color: var(--orange); font-weight: 700; }
+
+/* FOTO */
+.foto-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 28px; text-align: center; cursor: pointer; }
+.foto-area:active { background: var(--purple-light); }
+.foto-icon { font-size: 40px; margin-bottom: 8px; }
+.foto-text { font-size: 14px; color: var(--text-muted); }
+.foto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.foto-thumb { position: relative; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 1; }
+.foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.foto-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* PEDIDO */
+.pedido-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1EFE8; }
+.pedido-row:last-child { border-bottom: none; }
+.pedido-sku { font-size: 14px; font-weight: 700; }
+.pedido-qty { display: flex; align-items: center; gap: 10px; }
+.qty-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.qty-val { font-size: 17px; font-weight: 800; min-width: 30px; text-align: center; }
+
+/* HISTÓRICO */
+.hist-wrap { padding: 14px; }
+.busca-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; font-family: inherit; margin-bottom: 12px; }
+.visita-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; }
+.visita-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.visita-nome { font-size: 15px; font-weight: 700; flex: 1; margin-right: 8px; }
+.visita-data { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.visita-info { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.visita-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-editar { flex: 1; padding: 10px; background: var(--purple-light); color: var(--purple); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-excluir { padding: 10px 16px; background: var(--red-light); color: var(--red); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; }
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-right: 4px; margin-top: 4px; }
+.badge-green { background: var(--mint-light); color: var(--mint); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-purple { background: var(--purple-light); color: var(--purple); }
+.badge-red { background: var(--red-light); color: var(--red); }
+
+/* GESTOR */
+.gestor-wrap { padding: 14px; }
+.filtros { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+.filtro-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.filtro-group { display: flex; flex-direction: column; gap: 5px; }
+.filtro-group label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.filtro-group select, .filtro-group input[type="date"], .filtro-group input[type="text"] { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: #fff; }
+.btn-filtrar { padding: 12px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; }
+
+.resumo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.resumo-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; }
+.resumo-label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+.resumo-valor { font-size: 26px; font-weight: 900; line-height: 1; }
+.resumo-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.resumo-card.purple .resumo-valor { color: var(--purple); }
+.resumo-card.mint .resumo-valor { color: var(--mint); }
+.resumo-card.orange .resumo-valor { color: var(--orange); }
+.resumo-card.red .resumo-valor { color: var(--red); }
+
+.ranking-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F1EFE8; }
+.ranking-item:last-child { border-bottom: none; }
+.rank-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: var(--purple); flex-shrink: 0; }
+.rank-nome { font-size: 14px; font-weight: 600; flex: 1; }
+.rank-bar-wrap { width: 60px; height: 5px; background: var(--border); border-radius: 3px; }
+.rank-bar { height: 100%; background: var(--purple); border-radius: 3px; }
+.rank-count { font-size: 13px; color: var(--text-muted); font-weight: 700; min-width: 20px; text-align: right; }
+
+.sku-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; }
+.sku-lbl { font-size: 12px; font-weight: 800; width: 28px; }
+.sku-bar-wrap { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.sku-bar-fill { height: 100%; border-radius: 4px; }
+.sku-pct { font-size: 12px; color: var(--text-muted); width: 34px; text-align: right; font-weight: 700; }
+
+.conc-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1EFE8; font-size: 14px; }
+.conc-row:last-child { border-bottom: none; }
+.conc-count { background: var(--orange-light); color: var(--orange); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+
+.lista-gestor { display: flex; flex-direction: column; gap: 8px; }
+.visita-gestor { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 13px 15px; cursor: pointer; }
+.vg-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.vg-nome { font-size: 14px; font-weight: 700; }
+.vg-data { font-size: 11px; color: var(--text-muted); }
+.vg-promotor { font-size: 12px; color: var(--purple); font-weight: 700; margin-top: 2px; }
+.vg-info { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+/* MODAL DETALHE */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; overflow-y: auto; padding: 16px; }
+.modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+.modal { background: #fff; border-radius: 20px; width: 100%; max-width: 520px; overflow: hidden; }
+.modal-header { background: var(--purple); color: #fff; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: #fff; font-size: 26px; cursor: pointer; line-height: 1; }
+.modal-body { padding: 18px; max-height: 75vh; overflow-y: auto; }
+.rel-section { margin-bottom: 16px; }
+.rel-title { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.rel-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F1EFE8; font-size: 14px; }
+.rel-row:last-child { border-bottom: none; }
+.rel-key { color: var(--text-muted); }
+.rel-val { font-weight: 700; text-align: right; max-width: 58%; }
+.rel-fotos { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 8px; }
+.rel-fotos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+.rel-obs { font-size: 14px; background: var(--cream); padding: 10px 12px; border-radius: var(--radius-sm); margin-top: 6px; line-height: 1.5; }
+.modal-actions { padding: 0 18px 18px; display: flex; gap: 8px; }
+.modal-btn-excluir { flex: 1; padding: 12px; background: var(--red-light); color: var(--red); border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; }
+
+/* MISC */
+.empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+.empty-icon { font-size: 44px; margin-bottom: 10px; }
+.spinner-wrap { text-align: center; padding: 48px; }
+.spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #2C2C2A; color: #fff; padding: 12px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; display: none; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.toast.show { display: block; }
+input[type="file"] { display: none; }
+.sep { height: 1px; background: var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-logo">Cleantabaco</div>
+  <div class="login-sub">Promotor · Visita PDV</div>
+  <div class="login-card">
+    <h2>Quem é você?</h2>
+    <div class="promotor-grid">
+      <button class="promotor-btn gestor" onclick="iniciarLogin('Leandro','gestor')">👑 Leandro</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Francisco','promotor')">Francisco</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Anderson','promotor')">Anderson</button>
+      <button class="promotor-btn" onclick="iniciarLogin('André','promotor')">André</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Cristiano','promotor')">Cristiano</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Jarbas','promotor')">Jarbas</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Kayan','promotor')">Kayan</button>
+      <button class="promotor-btn" onclick="iniciarLogin('Wil','promotor')">Wil</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SENHA -->
+<div class="senha-overlay" id="senhaOverlay">
+  <div class="senha-card">
+    <h3 id="senhaTitulo">Entrar</h3>
+    <p id="senhaDesc">Digite sua senha para continuar</p>
+    <input type="password" class="senha-input" id="senhaInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')confirmarSenha()">
+    <div class="senha-erro" id="senhaErro">Senha incorreta. Tente novamente.</div>
+    <button class="btn-confirmar" onclick="confirmarSenha()">Entrar</button>
+    <button class="btn-cancelar" onclick="fecharSenha()">Cancelar</button>
+  </div>
+</div>
+
+<!-- APP PROMOTOR -->
+<div id="appPromotor" style="display:none;">
+  <div class="header">
+    <div>
+      <div class="header-title">Cleantabaco · PDV</div>
+      <div class="header-sub" id="headerNomeP"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="header-badge" id="totalP">0</span>
+      <button class="btn-sair" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="mudarAbaP('nova')">＋ Nova</button>
+    <button class="nav-btn" onclick="mudarAbaP('historico')">Histórico</button>
+  </div>
+
+  <!-- NOVA VISITA -->
+  <div class="page active" id="pNova">
+    <div class="progress-wrap">
+      <div class="progress-steps">
+        <div class="progress-step active" onclick="irSecao(0)"></div>
+        <div class="progress-step" onclick="irSecao(1)"></div>
+        <div class="progress-step" onclick="irSecao(2)"></div>
+        <div class="progress-step" onclick="irSecao(3)"></div>
+        <div class="progress-step" onclick="irSecao(4)"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">1 / 5 · Cadastro do PDV</div>
+    </div>
+
+    <!-- SECAO 1: PDV -->
+    <div class="form-section active" id="sec0">
+      <div class="card">
+        <div class="card-title">📋 Cadastro do PDV</div>
+        <div class="field"><label>Nome Fantasia *</label><input type="text" id="nomeFantasia" placeholder="Ex: Bar do João"></div>
+        <div class="field">
+          <label>Tipo de Estabelecimento *</label>
+          <select id="tipoEstab">
+            <option value="">Selecionar...</option>
+            <option>Bar</option><option>Mercearia / Mercadinho</option><option>Supermercado</option>
+            <option>Restaurante</option><option>Lanchonete</option><option>Distribuidora</option>
+            <option>Atacado</option><option>Conveniência</option><option>Tabacaria</option><option>Outros</option>
+          </select>
+        </div>
+        <div class="row-2">
+          <div class="field"><label>CNPJ</label><input type="text" id="cnpj" placeholder="00.000.000/0001-00" maxlength="18" oninput="mascaraCNPJ(this)"></div>
+          <div class="field"><label>Inscrição Estadual</label><input type="text" id="ie" placeholder="Opcional"></div>
+        </div>
+        <div class="field"><label>Endereço</label><input type="text" id="endereco" placeholder="Rua, número, bairro"></div>
+        <div class="row-2">
+          <div class="field"><label>Cidade</label><input type="text" id="cidade" placeholder="Cidade"></div>
+          <div class="field">
+            <label>UF</label>
+            <select id="uf">
+              <option value="">UF</option>
+              <option>RJ</option><option>SP</option><option>MG</option><option>ES</option><option>BA</option>
+              <option>PE</option><option>CE</option><option>PB</option><option>RN</option><option>AL</option>
+              <option>SE</option><option>PI</option><option>MA</option><option>PA</option><option>AM</option>
+              <option>GO</option><option>MT</option><option>MS</option><option>DF</option><option>PR</option>
+              <option>SC</option><option>RS</option>
+            </select>
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field"><label>Comprador / Resp.</label><input type="text" id="nomeComprador" placeholder="Nome"></div>
+          <div class="field"><label>Telefone</label><input type="tel" id="telefone" placeholder="(21) 99999-9999"></div>
+        </div>
+        <div class="field"><label>Distribuidor local</label><input type="text" id="distribuidor" placeholder="Nome do distribuidor"></div>
+      </div>
+      <div class="form-nav">
+        <button class="btn-next" onclick="irSecao(1)">Próximo →</button>
+      </div>
+    </div>
+
+    <!-- SECAO 2: PRESENÇA -->
+    <div class="form-section" id="sec1">
+      <div class="card">
+        <div class="card-title">🏪 Presença de Marca</div>
+        <div class="field">
+          <label>Tem nosso produto?</label>
+          <div class="radio-group" id="temProduto">
+            <div class="radio-pill active" onclick="selecionarRadio('temProduto',this)">Sim</div>
+            <div class="radio-pill" onclick="selecionarRadio('temProduto',this)">Não</div>
+            <div class="radio-pill" onclick="selecionarRadio('temProduto',this)">Parcial</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>SKUs presentes</label>
+          <div class="sku-grid" id="skusGrid">
+            <div class="sku-item" onclick="toggleSku(this,'GR')"><div class="sku-name">GR</div><div class="sku-full">Gudang Red</div></div>
+            <div class="sku-item" onclick="toggleSku(this,'GM')"><div class="sku-name">GM</div><div class="sku-full">Gudang Menta</div></div>
+            <div class="sku-item" onclick="toggleSku(this,'CM')"><div class="sku-name">CM</div><div class="sku-full">Cretec Menta</div></div>
+            <div class="sku-item" onclick="toggleSku(this,'CC')"><div class="sku-name">CC</div><div class="sku-full">Cretec Cereja</div></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Local de exposição</label>
+          <div class="radio-group" id="destaque">
+            <div class="radio-pill" onclick="selecionarRadio('destaque',this)">Destaque</div>
+            <div class="radio-pill active" onclick="selecionarRadio('destaque',this)">Neutro</div>
+            <div class="radio-pill" onclick="selecionarRadio('destaque',this)">Escondido</div>
+          </div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this,'ruptura')"><input type="checkbox" id="ruptura"><div class="check-label">⚠️ Ruptura na gôndola (produto em falta)</div></div>
+        <div class="check-item" onclick="toggleCheck(this,'materialPDV')"><input type="checkbox" id="materialPDV"><div class="check-label">✅ Material de PDV / display exposto</div></div>
+        <div class="check-item" onclick="toggleCheck(this,'precificador')"><input type="checkbox" id="precificador"><div class="check-label">✅ Precificador com nosso produto visível</div></div>
+      </div>
+      <div class="form-nav">
+        <button class="btn-prev" onclick="irSecao(0)">← Voltar</button>
+        <button class="btn-next" onclick="irSecao(2)">Próximo →</button>
+      </div>
+    </div>
+
+    <!-- SECAO 3: COMERCIAL -->
+    <div class="form-section" id="sec2">
+      <div class="card">
+        <div class="card-title">💼 Checklist Comercial</div>
+        <div class="field">
+          <label>Trabalha com preço de tabela?</label>
+          <div class="radio-group" id="precoTabela">
+            <div class="radio-pill active" onclick="selecionarRadio('precoTabela',this)">Sim</div>
+            <div class="radio-pill" onclick="selecionarRadio('precoTabela',this)">Não</div>
+            <div class="radio-pill" onclick="selecionarRadio('precoTabela',this)">Às vezes</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Frequência de compra</label>
+          <div class="radio-group" id="frequencia">
+            <div class="radio-pill" onclick="selecionarRadio('frequencia',this)">Semanal</div>
+            <div class="radio-pill" onclick="selecionarRadio('frequencia',this)">Quinzenal</div>
+            <div class="radio-pill active" onclick="selecionarRadio('frequencia',this)">Mensal</div>
+            <div class="radio-pill" onclick="selecionarRadio('frequencia',this)">Esporádico</div>
+            <div class="radio-pill" onclick="selecionarRadio('frequencia',this)">Nunca comprou</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Pedido feito na visita?</label>
+          <div class="radio-group" id="pedidoFeito">
+            <div class="radio-pill" onclick="selecionarRadio('pedidoFeito',this);togglePedidos(this)">Sim</div>
+            <div class="radio-pill active" onclick="selecionarRadio('pedidoFeito',this);togglePedidos(this)">Não</div>
+          </div>
+        </div>
+        <div id="bloquePedidos" style="display:none;">
+          <div class="sep"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Qtd. sugerida por SKU (caixas)</div>
+          <div class="pedido-row"><span class="pedido-sku">Gudang Red (GR)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyGR',-1)">−</button><span class="qty-val" id="qtyGR">0</span><button class="qty-btn" onclick="alterarQty('qtyGR',1)">+</button></div></div>
+          <div class="pedido-row"><span class="pedido-sku">Gudang Menta (GM)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyGM',-1)">−</button><span class="qty-val" id="qtyGM">0</span><button class="qty-btn" onclick="alterarQty('qtyGM',1)">+</button></div></div>
+          <div class="pedido-row"><span class="pedido-sku">Cretec Menta (CM)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyCM',-1)">−</button><span class="qty-val" id="qtyCM">0</span><button class="qty-btn" onclick="alterarQty('qtyCM',1)">+</button></div></div>
+          <div class="pedido-row"><span class="pedido-sku">Cretec Cereja (CC)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyCC',-1)">−</button><span class="qty-val" id="qtyCC">0</span><button class="qty-btn" onclick="alterarQty('qtyCC',1)">+</button></div></div>
+        </div>
+        <div class="sep"></div>
+        <div class="field">
+          <label>Receptividade do comprador</label>
+          <div class="radio-group" id="receptividade">
+            <div class="radio-pill" onclick="selecionarRadio('receptividade',this)">🥶 Frio</div>
+            <div class="radio-pill active" onclick="selecionarRadio('receptividade',this)">😐 Neutro</div>
+            <div class="radio-pill" onclick="selecionarRadio('receptividade',this)">🤝 Parceiro</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-nav">
+        <button class="btn-prev" onclick="irSecao(1)">← Voltar</button>
+        <button class="btn-next" onclick="irSecao(3)">Próximo →</button>
+      </div>
+    </div>
+
+    <!-- SECAO 4: MERCADO -->
+    <div class="form-section" id="sec3">
+      <div class="card">
+        <div class="card-title">🔍 Inteligência de Mercado</div>
+        <div class="field">
+          <label>Concorrentes presentes</label>
+          <div class="conc-grid" id="concorrentes">
+            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Cravo</div>
+            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Menta</div>
+            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Ice</div>
+            <div class="conc-item" onclick="toggleConc(this)">Camel Kretek</div>
+            <div class="conc-item" onclick="toggleConc(this)">Camel Cápsula Menta</div>
+            <div class="conc-item" onclick="toggleConc(this)">LA Menthol</div>
+            <div class="conc-item" onclick="toggleConc(this)">Lucky Strike Menta</div>
+            <div class="conc-item" onclick="toggleConc(this)">Lucky Strike Cápsula</div>
+            <div class="conc-item" onclick="toggleConc(this)">Marlboro Menta/Cáps.</div>
+            <div class="conc-item" onclick="toggleConc(this)">Outros kretek</div>
+            <div class="conc-item" onclick="toggleConc(this)">Palheiro menta</div>
+            <div class="conc-item" onclick="toggleConc(this)">Nenhum</div>
+          </div>
+        </div>
+        <div class="field"><label>Concorrente dominante</label><input type="text" id="concDominante" placeholder="Ex: Djarum Black Menta"></div>
+        <div class="field">
+          <label>Por que não compra / compra pouco?</label>
+          <div class="radio-group" id="motivoResistencia">
+            <div class="radio-pill" onclick="selecionarRadio('motivoResistencia',this)">Preço</div>
+            <div class="radio-pill" onclick="selecionarRadio('motivoResistencia',this)">Fidelidade concorrente</div>
+            <div class="radio-pill" onclick="selecionarRadio('motivoResistencia',this)">Falta de visita</div>
+            <div class="radio-pill" onclick="selecionarRadio('motivoResistencia',this)">Giro baixo</div>
+            <div class="radio-pill active" onclick="selecionarRadio('motivoResistencia',this)">N/A</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-nav">
+        <button class="btn-prev" onclick="irSecao(2)">← Voltar</button>
+        <button class="btn-next" onclick="irSecao(4)">Próximo →</button>
+      </div>
+    </div>
+
+    <!-- SECAO 5: FOTOS + OBS -->
+    <div class="form-section" id="sec4">
+      <div class="card">
+        <div class="card-title">📸 Fotos</div>
+        <input type="file" id="fotoInput" accept="image/*" multiple onchange="processarFotos(event)">
+        <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
+          <div class="foto-icon">📷</div>
+          <div class="foto-text">Toque para adicionar fotos<br><span style="font-size:12px;">Câmera ou galeria</span></div>
+        </div>
+        <div class="foto-grid" id="fotoGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Observações</div>
+        <div class="field"><textarea id="observacoes" placeholder="Anotações livres sobre a visita, oportunidades, problemas..."></textarea></div>
+      </div>
+      <div class="form-nav">
+        <button class="btn-prev" onclick="irSecao(3)">← Voltar</button>
+        <button class="btn-salvar" id="btnSalvar" onclick="salvarVisita()">✓ Salvar Visita</button>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="page" id="pHistorico">
+    <div class="hist-wrap">
+      <input type="text" class="busca-input" id="buscaHist" oninput="renderHistorico()" placeholder="Buscar por nome ou cidade...">
+      <div id="listaHist"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP GESTOR -->
+<div id="appGestor" style="display:none;">
+  <div class="header">
+    <div>
+      <div class="header-title">Cleantabaco · Gestor</div>
+      <div class="header-sub" id="headerNomeG">Leandro</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="carregarGestor()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;">↻</button>
+      <button class="btn-sair" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="mudarAbaG('painel')">Painel</button>
+    <button class="nav-btn" onclick="mudarAbaG('visitas')">Visitas</button>
+  </div>
+
+  <div class="page active" id="gPainel">
+    <div class="gestor-wrap">
+      <div class="filtros">
+        <div class="filtro-row">
+          <div class="filtro-group">
+            <label>Promotor</label>
+            <select id="gFiltroPromotor">
+              <option value="">Todos</option>
+              <option>Francisco</option><option>Anderson</option><option>André</option>
+              <option>Cristiano</option><option>Jarbas</option><option>Kayan</option><option>Wil</option>
+            </select>
+          </div>
+          <div class="filtro-group">
+            <label>Tipo PDV</label>
+            <select id="gFiltroTipo">
+              <option value="">Todos</option>
+              <option>Bar</option><option>Mercearia / Mercadinho</option><option>Supermercado</option>
+              <option>Restaurante</option><option>Lanchonete</option><option>Distribuidora</option>
+              <option>Atacado</option><option>Conveniência</option><option>Tabacaria</option>
+            </select>
+          </div>
+        </div>
+        <div class="filtro-row">
+          <div class="filtro-group"><label>De</label><input type="date" id="gFiltroDe"></div>
+          <div class="filtro-group"><label>Até</label><input type="date" id="gFiltroAte"></div>
+        </div>
+        <button class="btn-filtrar" onclick="carregarGestor()">Filtrar</button>
+      </div>
+
+      <div class="resumo-grid">
+        <div class="resumo-card purple"><div class="resumo-label">Total visitas</div><div class="resumo-valor" id="gTotal">—</div><div class="resumo-sub">no período</div></div>
+        <div class="resumo-card mint"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% dos PDVs</div></div>
+        <div class="resumo-card orange"><div class="resumo-label">Pedidos</div><div class="resumo-valor" id="gPedidos">—</div><div class="resumo-sub">gerados</div></div>
+        <div class="resumo-card red"><div class="resumo-label">Ruptura</div><div class="resumo-valor" id="gRuptura">—</div><div class="resumo-sub">PDVs com falta</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Visitas por promotor</div>
+        <div id="gRanking"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Presença por SKU</div>
+        <div id="gSKUs"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Concorrentes mais frequentes</div>
+        <div id="gConc"><div class="empty">Sem dados</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="gVisitas">
+    <div class="gestor-wrap">
+      <input type="text" class="busca-input" id="gBusca" oninput="renderListaGestor()" placeholder="Buscar por PDV, cidade, promotor...">
+      <div id="gLista"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modalDetalhe">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Detalhe</h3>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const API_TOKEN = 'ct-prom-2024-xK9mR3vL';
+
+const SENHAS = {
+  'Leandro': 'Lx9#mK2p',
+  'Francisco': 'Fj4@nR7w',
+  'Anderson': 'Ak8!qT3v',
+  'André': 'Ad6#hW5z',
+  'Cristiano': 'Cr2@bN9x',
+  'Jarbas': 'Jb7!sM4k',
+  'Kayan': 'Ky3#tP6q',
+  'Wil': 'Wi5@dL8n'
+};
+
+let usuarioAtual = null;
+let tipoAtual = null;
+let visitasPromotor = [];
+let visitasGestor = [];
+let secaoAtual = 0;
+let skusSelecionados = [];
+let concSelecionados = [];
+let fotos = [];
+let editandoId = null;
+let visitaDetalheAtual = null;
+
+const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
+
+function toast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function headers() {
+  return { 'Content-Type': 'application/json', 'x-api-token': API_TOKEN };
+}
+
+// LOGIN
+let loginPendente = null;
+
+function iniciarLogin(nome, tipo) {
+  loginPendente = { nome, tipo };
+  document.getElementById('senhaTitulo').textContent = 'Olá, ' + nome;
+  document.getElementById('senhaDesc').textContent = tipo === 'gestor' ? 'Digite sua senha de gestor' : 'Digite sua senha para continuar';
+  document.getElementById('senhaInput').value = '';
+  document.getElementById('senhaErro').style.display = 'none';
+  document.getElementById('senhaOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('senhaInput').focus(), 100);
+}
+
+function confirmarSenha() {
+  const senha = document.getElementById('senhaInput').value;
+  if (senha !== SENHAS[loginPendente.nome]) {
+    document.getElementById('senhaErro').style.display = 'block';
+    document.getElementById('senhaInput').value = '';
+    document.getElementById('senhaInput').focus();
+    return;
+  }
+  document.getElementById('senhaOverlay').classList.remove('open');
+  fazerLogin(loginPendente.nome, loginPendente.tipo);
+}
+
+function fecharSenha() {
+  document.getElementById('senhaOverlay').classList.remove('open');
+  loginPendente = null;
+}
+
+function fazerLogin(nome, tipo) {
+  usuarioAtual = nome;
+  tipoAtual = tipo;
+  localStorage.setItem('ct_user', JSON.stringify({ nome, tipo }));
+  document.getElementById('loginScreen').style.display = 'none';
+
+  if (tipo === 'gestor') {
+    document.getElementById('appGestor').style.display = 'block';
+    document.getElementById('headerNomeG').textContent = nome;
+    const hoje = new Date();
+    const trintaDias = new Date();
+    trintaDias.setDate(hoje.getDate() - 30);
+    document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
+    document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
+    carregarGestor();
+  } else {
+    document.getElementById('appPromotor').style.display = 'block';
+    document.getElementById('headerNomeP').textContent = nome;
+    carregarVisitasPromotor();
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ct_user');
+  usuarioAtual = null; tipoAtual = null;
+  document.getElementById('appPromotor').style.display = 'none';
+  document.getElementById('appGestor').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  limparFormulario();
+}
+
+// NAVEGAÇÃO PROMOTOR
+function mudarAbaP(aba) {
+  document.querySelectorAll('#appPromotor .page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
+  document.querySelectorAll('#appPromotor .nav-btn')[aba === 'nova' ? 0 : 1].classList.add('active');
+  if (aba === 'historico') carregarVisitasPromotor().then(() => renderHistorico());
+}
+
+// NAVEGAÇÃO GESTOR
+function mudarAbaG(aba) {
+  document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
+  document.querySelectorAll('#appGestor .nav-btn')[aba === 'painel' ? 0 : 1].classList.add('active');
+  if (aba === 'visitas') renderListaGestor();
+}
+
+// SECOES DO FORMULÁRIO
+function irSecao(n) {
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.progress-step').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if (i < n) s.classList.add('done');
+    if (i === n) s.classList.add('active');
+  });
+  document.getElementById('sec' + n).classList.add('active');
+  document.getElementById('progressLabel').textContent = (n+1) + ' / 5 · ' + SECAO_LABELS[n];
+  secaoAtual = n;
+  window.scrollTo(0,0);
+}
+
+// HELPERS FORM
+function selecionarRadio(grupo, el) {
+  document.querySelectorAll('#' + grupo + ' .radio-pill').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getRadio(grupo) {
+  const el = document.querySelector('#' + grupo + ' .radio-pill.active');
+  return el ? el.textContent.trim() : '';
+}
+
+function toggleCheck(item, id) {
+  item.classList.toggle('checked');
+  document.getElementById(id).checked = item.classList.contains('checked');
+}
+
+function toggleSku(el, sku) {
+  el.classList.toggle('active');
+  if (el.classList.contains('active')) { if (!skusSelecionados.includes(sku)) skusSelecionados.push(sku); }
+  else { skusSelecionados = skusSelecionados.filter(s => s !== sku); }
+}
+
+function toggleConc(el) {
+  el.classList.toggle('active');
+  const txt = el.textContent.trim();
+  if (el.classList.contains('active')) { if (!concSelecionados.includes(txt)) concSelecionados.push(txt); }
+  else { concSelecionados = concSelecionados.filter(c => c !== txt); }
+}
+
+function togglePedidos(el) {
+  document.getElementById('bloquePedidos').style.display = el.textContent.trim() === 'Sim' ? 'block' : 'none';
+}
+
+function alterarQty(id, delta) {
+  const el = document.getElementById(id);
+  el.textContent = Math.max(0, parseInt(el.textContent) + delta);
+}
+
+function mascaraCNPJ(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,14);
+  v = v.replace(/^(\d{2})(\d)/,'$1.$2');
+  v = v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+  v = v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+  v = v.replace(/(\d{4})(\d)/,'$1-$2');
+  input.value = v;
+}
+
+function processarFotos(event) {
+  Array.from(event.target.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const max = 800;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) { if (w > h) { h = h*max/w; w = max; } else { w = w*max/h; h = max; } }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        fotos.push(canvas.toDataURL('image/jpeg', 0.7));
+        renderFotos();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderFotos() {
+  document.getElementById('fotoGrid').innerHTML = fotos.map((f,i) => `
+    <div class="foto-thumb"><img src="${f}"><button class="foto-del" onclick="removerFoto(${i})">×</button></div>
+  `).join('');
+}
+
+function removerFoto(i) { fotos.splice(i,1); renderFotos(); }
+
+// SALVAR
+async function salvarVisita() {
+  const nome = document.getElementById('nomeFantasia').value.trim();
+  if (!nome) { toast('⚠️ Informe o nome do estabelecimento'); irSecao(0); return; }
+
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  const dados = {
+    pdv: {
+      nomeFantasia: nome,
+      tipo: document.getElementById('tipoEstab').value,
+      cnpj: document.getElementById('cnpj').value,
+      ie: document.getElementById('ie').value,
+      endereco: document.getElementById('endereco').value,
+      cidade: document.getElementById('cidade').value,
+      uf: document.getElementById('uf').value,
+      nomeComprador: document.getElementById('nomeComprador').value,
+      telefone: document.getElementById('telefone').value,
+      distribuidor: document.getElementById('distribuidor').value,
+    },
+    presenca: {
+      temProduto: getRadio('temProduto'),
+      skusPresentes: [...skusSelecionados],
+      destaque: getRadio('destaque'),
+      ruptura: document.getElementById('ruptura').checked,
+      materialPDV: document.getElementById('materialPDV').checked,
+      precificador: document.getElementById('precificador').checked,
+    },
+    comercial: {
+      precoTabela: getRadio('precoTabela'),
+      frequencia: getRadio('frequencia'),
+      pedidoFeito: getRadio('pedidoFeito'),
+      pedidoQty: {
+        GR: parseInt(document.getElementById('qtyGR').textContent),
+        GM: parseInt(document.getElementById('qtyGM').textContent),
+        CM: parseInt(document.getElementById('qtyCM').textContent),
+        CC: parseInt(document.getElementById('qtyCC').textContent),
+      },
+      receptividade: getRadio('receptividade'),
+    },
+    mercado: {
+      concorrentes: [...concSelecionados],
+      concDominante: document.getElementById('concDominante').value,
+      motivoResistencia: getRadio('motivoResistencia'),
+    },
+    observacoes: document.getElementById('observacoes').value,
+  };
+
+  try {
+    let res;
+    if (editandoId) {
+      res = await fetch(`${API}/api/editar`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify({ id: editandoId, promotor: usuarioAtual, dados, fotos })
+      });
+    } else {
+      res = await fetch(`${API}/api/salvar`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ promotor: usuarioAtual, dados, fotos })
+      });
+    }
+    const data = await res.json();
+    if (data.ok) {
+      toast(editandoId ? '✓ Visita atualizada!' : '✓ Visita salva!');
+      editandoId = null;
+      limparFormulario();
+      await carregarVisitasPromotor();
+      mudarAbaP('historico');
+    } else {
+      toast('Erro: ' + (data.erro || 'tente novamente'));
+    }
+  } catch(e) {
+    toast('❌ Sem conexão. Tente novamente.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✓ Salvar Visita';
+}
+
+function limparFormulario() {
+  ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('tipoEstab').value = '';
+  document.getElementById('uf').value = '';
+  skusSelecionados = []; concSelecionados = []; fotos = []; editandoId = null;
+  renderFotos();
+  document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.conc-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('checked'); el.querySelector('input').checked = false; });
+  document.getElementById('bloquePedidos').style.display = 'none';
+  ['qtyGR','qtyGM','qtyCM','qtyCC'].forEach(id => document.getElementById(id).textContent = '0');
+  ['temProduto','destaque','precoTabela','frequencia','pedidoFeito','receptividade','motivoResistencia'].forEach(grupo => {
+    const pills = document.querySelectorAll('#' + grupo + ' .radio-pill');
+    pills.forEach(p => p.classList.remove('active'));
+    if (pills.length) pills[0].classList.add('active');
+  });
+  irSecao(0);
+  document.getElementById('btnSalvar').textContent = '✓ Salvar Visita';
+}
+
+// CARREGAR PROMOTOR
+async function carregarVisitasPromotor() {
+  try {
+    const res = await fetch(`${API}/api/listar?promotor=${encodeURIComponent(usuarioAtual)}`, { headers: headers() });
+    const data = await res.json();
+    visitasPromotor = data.visitas || [];
+    document.getElementById('totalP').textContent = visitasPromotor.length;
+  } catch(e) { visitasPromotor = []; }
+}
+
+function renderHistorico() {
+  const busca = document.getElementById('buscaHist').value.toLowerCase();
+  const lista = document.getElementById('listaHist');
+  const filtradas = visitasPromotor.filter(v => {
+    const d = v.dados || {};
+    return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')).toLowerCase().includes(busca);
+  });
+  if (!filtradas.length) {
+    lista.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div>${visitasPromotor.length ? 'Nenhuma encontrada' : 'Nenhuma visita ainda'}</div></div>`;
+    return;
+  }
+  lista.innerHTML = filtradas.map((v,i) => {
+    const d = v.dados || {};
+    const data = new Date(v.criado_em);
+    const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const skus = (d.presenca?.skusPresentes||[]).length;
+    const temPedido = d.comercial?.pedidoFeito === 'Sim';
+    return `
+      <div class="visita-card">
+        <div class="visita-header">
+          <div class="visita-nome">${d.pdv?.nomeFantasia||'—'}</div>
+          <div class="visita-data">${dataStr}</div>
+        </div>
+        <div class="visita-info">${d.pdv?.tipo||''} ${d.pdv?.cidade ? '· '+d.pdv.cidade : ''}</div>
+        <div>
+          <span class="badge badge-purple">${d.presenca?.temProduto||''}</span>
+          ${skus > 0 ? `<span class="badge badge-green">${skus} SKU${skus>1?'s':''}</span>` : ''}
+          ${temPedido ? `<span class="badge badge-orange">Pedido feito</span>` : ''}
+        </div>
+        <div class="visita-actions">
+          <button class="btn-editar" onclick="editarVisita('${v.id}')">✏️ Editar</button>
+          <button class="btn-excluir" onclick="excluirVisitaPromotor('${v.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function editarVisita(id) {
+  const v = visitasPromotor.find(x => x.id === id);
+  if (!v) return;
+  const d = v.dados || {};
+  editandoId = id;
+
+  // Preencher PDV
+  ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(campo => {
+    const mapa = { nomeFantasia:'nomeFantasia', cnpj:'cnpj', ie:'ie', endereco:'endereco', cidade:'cidade', nomeComprador:'nomeComprador', telefone:'telefone', distribuidor:'distribuidor' };
+    const fonte = d.pdv?.[campo] || d.mercado?.[campo === 'concDominante' ? 'concDominante' : ''] || d[campo] || '';
+    const el = document.getElementById(campo);
+    if (el) el.value = fonte;
+  });
+  if (d.pdv?.nomeFantasia) document.getElementById('nomeFantasia').value = d.pdv.nomeFantasia;
+  if (d.pdv?.cnpj) document.getElementById('cnpj').value = d.pdv.cnpj;
+  if (d.pdv?.ie) document.getElementById('ie').value = d.pdv.ie;
+  if (d.pdv?.endereco) document.getElementById('endereco').value = d.pdv.endereco;
+  if (d.pdv?.cidade) document.getElementById('cidade').value = d.pdv.cidade;
+  if (d.pdv?.nomeComprador) document.getElementById('nomeComprador').value = d.pdv.nomeComprador;
+  if (d.pdv?.telefone) document.getElementById('telefone').value = d.pdv.telefone;
+  if (d.pdv?.distribuidor) document.getElementById('distribuidor').value = d.pdv.distribuidor;
+  if (d.pdv?.tipo) document.getElementById('tipoEstab').value = d.pdv.tipo;
+  if (d.pdv?.uf) document.getElementById('uf').value = d.pdv.uf;
+  if (d.mercado?.concDominante) document.getElementById('concDominante').value = d.mercado.concDominante;
+  if (d.observacoes) document.getElementById('observacoes').value = d.observacoes;
+
+  // SKUs
+  skusSelecionados = [...(d.presenca?.skusPresentes||[])];
+  document.querySelectorAll('.sku-item').forEach(el => {
+    const sku = el.querySelector('.sku-name')?.textContent;
+    if (skusSelecionados.includes(sku)) el.classList.add('active'); else el.classList.remove('active');
+  });
+
+  // Concorrentes
+  concSelecionados = [...(d.mercado?.concorrentes||[])];
+  document.querySelectorAll('#concorrentes .conc-item').forEach(el => {
+    if (concSelecionados.includes(el.textContent.trim())) el.classList.add('active'); else el.classList.remove('active');
+  });
+
+  // Radios
+  const setRadio = (grupo, val) => {
+    document.querySelectorAll('#'+grupo+' .radio-pill').forEach(p => {
+      p.classList.toggle('active', p.textContent.trim() === val);
+    });
+  };
+  setRadio('temProduto', d.presenca?.temProduto);
+  setRadio('destaque', d.presenca?.destaque);
+  setRadio('precoTabela', d.comercial?.precoTabela);
+  setRadio('frequencia', d.comercial?.frequencia);
+  setRadio('pedidoFeito', d.comercial?.pedidoFeito);
+  setRadio('receptividade', d.comercial?.receptividade);
+  setRadio('motivoResistencia', d.mercado?.motivoResistencia);
+
+  // Pedidos
+  if (d.comercial?.pedidoFeito === 'Sim') {
+    document.getElementById('bloquePedidos').style.display = 'block';
+    ['GR','GM','CM','CC'].forEach(s => {
+      const el = document.getElementById('qty'+s);
+      if (el) el.textContent = d.comercial.pedidoQty?.[s] || 0;
+    });
+  }
+
+  // Checks
+  ['ruptura','materialPDV','precificador'].forEach(campo => {
+    const val = d.presenca?.[campo] || false;
+    const item = document.getElementById(campo)?.closest('.check-item');
+    if (item) { item.classList.toggle('checked', val); document.getElementById(campo).checked = val; }
+  });
+
+  // Fotos
+  fotos = [...(v.fotos||[])];
+  renderFotos();
+
+  document.getElementById('btnSalvar').textContent = '✓ Atualizar Visita';
+  mudarAbaP('nova');
+  irSecao(0);
+  toast('Visita carregada para edição');
+}
+
+async function excluirVisitaPromotor(id) {
+  if (!confirm('Excluir esta visita? Ação irreversível.')) return;
+  try {
+    const res = await fetch(`${API}/api/deletar`, {
+      method: 'DELETE',
+      headers: headers(),
+      body: JSON.stringify({ id, promotor: usuarioAtual, gestor: false })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast('Visita excluída');
+      await carregarVisitasPromotor();
+      renderHistorico();
+    }
+  } catch(e) { toast('Erro ao excluir'); }
+}
+
+// GESTOR
+async function carregarGestor() {
+  const promotor = document.getElementById('gFiltroPromotor').value;
+  const de = document.getElementById('gFiltroDe').value;
+  const ate = document.getElementById('gFiltroAte').value;
+
+  document.getElementById('gLista').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  let url = `${API}/api/listar?`;
+  if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+  if (de) url += `de=${de}T00:00:00Z&`;
+  if (ate) url += `ate=${ate}T23:59:59Z&`;
+
+  try {
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    visitasGestor = data.visitas || [];
+
+    const tipo = document.getElementById('gFiltroTipo').value;
+    if (tipo) visitasGestor = visitasGestor.filter(v => v.dados?.pdv?.tipo === tipo);
+
+    renderPainel();
+    renderListaGestor();
+  } catch(e) {
+    toast('Erro ao carregar dados');
+  }
+}
+
+function renderPainel() {
+  const total = visitasGestor.length;
+  const comProduto = visitasGestor.filter(v => v.dados?.presenca?.temProduto === 'Sim').length;
+  const pedidos = visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').length;
+  const ruptura = visitasGestor.filter(v => v.dados?.presenca?.ruptura).length;
+
+  document.getElementById('gTotal').textContent = total;
+  document.getElementById('gProduto').textContent = total ? Math.round(comProduto/total*100)+'%' : '—';
+  document.getElementById('gPedidos').textContent = pedidos;
+  document.getElementById('gRuptura').textContent = ruptura;
+
+  // Ranking
+  const contagem = {};
+  visitasGestor.forEach(v => { contagem[v.promotor] = (contagem[v.promotor]||0)+1; });
+  const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+  document.getElementById('gRanking').innerHTML = sorted.length ? sorted.map(([nome,qtd]) => `
+    <div class="ranking-item">
+      <div class="rank-avatar">${nome.charAt(0)}</div>
+      <div class="rank-nome">${nome}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(qtd/max*100)}%"></div></div>
+      <div class="rank-count">${qtd}</div>
+    </div>
+  `).join('') : '<div class="empty">Sem dados</div>';
+
+  // SKUs
+  const skus = ['GR','GM','CM','CC'];
+  const nomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  const cores = {GR:'#533AB7',GM:'#1D9E75',CM:'#D85A30',CC:'#BA7517'};
+  const cSku = {GR:0,GM:0,CM:0,CC:0};
+  visitasGestor.forEach(v => { (v.dados?.presenca?.skusPresentes||[]).forEach(s => { if(cSku[s]!==undefined) cSku[s]++; }); });
+  document.getElementById('gSKUs').innerHTML = skus.map(s => {
+    const pct = total ? Math.round(cSku[s]/total*100) : 0;
+    return `<div class="sku-row">
+      <div class="sku-lbl">${s}</div>
+      <div style="flex:1;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">${nomes[s]}</div>
+      <div class="sku-bar-wrap"><div class="sku-bar-fill" style="width:${pct}%;background:${cores[s]}"></div></div></div>
+      <div class="sku-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Concorrentes
+  const cConc = {};
+  visitasGestor.forEach(v => { (v.dados?.mercado?.concorrentes||[]).forEach(c => { if(c!=='Nenhum') cConc[c]=(cConc[c]||0)+1; }); });
+  const sortedConc = Object.entries(cConc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('gConc').innerHTML = sortedConc.length ? sortedConc.map(([nome,qtd]) => `
+    <div class="conc-row"><span>${nome}</span><span class="conc-count">${qtd}x</span></div>
+  `).join('') : '<div class="empty">Sem dados</div>';
+}
+
+function renderListaGestor() {
+  const busca = document.getElementById('gBusca').value.toLowerCase();
+  const filtradas = visitasGestor.filter(v => {
+    const d = v.dados||{};
+    return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca);
+  });
+  if (!filtradas.length) {
+    document.getElementById('gLista').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>';
+    return;
+  }
+  document.getElementById('gLista').innerHTML = '<div class="lista-gestor">' + filtradas.map((v,i) => {
+    const d = v.dados||{};
+    const data = new Date(v.criado_em);
+    const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const skus = (d.presenca?.skusPresentes||[]).join(', ')||'—';
+    const temPedido = d.comercial?.pedidoFeito === 'Sim';
+    return `
+      <div class="visita-gestor" onclick="abrirDetalheGestor('${v.id}')">
+        <div class="vg-header">
+          <div>
+            <div class="vg-nome">${d.pdv?.nomeFantasia||'—'}</div>
+            <div class="vg-promotor">${v.promotor}</div>
+          </div>
+          <div class="vg-data">${dataStr}</div>
+        </div>
+        <div class="vg-info">${d.pdv?.tipo||''} ${d.pdv?.cidade ? '· '+d.pdv.cidade : ''} ${d.pdv?.uf ? '/'+d.pdv.uf : ''}</div>
+        <div style="margin-top:6px;">
+          <span class="badge badge-purple">${d.presenca?.temProduto||'—'}</span>
+          ${temPedido ? '<span class="badge badge-orange">Pedido</span>' : ''}
+          ${d.presenca?.ruptura ? '<span class="badge badge-red">Ruptura</span>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+function abrirDetalheGestor(id) {
+  const v = visitasGestor.find(x => x.id === id);
+  if (!v) return;
+  visitaDetalheAtual = v;
+  renderModal(v, true);
+}
+
+function renderModal(v, isGestor) {
+  const d = v.dados||{};
+  const data = new Date(v.criado_em);
+  const dataStr = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modalTitulo').textContent = d.pdv?.nomeFantasia || 'Visita';
+
+  const pedidos = d.comercial?.pedidoFeito === 'Sim' ? `
+    <div class="rel-row"><span class="rel-key">GR</span><span class="rel-val">${d.comercial.pedidoQty?.GR||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">GM</span><span class="rel-val">${d.comercial.pedidoQty?.GM||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">CM</span><span class="rel-val">${d.comercial.pedidoQty?.CM||0} cx</span></div>
+    <div class="rel-row"><span class="rel-key">CC</span><span class="rel-val">${d.comercial.pedidoQty?.CC||0} cx</span></div>
+  ` : '<div style="font-size:13px;color:var(--text-muted);">Sem pedido</div>';
+
+  const fotosArr = v.fotos||[];
+  const fotosHTML = fotosArr.length ? `<div class="rel-fotos">${fotosArr.map(f=>`<img src="${f}">`).join('')}</div>` : '<div style="font-size:13px;color:var(--text-muted);">Sem fotos</div>';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="rel-section">
+      <div class="rel-title">Geral</div>
+      <div class="rel-row"><span class="rel-key">Data</span><span class="rel-val">${dataStr}</span></div>
+      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${v.promotor}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">PDV</div>
+      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${d.pdv?.tipo||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${d.pdv?.cnpj||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${d.pdv?.ie||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${d.pdv?.endereco||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${d.pdv?.cidade||'—'} ${d.pdv?.uf||''}</span></div>
+      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${d.pdv?.nomeComprador||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${d.pdv?.telefone||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${d.pdv?.distribuidor||'—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Presença</div>
+      <div class="rel-row"><span class="rel-key">Tem produto</span><span class="rel-val">${d.presenca?.temProduto||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">SKUs</span><span class="rel-val">${(d.presenca?.skusPresentes||[]).join(', ')||'Nenhum'}</span></div>
+      <div class="rel-row"><span class="rel-key">Destaque</span><span class="rel-val">${d.presenca?.destaque||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Ruptura</span><span class="rel-val">${d.presenca?.ruptura?'⚠️ Sim':'Não'}</span></div>
+      <div class="rel-row"><span class="rel-key">Material PDV</span><span class="rel-val">${d.presenca?.materialPDV?'Sim':'Não'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Comercial</div>
+      <div class="rel-row"><span class="rel-key">Preço tabela</span><span class="rel-val">${d.comercial?.precoTabela||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Frequência</span><span class="rel-val">${d.comercial?.frequencia||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Pedido</span><span class="rel-val">${d.comercial?.pedidoFeito||'—'}</span></div>
+      ${pedidos}
+      <div class="rel-row"><span class="rel-key">Receptividade</span><span class="rel-val">${d.comercial?.receptividade||'—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Mercado</div>
+      <div class="rel-row"><span class="rel-key">Concorrentes</span><span class="rel-val">${(d.mercado?.concorrentes||[]).join(', ')||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Dominante</span><span class="rel-val">${d.mercado?.concDominante||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Motivo resist.</span><span class="rel-val">${d.mercado?.motivoResistencia||'—'}</span></div>
+    </div>
+    <div class="rel-section"><div class="rel-title">Fotos</div>${fotosHTML}</div>
+    ${d.observacoes ? `<div class="rel-section"><div class="rel-title">Observações</div><div class="rel-obs">${d.observacoes}</div></div>` : ''}
+  `;
+
+  document.getElementById('modalActions').innerHTML = isGestor ? `
+    <button class="modal-btn-excluir" onclick="excluirVisitaGestor('${v.id}')">🗑 Excluir visita</button>
+  ` : '';
+
+  document.getElementById('modalDetalhe').classList.add('open');
+}
+
+async function excluirVisitaGestor(id) {
+  if (!confirm('Excluir esta visita? Ação irreversível.')) return;
+  try {
+    const res = await fetch(`${API}/api/deletar`, {
+      method: 'DELETE',
+      headers: headers(),
+      body: JSON.stringify({ id, gestor: true })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast('Visita excluída');
+      fecharModal();
+      await carregarGestor();
+    }
+  } catch(e) { toast('Erro ao excluir'); }
+}
+
+function fecharModal() { document.getElementById('modalDetalhe').classList.remove('open'); }
+document.getElementById('modalDetalhe').addEventListener('click', function(e) { if(e.target===this) fecharModal(); });
+document.getElementById('senhaOverlay').addEventListener('click', function(e) { if(e.target===this) fecharSenha(); });
+
+// INIT
+window.onload = function() {
+  const saved = localStorage.getItem('ct_user');
+  if (saved) {
+    const u = JSON.parse(saved);
+    fazerLogin(u.nome, u.tipo);
+  }
+};
+</script>
+</body>
+</html>
