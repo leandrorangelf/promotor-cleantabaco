@@ -108,6 +108,17 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .conc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .conc-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; text-align: center; font-size: 13px; background: #fff; min-height: 44px; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
 .conc-item.active { border-color: var(--orange); background: var(--orange-light); color: var(--orange); font-weight: 700; }
+.conc-detalhe { display: none; background: var(--orange-light); border: 1.5px solid var(--orange); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 6px; }
+.conc-detalhe.open { display: block; }
+.conc-detalhe-titulo { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.conc-detalhe-row { display: flex; gap: 10px; align-items: flex-end; }
+.conc-detalhe-field { flex: 1; }
+.conc-detalhe-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.conc-detalhe-field input, .conc-detalhe-field select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; background: #fff; }
+.conc-fabricante { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 3px; display: inline-block; }
+.fab-jti { background: #E8F4FD; color: #1A6FA8; }
+.fab-bat { background: #FDF3E8; color: #A85A1A; }
+.fab-pmb { background: #F3E8FD; color: #6A1AA8; }
 
 /* FOTO */
 .foto-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 28px; text-align: center; cursor: pointer; }
@@ -426,19 +437,22 @@ input[type="file"] { display: none; }
         <div class="card-title">🔍 Inteligência de Mercado</div>
         <div class="field">
           <label>Concorrentes presentes</label>
-          <div class="conc-grid" id="concorrentes">
-            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Cravo</div>
-            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Menta</div>
-            <div class="conc-item" onclick="toggleConc(this)">Djarum Black Ice</div>
-            <div class="conc-item" onclick="toggleConc(this)">Camel Kretek</div>
-            <div class="conc-item" onclick="toggleConc(this)">Camel Cápsula Menta</div>
-            <div class="conc-item" onclick="toggleConc(this)">LA Menthol</div>
-            <div class="conc-item" onclick="toggleConc(this)">Lucky Strike Menta</div>
-            <div class="conc-item" onclick="toggleConc(this)">Lucky Strike Cápsula</div>
-            <div class="conc-item" onclick="toggleConc(this)">Marlboro Menta/Cáps.</div>
-            <div class="conc-item" onclick="toggleConc(this)">Outros kretek</div>
-            <div class="conc-item" onclick="toggleConc(this)">Palheiro menta</div>
-            <div class="conc-item" onclick="toggleConc(this)">Nenhum</div>
+          <div id="concorrentes">
+            <div class="conc-grid" style="margin-bottom:8px;">
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">Djarum Black Cravo<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">Djarum Black Menta<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">Djarum Black Ice<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">Camel Kretek<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">Camel Cápsula Menta<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'JTI')">LA Menthol<br><span class="conc-fabricante fab-jti">JTI</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'BAT')">Lucky Strike Menta<br><span class="conc-fabricante fab-bat">BAT</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'BAT')">Lucky Strike Cápsula<br><span class="conc-fabricante fab-bat">BAT</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'PMB')">Marlboro Menta/Cáps.<br><span class="conc-fabricante fab-pmb">PMB</span></div>
+              <div class="conc-item" onclick="toggleConc(this,'')">Outros kretek</div>
+              <div class="conc-item" onclick="toggleConc(this,'')">Palheiro menta</div>
+              <div class="conc-item" onclick="toggleConc(this,'')">Nenhum</div>
+            </div>
+            <div id="concDetalhes"></div>
           </div>
         </div>
         <div class="field"><label>Concorrente dominante</label><input type="text" id="concDominante" placeholder="Ex: Djarum Black Menta"></div>
@@ -737,11 +751,56 @@ function toggleSku(el, sku) {
   else { skusSelecionados = skusSelecionados.filter(s => s !== sku); }
 }
 
-function toggleConc(el) {
+let concDetalhes = {}; // { nomeConcorrente: { preco, frequencia } }
+
+function toggleConc(el, fab) {
+  const txt = el.querySelector('.conc-fabricante') ? el.childNodes[0].textContent.trim() : el.textContent.trim();
   el.classList.toggle('active');
-  const txt = el.textContent.trim();
-  if (el.classList.contains('active')) { if (!concSelecionados.includes(txt)) concSelecionados.push(txt); }
-  else { concSelecionados = concSelecionados.filter(c => c !== txt); }
+  if (el.classList.contains('active')) {
+    if (!concSelecionados.includes(txt)) concSelecionados.push(txt);
+    if (txt !== 'Nenhum' && txt !== 'Outros kretek' && txt !== 'Palheiro menta') {
+      if (!concDetalhes[txt]) concDetalhes[txt] = { preco: '', frequencia: '' };
+    }
+  } else {
+    concSelecionados = concSelecionados.filter(c => c !== txt);
+    delete concDetalhes[txt];
+  }
+  renderConcDetalhes();
+}
+
+function renderConcDetalhes() {
+  const wrap = document.getElementById('concDetalhes');
+  if (!wrap) return;
+  const ativos = concSelecionados.filter(c => c !== 'Nenhum' && c !== 'Outros kretek' && c !== 'Palheiro menta');
+  if (!ativos.length) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = ativos.map(nome => {
+    const d = concDetalhes[nome] || {};
+    const id = nome.replace(/[^a-zA-Z0-9]/g,'_');
+    return `
+      <div class="conc-detalhe open">
+        <div class="conc-detalhe-titulo">📊 ${nome}</div>
+        <div class="conc-detalhe-row">
+          <div class="conc-detalhe-field">
+            <label>Preço no PDV (R$)</label>
+            <input type="number" step="0.01" min="0" placeholder="0,00"
+              value="${d.preco||''}"
+              oninput="concDetalhes['${nome}'].preco = this.value">
+          </div>
+          <div class="conc-detalhe-field">
+            <label>Frequência recompra</label>
+            <select onchange="concDetalhes['${nome}'].frequencia = this.value">
+              <option value="">Selecionar...</option>
+              <option value="Semanal" ${d.frequencia==='Semanal'?'selected':''}>Semanal</option>
+              <option value="Quinzenal" ${d.frequencia==='Quinzenal'?'selected':''}>Quinzenal</option>
+              <option value="Mensal" ${d.frequencia==='Mensal'?'selected':''}>Mensal</option>
+              <option value="Esporádico" ${d.frequencia==='Esporádico'?'selected':''}>Esporádico</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function togglePedidos(el) {
@@ -836,6 +895,7 @@ async function salvarVisita() {
     },
     mercado: {
       concorrentes: [...concSelecionados],
+      concDetalhes: {...concDetalhes},
       concDominante: document.getElementById('concDominante').value,
       motivoResistencia: getRadio('motivoResistencia'),
     },
@@ -879,10 +939,11 @@ function limparFormulario() {
   ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('tipoEstab').value = '';
   document.getElementById('uf').value = '';
-  skusSelecionados = []; concSelecionados = []; fotos = []; editandoId = null;
+  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null;
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.conc-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#concorrentes .conc-item').forEach(el => el.classList.remove('active'));
+  const cd = document.getElementById('concDetalhes'); if(cd) cd.innerHTML = '';
   document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('checked'); el.querySelector('input').checked = false; });
   document.getElementById('bloquePedidos').style.display = 'none';
   ['qtyGR','qtyGM','qtyCM','qtyCC'].forEach(id => document.getElementById(id).textContent = '0');
@@ -1109,12 +1170,49 @@ function renderPainel() {
   }).join('');
 
   // Concorrentes
+  // Concorrentes com preço médio e fabricante
+  const FAB = {
+    'Djarum Black Cravo':'JTI','Djarum Black Menta':'JTI','Djarum Black Ice':'JTI',
+    'Camel Kretek':'JTI','Camel Cápsula Menta':'JTI','LA Menthol':'JTI',
+    'Lucky Strike Menta':'BAT','Lucky Strike Cápsula':'BAT',
+    'Marlboro Menta/Cáps.':'PMB'
+  };
+  const FAB_COR = { JTI:'#1A6FA8', BAT:'#A85A1A', PMB:'#6A1AA8' };
+  const FAB_BG  = { JTI:'#E8F4FD', BAT:'#FDF3E8', PMB:'#F3E8FD' };
+
   const cConc = {};
-  visitasGestor.forEach(v => { (v.dados?.mercado?.concorrentes||[]).forEach(c => { if(c!=='Nenhum') cConc[c]=(cConc[c]||0)+1; }); });
-  const sortedConc = Object.entries(cConc).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  document.getElementById('gConc').innerHTML = sortedConc.length ? sortedConc.map(([nome,qtd]) => `
-    <div class="conc-row"><span>${nome}</span><span class="conc-count">${qtd}x</span></div>
-  `).join('') : '<div class="empty">Sem dados</div>';
+  const precoConc = {};
+  visitasGestor.forEach(v => {
+    const concs = v.dados?.mercado?.concorrentes||[];
+    const dets  = v.dados?.mercado?.concDetalhes||{};
+    concs.forEach(c => {
+      if(c!=='Nenhum') {
+        cConc[c]=(cConc[c]||0)+1;
+        if(dets[c]?.preco) {
+          if(!precoConc[c]) precoConc[c]=[];
+          precoConc[c].push(parseFloat(dets[c].preco));
+        }
+      }
+    });
+  });
+  const sortedConc = Object.entries(cConc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('gConc').innerHTML = sortedConc.length ? sortedConc.map(([nome,qtd]) => {
+    const fab = FAB[nome]||'';
+    const precos = precoConc[nome]||[];
+    const precoMedio = precos.length ? (precos.reduce((a,b)=>a+b,0)/precos.length).toFixed(2) : null;
+    return `
+      <div class="conc-row">
+        <div>
+          <div style="font-size:14px;">${nome}</div>
+          ${fab ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${FAB_BG[fab]};color:${FAB_COR[fab]}">${fab}</span>` : ''}
+        </div>
+        <div style="text-align:right;">
+          <div class="conc-count">${qtd}x</div>
+          ${precoMedio ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">R$ ${precoMedio} médio</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('') : '<div class="empty">Sem dados</div>';
 }
 
 function renderListaGestor() {
@@ -1211,9 +1309,22 @@ function renderModal(v, isGestor) {
     </div>
     <div class="rel-section">
       <div class="rel-title">Mercado</div>
-      <div class="rel-row"><span class="rel-key">Concorrentes</span><span class="rel-val">${(d.mercado?.concorrentes||[]).join(', ')||'—'}</span></div>
       <div class="rel-row"><span class="rel-key">Dominante</span><span class="rel-val">${d.mercado?.concDominante||'—'}</span></div>
       <div class="rel-row"><span class="rel-key">Motivo resist.</span><span class="rel-val">${d.mercado?.motivoResistencia||'—'}</span></div>
+      ${(d.mercado?.concorrentes||[]).filter(c=>c!=='Nenhum').length ? `
+        <div style="margin-top:10px;">
+          ${(d.mercado.concorrentes).filter(c=>c!=='Nenhum').map(c => {
+            const det = d.mercado?.concDetalhes?.[c] || {};
+            return `<div style="padding:8px 0;border-bottom:1px solid #F1EFE8;">
+              <div style="font-size:13px;font-weight:700;">${c}</div>
+              <div style="display:flex;gap:16px;margin-top:4px;font-size:13px;color:var(--text-muted);">
+                ${det.preco ? `<span>💰 R$ ${parseFloat(det.preco).toFixed(2)}</span>` : ''}
+                ${det.frequencia ? `<span>🔄 ${det.frequencia}</span>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : '<div style="font-size:13px;color:var(--text-muted);margin-top:6px;">Nenhum concorrente</div>'}
     </div>
     <div class="rel-section"><div class="rel-title">Fotos</div>${fotosHTML}</div>
     ${d.observacoes ? `<div class="rel-section"><div class="rel-title">Observações</div><div class="rel-obs">${d.observacoes}</div></div>` : ''}
