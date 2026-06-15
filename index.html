@@ -418,22 +418,25 @@ input[type="file"] { display: none; }
         </div>
         <div id="bloquePedidos" style="display:none;">
           <div class="sep"></div>
-          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Pedido por SKU</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Pedido por SKU — unidade: pacotes</div>
 
           <div class="pedido-row">
             <div style="flex:1;">
               <div class="pedido-sku">Gudang Red (GR)</div>
-              <div style="font-size:11px;color:var(--text-muted);">48 pac/cx</div>
+              <div style="font-size:11px;color:var(--text-muted);" id="cxGR">0 cx</div>
             </div>
             <div class="pedido-qty">
               <button class="qty-btn" onclick="alterarQty('qtyGR',-1)">−</button>
-              <span class="qty-val" id="qtyGR">0</span>
+              <div style="text-align:center;">
+                <span class="qty-val" id="qtyGR">0</span>
+                <div style="font-size:10px;color:var(--text-muted);">pac</div>
+              </div>
               <button class="qty-btn" onclick="alterarQty('qtyGR',1)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
             <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <span style="font-size:12px;color:var(--text-muted);">R$/pac:</span>
               <input type="number" id="precoGR" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
               <span style="font-size:12px;color:var(--text-muted);" id="totalGR"></span>
             </div>
@@ -442,17 +445,20 @@ input[type="file"] { display: none; }
           <div class="pedido-row">
             <div style="flex:1;">
               <div class="pedido-sku">Gudang Menta (GM)</div>
-              <div style="font-size:11px;color:var(--text-muted);">48 pac/cx</div>
+              <div style="font-size:11px;color:var(--text-muted);" id="cxGM">0 cx</div>
             </div>
             <div class="pedido-qty">
               <button class="qty-btn" onclick="alterarQty('qtyGM',-1)">−</button>
-              <span class="qty-val" id="qtyGM">0</span>
+              <div style="text-align:center;">
+                <span class="qty-val" id="qtyGM">0</span>
+                <div style="font-size:10px;color:var(--text-muted);">pac</div>
+              </div>
               <button class="qty-btn" onclick="alterarQty('qtyGM',1)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
             <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <span style="font-size:12px;color:var(--text-muted);">R$/pac:</span>
               <input type="number" id="precoGM" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
               <span style="font-size:12px;color:var(--text-muted);" id="totalGM"></span>
             </div>
@@ -461,17 +467,20 @@ input[type="file"] { display: none; }
           <div class="pedido-row">
             <div style="flex:1;">
               <div class="pedido-sku">Cretec Menta (CM)</div>
-              <div style="font-size:11px;color:var(--text-muted);">50 pac/cx</div>
+              <div style="font-size:11px;color:var(--text-muted);" id="cxCM">0 cx</div>
             </div>
             <div class="pedido-qty">
               <button class="qty-btn" onclick="alterarQty('qtyCM',-1)">−</button>
-              <span class="qty-val" id="qtyCM">0</span>
+              <div style="text-align:center;">
+                <span class="qty-val" id="qtyCM">0</span>
+                <div style="font-size:10px;color:var(--text-muted);">pac</div>
+              </div>
               <button class="qty-btn" onclick="alterarQty('qtyCM',1)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
             <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <span style="font-size:12px;color:var(--text-muted);">R$/pac:</span>
               <input type="number" id="precoCM" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
               <span style="font-size:12px;color:var(--text-muted);" id="totalCM"></span>
             </div>
@@ -480,17 +489,20 @@ input[type="file"] { display: none; }
           <div class="pedido-row">
             <div style="flex:1;">
               <div class="pedido-sku">Cretec Cereja (CC)</div>
-              <div style="font-size:11px;color:var(--text-muted);">50 pac/cx</div>
+              <div style="font-size:11px;color:var(--text-muted);" id="cxCC">0 cx</div>
             </div>
             <div class="pedido-qty">
               <button class="qty-btn" onclick="alterarQty('qtyCC',-1)">−</button>
-              <span class="qty-val" id="qtyCC">0</span>
+              <div style="text-align:center;">
+                <span class="qty-val" id="qtyCC">0</span>
+                <div style="font-size:10px;color:var(--text-muted);">pac</div>
+              </div>
               <button class="qty-btn" onclick="alterarQty('qtyCC',1)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
             <div style="display:flex;gap:8px;align-items:center;">
-              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <span style="font-size:12px;color:var(--text-muted);">R$/pac:</span>
               <input type="number" id="precoCC" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
               <span style="font-size:12px;color:var(--text-muted);" id="totalCC"></span>
             </div>
@@ -959,12 +971,18 @@ const PACOTES = { GR:48, GM:48, CM:50, CC:50 };
 function calcularTotalPedido() {
   let total = 0;
   ['GR','GM','CM','CC'].forEach(s => {
-    const qty = parseInt(document.getElementById('qty'+s)?.textContent||'0');
+    const pac = parseInt(document.getElementById('qty'+s)?.textContent||'0');
     const preco = parseFloat(document.getElementById('preco'+s)?.value||'0');
-    const subtotal = qty * preco;
+    const subtotal = pac * preco;
     total += subtotal;
-    const el = document.getElementById('total'+s);
-    if (el) el.textContent = qty > 0 && preco > 0 ? `= R$ ${subtotal.toFixed(2)}` : '';
+    // Mostrar caixas equivalentes
+    const cx = Math.floor(pac / PACOTES[s]);
+    const resto = pac % PACOTES[s];
+    const elCx = document.getElementById('cx'+s);
+    if (elCx) elCx.textContent = cx > 0 ? `${cx} cx${resto > 0 ? ' + '+resto+' pac' : ''}` : resto > 0 ? resto+' pac (< 1 cx)' : '0 cx';
+    // Mostrar subtotal
+    const elTotal = document.getElementById('total'+s);
+    if (elTotal) elTotal.textContent = pac > 0 && preco > 0 ? `= R$ ${subtotal.toFixed(2)}` : '';
   });
   const elTotal = document.getElementById('totalPedido');
   if (elTotal) elTotal.textContent = `R$ ${total.toFixed(2)}`;
@@ -974,7 +992,7 @@ function gerarTextoWhatsApp(v) {
   const d = v.dados||{};
   const p = d.pdv||{};
   const c = d.comercial||{};
-  const qty = c.pedidoQty||{};
+  const pac = c.pedidoPac||c.pedidoQty||{}; // compatibilidade com registros antigos
   const preco = c.pedidoPreco||{};
   const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
 
@@ -982,11 +1000,13 @@ function gerarTextoWhatsApp(v) {
   let itens = '';
   let total = 0;
   ['GR','GM','CM','CC'].forEach(s => {
-    if (qty[s] > 0) {
-      const pac = qty[s] * PACOTES[s];
-      const subtotal = qty[s] * (preco[s]||0);
+    if (pac[s] > 0) {
+      const cx = Math.floor(pac[s] / PACOTES[s]);
+      const resto = pac[s] % PACOTES[s];
+      const cxStr = cx > 0 ? ` / ${cx} cx${resto > 0 ? ' + '+resto+' pac' : ''}` : '';
+      const subtotal = pac[s] * (preco[s]||0);
       total += subtotal;
-      itens += `• ${skuNomes[s]} (${s}): ${qty[s]} cx / ${pac} pac`;
+      itens += `• ${skuNomes[s]} (${s}): *${pac[s]} pac*${cxStr}`;
       if (preco[s] > 0) itens += ` · R$ ${subtotal.toFixed(2)}`;
       itens += '\n';
     }
@@ -1022,7 +1042,7 @@ function gerarPDF(v) {
   const d = v.dados||{};
   const p = d.pdv||{};
   const c = d.comercial||{};
-  const qty = c.pedidoQty||{};
+  const pac = c.pedidoPac||c.pedidoQty||{};
   const preco = c.pedidoPreco||{};
   const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
   const hora = new Date(v.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1031,15 +1051,17 @@ function gerarPDF(v) {
   let linhasTabela = '';
   let total = 0;
   ['GR','GM','CM','CC'].forEach(s => {
-    if (qty[s] > 0) {
-      const pac = qty[s] * PACOTES[s];
-      const subtotal = qty[s] * (preco[s]||0);
+    if (pac[s] > 0) {
+      const cx = Math.floor(pac[s] / PACOTES[s]);
+      const resto = pac[s] % PACOTES[s];
+      const cxStr = cx > 0 ? `${cx} cx${resto > 0 ? ' + '+resto+' pac' : ''}` : `${resto} pac`;
+      const subtotal = pac[s] * (preco[s]||0);
       total += subtotal;
       linhasTabela += `<tr>
         <td>${skuNomes[s]} (${s})</td>
-        <td style="text-align:center">${qty[s]}</td>
-        <td style="text-align:center">${pac}</td>
-        <td style="text-align:right">${preco[s] > 0 ? 'R$ '+preco[s].toFixed(2) : '—'}</td>
+        <td style="text-align:center;font-weight:700;">${pac[s]} pac</td>
+        <td style="text-align:center;color:#6B6480;">${cxStr}</td>
+        <td style="text-align:right">${preco[s] > 0 ? 'R$ '+Number(preco[s]).toFixed(2)+'/pac' : '—'}</td>
         <td style="text-align:right">${preco[s] > 0 ? 'R$ '+subtotal.toFixed(2) : '—'}</td>
       </tr>`;
     }
@@ -1080,7 +1102,7 @@ function gerarPDF(v) {
   <div class="section">
     <div class="section-title">Itens do Pedido</div>
     <table>
-      <thead><tr><th>Produto</th><th style="text-align:center">Caixas</th><th style="text-align:center">Pacotes</th><th style="text-align:right">R$/cx</th><th style="text-align:right">Subtotal</th></tr></thead>
+      <thead><tr><th>Produto</th><th style="text-align:center">Pacotes</th><th style="text-align:center">Caixas equiv.</th><th style="text-align:right">R$/pac</th><th style="text-align:right">Subtotal</th></tr></thead>
       <tbody>
         ${linhasTabela}
         ${total > 0 ? `<tr class="total-row"><td colspan="4" style="text-align:right">TOTAL</td><td style="text-align:right">R$ ${total.toFixed(2)}</td></tr>` : ''}
@@ -1107,8 +1129,10 @@ function exportarCSV() {
 
   const header = ['Data','Promotor','PDV','Tipo','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor',
     'Tem Produto','SKUs Presentes','Destaque','Ruptura','Material PDV','Precificador',
-    'Preco Tabela','Frequencia','Pedido Feito','Qty GR','Qty GM','Qty CM','Qty CC',
-    'Pac GR','Pac GM','Pac CM','Pac CC','Preco GR','Preco GM','Preco CM','Preco CC','Total Pedido',
+    'Preco Tabela','Frequencia','Pedido Feito',
+    'Pac GR','Pac GM','Pac CM','Pac CC',
+    'Cx GR','Cx GM','Cx CM','Cx CC',
+    'Preco GR/pac','Preco GM/pac','Preco CM/pac','Preco CC/pac','Total Pedido',
     'Receptividade','Concorrentes','Conc Dominante','Motivo Resistencia','Observacoes'];
 
   const rows = visitas.map(v => {
@@ -1117,7 +1141,7 @@ function exportarCSV() {
     const pr = d.presenca||{};
     const c = d.comercial||{};
     const m = d.mercado||{};
-    const qty = c.pedidoQty||{};
+    const qty = c.pedidoPac||c.pedidoQty||{};
     const preco = c.pedidoPreco||{};
     let total = 0;
     ['GR','GM','CM','CC'].forEach(s => { total += (qty[s]||0)*(preco[s]||0); });
@@ -1133,7 +1157,7 @@ function exportarCSV() {
       pr.ruptura?'Sim':'Nao', pr.materialPDV?'Sim':'Nao', pr.precificador?'Sim':'Nao',
       cel(c.precoTabela), cel(c.frequencia), cel(c.pedidoFeito),
       qty.GR||0, qty.GM||0, qty.CM||0, qty.CC||0,
-      (qty.GR||0)*48, (qty.GM||0)*48, (qty.CM||0)*50, (qty.CC||0)*50,
+      Math.floor((qty.GR||0)/48), Math.floor((qty.GM||0)/48), Math.floor((qty.CM||0)/50), Math.floor((qty.CC||0)/50),
       fmt(preco.GR||0), fmt(preco.GM||0), fmt(preco.CM||0), fmt(preco.CC||0), fmt(total.toFixed(2)),
       cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia),
       cel(d.observacoes)
@@ -1222,7 +1246,7 @@ async function salvarVisita() {
       precoTabela: getRadio('precoTabela'),
       frequencia: getRadio('frequencia'),
       pedidoFeito: getRadio('pedidoFeito'),
-      pedidoQty: {
+      pedidoPac: {
         GR: parseInt(document.getElementById('qtyGR').textContent),
         GM: parseInt(document.getElementById('qtyGM').textContent),
         CM: parseInt(document.getElementById('qtyCM').textContent),
@@ -1819,20 +1843,23 @@ function renderModal(v, isGestor) {
   document.getElementById('modalTitulo').textContent = d.pdv?.nomeFantasia || 'Visita';
 
   const skuNomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
-  const qty = c.pedidoQty||{};
+  const qty = c.pedidoPac||c.pedidoQty||{}; // compatibilidade
   const preco = c.pedidoPreco||{};
   let totalPed = 0;
   const pedidos = c.pedidoFeito === 'Sim' ? `
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
-      <tr style="background:var(--cream);"><th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--text-muted);">SKU</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Cx</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Pac</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">R$/cx</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">Total</th></tr>
+      <tr style="background:var(--cream);"><th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--text-muted);">SKU</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Pac</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Cx equiv.</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">R$/pac</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">Total</th></tr>
       ${['GR','GM','CM','CC'].filter(s=>qty[s]>0).map(s => {
         const sub = (qty[s]||0)*(preco[s]||0);
         totalPed += sub;
+        const cx = Math.floor(qty[s]/PACOTES[s]);
+        const resto = qty[s]%PACOTES[s];
+        const cxStr = cx > 0 ? `${cx}cx${resto>0?'+'+resto:''}` : `${resto}pac`;
         return `<tr style="border-bottom:1px solid #F1EFE8;">
           <td style="padding:7px 8px;font-weight:700;">${skuNomes[s]}</td>
-          <td style="padding:7px 8px;text-align:center;">${qty[s]}</td>
-          <td style="padding:7px 8px;text-align:center;">${qty[s]*PACOTES[s]}</td>
-          <td style="padding:7px 8px;text-align:right;">${preco[s]>0?'R$ '+preco[s].toFixed(2):'—'}</td>
+          <td style="padding:7px 8px;text-align:center;font-weight:700;">${qty[s]}</td>
+          <td style="padding:7px 8px;text-align:center;color:var(--text-muted);font-size:12px;">${cxStr}</td>
+          <td style="padding:7px 8px;text-align:right;">${preco[s]>0?'R$ '+Number(preco[s]).toFixed(2):'—'}</td>
           <td style="padding:7px 8px;text-align:right;font-weight:700;">${sub>0?'R$ '+sub.toFixed(2):'—'}</td>
         </tr>`;
       }).join('')}
