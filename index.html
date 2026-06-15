@@ -69,7 +69,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .form-section { display: none; padding: 16px; }
 .form-section.active { display: block; }
 .card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-bottom: 14px; }
-.card-title { font-size: 12px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.card-title { font-size: 13px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--purple-light); }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.8px; }
 .field input, .field select, .field textarea { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: #fff; appearance: none; -webkit-appearance: none; font-family: inherit; }
@@ -165,10 +165,19 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .btn-filtrar { padding: 12px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
 .resumo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-.resumo-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; }
-.resumo-label { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.resumo-valor { font-size: 28px; font-weight: 900; line-height: 1; }
-.resumo-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.resumo-card { border-radius: var(--radius); padding: 16px; position: relative; overflow: hidden; }
+.resumo-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+.resumo-card.purple { background: #EAE8FA; border: none; }
+.resumo-card.purple::before { background: var(--purple); }
+.resumo-card.mint { background: #D8F5EC; border: none; }
+.resumo-card.mint::before { background: var(--mint); }
+.resumo-card.orange { background: #FFF0D0; border: none; }
+.resumo-card.orange::before { background: var(--amber); }
+.resumo-card.red { background: #FFE8EC; border: none; }
+.resumo-card.red::before { background: var(--red); }
+.resumo-label { font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+.resumo-valor { font-size: 32px; font-weight: 900; line-height: 1; }
+.resumo-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 .resumo-card.purple .resumo-valor { color: var(--purple); }
 .resumo-card.mint .resumo-valor { color: var(--mint); }
 .resumo-card.orange .resumo-valor { color: var(--amber); }
@@ -176,21 +185,21 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 
 .ranking-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F1EFE8; }
 .ranking-item:last-child { border-bottom: none; }
-.rank-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: var(--purple); flex-shrink: 0; }
-.rank-nome { font-size: 14px; font-weight: 600; flex: 1; }
-.rank-bar-wrap { width: 60px; height: 5px; background: var(--border); border-radius: 3px; }
-.rank-bar { height: 100%; background: var(--purple); border-radius: 3px; }
-.rank-count { font-size: 13px; color: var(--text-muted); font-weight: 700; min-width: 20px; text-align: right; }
+.rank-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--purple); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; flex-shrink: 0; }
+.rank-nome { font-size: 14px; font-weight: 700; flex: 1; }
+.rank-bar-wrap { width: 80px; height: 8px; background: var(--border); border-radius: 4px; }
+.rank-bar { height: 100%; background: var(--purple); border-radius: 4px; }
+.rank-count { font-size: 14px; color: var(--text-muted); font-weight: 700; min-width: 24px; text-align: right; }
 
-.sku-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; }
-.sku-lbl { font-size: 12px; font-weight: 800; width: 28px; }
-.sku-bar-wrap { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
-.sku-bar-fill { height: 100%; border-radius: 4px; }
-.sku-pct { font-size: 12px; color: var(--text-muted); width: 34px; text-align: right; font-weight: 700; }
+.sku-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.sku-lbl { font-size: 13px; font-weight: 800; width: 30px; }
+.sku-bar-wrap { flex: 1; height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.sku-bar-fill { height: 100%; border-radius: 6px; }
+.sku-pct { font-size: 13px; font-weight: 700; width: 38px; text-align: right; color: var(--text); }
 
 .conc-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1EFE8; font-size: 14px; }
 .conc-row:last-child { border-bottom: none; }
-.conc-count { background: var(--orange-light); color: var(--orange); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.conc-count { background: var(--orange-light); color: var(--orange); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
 
 .lista-gestor { display: flex; flex-direction: column; gap: 8px; }
 .visita-gestor { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 13px 15px; cursor: pointer; }
@@ -1094,11 +1103,13 @@ function exportarCSV() {
   const visitas = visitasGestor.length > 0 ? visitasGestor : visitasPromotor;
   if (!visitas.length) { toast('Nenhuma visita para exportar'); return; }
 
+  const SEP = ';';
+
   const header = ['Data','Promotor','PDV','Tipo','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor',
     'Tem Produto','SKUs Presentes','Destaque','Ruptura','Material PDV','Precificador',
-    'Preço Tabela','Frequência','Pedido Feito','Qty GR','Qty GM','Qty CM','Qty CC',
-    'Pac GR','Pac GM','Pac CM','Pac CC','Preço GR','Preço GM','Preço CM','Preço CC','Total Pedido',
-    'Receptividade','Concorrentes','Conc. Dominante','Motivo Resistência','Observações'];
+    'Preco Tabela','Frequencia','Pedido Feito','Qty GR','Qty GM','Qty CM','Qty CC',
+    'Pac GR','Pac GM','Pac CM','Pac CC','Preco GR','Preco GM','Preco CM','Preco CC','Total Pedido',
+    'Receptividade','Concorrentes','Conc Dominante','Motivo Resistencia','Observacoes'];
 
   const rows = visitas.map(v => {
     const d = v.dados||{};
@@ -1110,22 +1121,26 @@ function exportarCSV() {
     const preco = c.pedidoPreco||{};
     let total = 0;
     ['GR','GM','CM','CC'].forEach(s => { total += (qty[s]||0)*(preco[s]||0); });
+
+    const fmt = val => String(val||'').replace(/\./g,','); // decimal com vírgula
+    const cel = val => String(val||'').replace(/;/g,' '); // remove ponto-e-vírgula de textos
+
     return [
       new Date(v.criado_em).toLocaleString('pt-BR'),
-      v.promotor, p.nomeFantasia, p.tipo, p.cnpj, p.ie, p.endereco, p.cidade, p.uf,
-      p.nomeComprador, p.telefone, p.distribuidor,
-      pr.temProduto, (pr.skusPresentes||[]).join(';'), pr.destaque,
-      pr.ruptura?'Sim':'Não', pr.materialPDV?'Sim':'Não', pr.precificador?'Sim':'Não',
-      c.precoTabela, c.frequencia, c.pedidoFeito,
+      cel(v.promotor), cel(p.nomeFantasia), cel(p.tipo), cel(p.cnpj), cel(p.ie),
+      cel(p.endereco), cel(p.cidade), cel(p.uf), cel(p.nomeComprador), cel(p.telefone), cel(p.distribuidor),
+      cel(pr.temProduto), (pr.skusPresentes||[]).join('|'), cel(pr.destaque),
+      pr.ruptura?'Sim':'Nao', pr.materialPDV?'Sim':'Nao', pr.precificador?'Sim':'Nao',
+      cel(c.precoTabela), cel(c.frequencia), cel(c.pedidoFeito),
       qty.GR||0, qty.GM||0, qty.CM||0, qty.CC||0,
       (qty.GR||0)*48, (qty.GM||0)*48, (qty.CM||0)*50, (qty.CC||0)*50,
-      preco.GR||0, preco.GM||0, preco.CM||0, preco.CC||0, total.toFixed(2),
-      c.receptividade, (m.concorrentes||[]).join(';'), m.concDominante, m.motivoResistencia,
-      d.observacoes
-    ].map(v => `"${String(v||'').replace(/"/g,'""')}"`);
+      fmt(preco.GR||0), fmt(preco.GM||0), fmt(preco.CM||0), fmt(preco.CC||0), fmt(total.toFixed(2)),
+      cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia),
+      cel(d.observacoes)
+    ].map(v => `"${String(v||'')}"`).join(SEP);
   });
 
-  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const csv = 'sep=;\n' + [header.join(SEP), ...rows].join('\r\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
