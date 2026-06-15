@@ -409,11 +409,90 @@ input[type="file"] { display: none; }
         </div>
         <div id="bloquePedidos" style="display:none;">
           <div class="sep"></div>
-          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Qtd. sugerida por SKU (caixas)</div>
-          <div class="pedido-row"><span class="pedido-sku">Gudang Red (GR)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyGR',-1)">−</button><span class="qty-val" id="qtyGR">0</span><button class="qty-btn" onclick="alterarQty('qtyGR',1)">+</button></div></div>
-          <div class="pedido-row"><span class="pedido-sku">Gudang Menta (GM)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyGM',-1)">−</button><span class="qty-val" id="qtyGM">0</span><button class="qty-btn" onclick="alterarQty('qtyGM',1)">+</button></div></div>
-          <div class="pedido-row"><span class="pedido-sku">Cretec Menta (CM)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyCM',-1)">−</button><span class="qty-val" id="qtyCM">0</span><button class="qty-btn" onclick="alterarQty('qtyCM',1)">+</button></div></div>
-          <div class="pedido-row"><span class="pedido-sku">Cretec Cereja (CC)</span><div class="pedido-qty"><button class="qty-btn" onclick="alterarQty('qtyCC',-1)">−</button><span class="qty-val" id="qtyCC">0</span><button class="qty-btn" onclick="alterarQty('qtyCC',1)">+</button></div></div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Pedido por SKU</div>
+
+          <div class="pedido-row">
+            <div style="flex:1;">
+              <div class="pedido-sku">Gudang Red (GR)</div>
+              <div style="font-size:11px;color:var(--text-muted);">48 pac/cx</div>
+            </div>
+            <div class="pedido-qty">
+              <button class="qty-btn" onclick="alterarQty('qtyGR',-1)">−</button>
+              <span class="qty-val" id="qtyGR">0</span>
+              <button class="qty-btn" onclick="alterarQty('qtyGR',1)">+</button>
+            </div>
+          </div>
+          <div style="padding:0 0 10px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <input type="number" id="precoGR" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
+              <span style="font-size:12px;color:var(--text-muted);" id="totalGR"></span>
+            </div>
+          </div>
+
+          <div class="pedido-row">
+            <div style="flex:1;">
+              <div class="pedido-sku">Gudang Menta (GM)</div>
+              <div style="font-size:11px;color:var(--text-muted);">48 pac/cx</div>
+            </div>
+            <div class="pedido-qty">
+              <button class="qty-btn" onclick="alterarQty('qtyGM',-1)">−</button>
+              <span class="qty-val" id="qtyGM">0</span>
+              <button class="qty-btn" onclick="alterarQty('qtyGM',1)">+</button>
+            </div>
+          </div>
+          <div style="padding:0 0 10px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <input type="number" id="precoGM" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
+              <span style="font-size:12px;color:var(--text-muted);" id="totalGM"></span>
+            </div>
+          </div>
+
+          <div class="pedido-row">
+            <div style="flex:1;">
+              <div class="pedido-sku">Cretec Menta (CM)</div>
+              <div style="font-size:11px;color:var(--text-muted);">50 pac/cx</div>
+            </div>
+            <div class="pedido-qty">
+              <button class="qty-btn" onclick="alterarQty('qtyCM',-1)">−</button>
+              <span class="qty-val" id="qtyCM">0</span>
+              <button class="qty-btn" onclick="alterarQty('qtyCM',1)">+</button>
+            </div>
+          </div>
+          <div style="padding:0 0 10px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <input type="number" id="precoCM" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
+              <span style="font-size:12px;color:var(--text-muted);" id="totalCM"></span>
+            </div>
+          </div>
+
+          <div class="pedido-row">
+            <div style="flex:1;">
+              <div class="pedido-sku">Cretec Cereja (CC)</div>
+              <div style="font-size:11px;color:var(--text-muted);">50 pac/cx</div>
+            </div>
+            <div class="pedido-qty">
+              <button class="qty-btn" onclick="alterarQty('qtyCC',-1)">−</button>
+              <span class="qty-val" id="qtyCC">0</span>
+              <button class="qty-btn" onclick="alterarQty('qtyCC',1)">+</button>
+            </div>
+          </div>
+          <div style="padding:0 0 10px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:12px;color:var(--text-muted);">R$/cx:</span>
+              <input type="number" id="precoCC" step="0.01" min="0" placeholder="0,00" style="width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;" oninput="calcularTotalPedido()">
+              <span style="font-size:12px;color:var(--text-muted);" id="totalCC"></span>
+            </div>
+          </div>
+
+          <div style="background:var(--purple-light);border-radius:var(--radius-sm);padding:12px 14px;margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:13px;font-weight:700;color:var(--purple);">TOTAL DO PEDIDO</span>
+              <span style="font-size:18px;font-weight:900;color:var(--purple);" id="totalPedido">R$ 0,00</span>
+            </div>
+          </div>
         </div>
         <div class="sep"></div>
         <div class="field">
@@ -549,6 +628,7 @@ input[type="file"] { display: none; }
           <div class="filtro-group"><label>Até</label><input type="date" id="gFiltroAte"></div>
         </div>
         <button class="btn-filtrar" onclick="carregarGestor()">Filtrar</button>
+        <button onclick="exportarCSV()" style="padding:12px;background:var(--mint);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">↓ Exportar CSV</button>
       </div>
 
       <div class="resumo-grid">
@@ -556,6 +636,7 @@ input[type="file"] { display: none; }
         <div class="resumo-card mint"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% dos PDVs</div></div>
         <div class="resumo-card orange"><div class="resumo-label">Pedidos</div><div class="resumo-valor" id="gPedidos">—</div><div class="resumo-sub">gerados</div></div>
         <div class="resumo-card red"><div class="resumo-label">Ruptura</div><div class="resumo-valor" id="gRuptura">—</div><div class="resumo-sub">PDVs com falta</div></div>
+        <div class="resumo-card mint" style="grid-column:1/-1;"><div class="resumo-label">Valor total pedidos</div><div class="resumo-valor" id="gValorTotal" style="font-size:22px;">—</div><div class="resumo-sub">soma de todos os pedidos com valor</div></div>
       </div>
 
       <div class="card" style="margin-bottom:14px;">
@@ -810,6 +891,196 @@ function togglePedidos(el) {
 function alterarQty(id, delta) {
   const el = document.getElementById(id);
   el.textContent = Math.max(0, parseInt(el.textContent) + delta);
+  calcularTotalPedido();
+}
+
+const PACOTES = { GR:48, GM:48, CM:50, CC:50 };
+
+function calcularTotalPedido() {
+  let total = 0;
+  ['GR','GM','CM','CC'].forEach(s => {
+    const qty = parseInt(document.getElementById('qty'+s)?.textContent||'0');
+    const preco = parseFloat(document.getElementById('preco'+s)?.value||'0');
+    const subtotal = qty * preco;
+    total += subtotal;
+    const el = document.getElementById('total'+s);
+    if (el) el.textContent = qty > 0 && preco > 0 ? `= R$ ${subtotal.toFixed(2)}` : '';
+  });
+  const elTotal = document.getElementById('totalPedido');
+  if (elTotal) elTotal.textContent = `R$ ${total.toFixed(2)}`;
+}
+
+function gerarTextoWhatsApp(v) {
+  const d = v.dados||{};
+  const p = d.pdv||{};
+  const c = d.comercial||{};
+  const qty = c.pedidoQty||{};
+  const preco = c.pedidoPreco||{};
+  const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+
+  const skuNomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  let itens = '';
+  let total = 0;
+  ['GR','GM','CM','CC'].forEach(s => {
+    if (qty[s] > 0) {
+      const pac = qty[s] * PACOTES[s];
+      const subtotal = qty[s] * (preco[s]||0);
+      total += subtotal;
+      itens += `• ${skuNomes[s]} (${s}): ${qty[s]} cx / ${pac} pac`;
+      if (preco[s] > 0) itens += ` · R$ ${subtotal.toFixed(2)}`;
+      itens += '\n';
+    }
+  });
+
+  return `🟢 *PEDIDO CLEANTABACO*
+📅 ${data} · ${v.promotor}
+
+📋 *CLIENTE*
+*${p.nomeFantasia||'—'}*
+CNPJ: ${p.cnpj||'—'}
+IE: ${p.ie||'—'}
+Endereço: ${p.endereco||'—'}, ${p.cidade||'—'}/${p.uf||'—'}
+Comprador: ${p.nomeComprador||'—'}${p.telefone ? ' · ' + p.telefone : ''}
+
+📦 *PEDIDO*
+${itens.trim()}
+${total > 0 ? '\n💰 *TOTAL: R$ ' + total.toFixed(2) + '*' : ''}
+
+🚚 *DISTRIBUIDOR*
+${p.distribuidor||'—'}
+${d.observacoes ? '\n📝 Obs: ' + d.observacoes : ''}
+
+_Enviado via Cleantabaco PDV_`;
+}
+
+function copiarWhatsApp(v) {
+  const texto = gerarTextoWhatsApp(v);
+  navigator.clipboard.writeText(texto).then(() => toast('✓ Copiado! Cole no WhatsApp'));
+}
+
+function gerarPDF(v) {
+  const d = v.dados||{};
+  const p = d.pdv||{};
+  const c = d.comercial||{};
+  const qty = c.pedidoQty||{};
+  const preco = c.pedidoPreco||{};
+  const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+  const hora = new Date(v.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  const skuNomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  let linhasTabela = '';
+  let total = 0;
+  ['GR','GM','CM','CC'].forEach(s => {
+    if (qty[s] > 0) {
+      const pac = qty[s] * PACOTES[s];
+      const subtotal = qty[s] * (preco[s]||0);
+      total += subtotal;
+      linhasTabela += `<tr>
+        <td>${skuNomes[s]} (${s})</td>
+        <td style="text-align:center">${qty[s]}</td>
+        <td style="text-align:center">${pac}</td>
+        <td style="text-align:right">${preco[s] > 0 ? 'R$ '+preco[s].toFixed(2) : '—'}</td>
+        <td style="text-align:right">${preco[s] > 0 ? 'R$ '+subtotal.toFixed(2) : '—'}</td>
+      </tr>`;
+    }
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #1A1428; padding: 32px; max-width: 700px; margin: 0 auto; }
+    h1 { font-size: 20px; color: #1E1648; margin-bottom: 4px; }
+    .sub { color: #6B6480; font-size: 12px; margin-bottom: 24px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-size: 11px; font-weight: 700; color: #1E1648; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #1E1648; padding-bottom: 4px; margin-bottom: 10px; }
+    .row { display: flex; gap: 8px; margin-bottom: 4px; }
+    .label { color: #6B6480; min-width: 130px; }
+    .val { font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th { background: #1E1648; color: #fff; padding: 8px 10px; font-size: 12px; text-align: left; }
+    td { padding: 8px 10px; border-bottom: 1px solid #E0DDD8; font-size: 13px; }
+    .total-row { background: #EEEDFE; font-weight: 700; }
+    .total-row td { border-bottom: none; }
+    .footer { margin-top: 32px; font-size: 11px; color: #6B6480; border-top: 1px solid #E0DDD8; padding-top: 12px; }
+  </style></head><body>
+  <h1>🟢 Pedido Cleantabaco</h1>
+  <div class="sub">Emitido em ${data} às ${hora} · Promotor: ${v.promotor}</div>
+
+  <div class="section">
+    <div class="section-title">Dados do Cliente</div>
+    <div class="row"><span class="label">Nome Fantasia</span><span class="val">${p.nomeFantasia||'—'}</span></div>
+    <div class="row"><span class="label">CNPJ</span><span class="val">${p.cnpj||'—'}</span></div>
+    <div class="row"><span class="label">Inscrição Estadual</span><span class="val">${p.ie||'—'}</span></div>
+    <div class="row"><span class="label">Endereço</span><span class="val">${p.endereco||'—'}</span></div>
+    <div class="row"><span class="label">Cidade/UF</span><span class="val">${p.cidade||'—'} / ${p.uf||'—'}</span></div>
+    <div class="row"><span class="label">Comprador</span><span class="val">${p.nomeComprador||'—'}</span></div>
+    <div class="row"><span class="label">Telefone</span><span class="val">${p.telefone||'—'}</span></div>
+    <div class="row"><span class="label">Distribuidor</span><span class="val">${p.distribuidor||'—'}</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Itens do Pedido</div>
+    <table>
+      <thead><tr><th>Produto</th><th style="text-align:center">Caixas</th><th style="text-align:center">Pacotes</th><th style="text-align:right">R$/cx</th><th style="text-align:right">Subtotal</th></tr></thead>
+      <tbody>
+        ${linhasTabela}
+        ${total > 0 ? `<tr class="total-row"><td colspan="4" style="text-align:right">TOTAL</td><td style="text-align:right">R$ ${total.toFixed(2)}</td></tr>` : ''}
+      </tbody>
+    </table>
+  </div>
+
+  ${d.observacoes ? `<div class="section"><div class="section-title">Observações</div><p>${d.observacoes}</p></div>` : ''}
+
+  <div class="footer">Cleantabaco Distribuidora · Gerado via App PDV · ${data}</div>
+  </body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function exportarCSV() {
+  const visitas = visitasGestor.length > 0 ? visitasGestor : visitasPromotor;
+  if (!visitas.length) { toast('Nenhuma visita para exportar'); return; }
+
+  const header = ['Data','Promotor','PDV','Tipo','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor',
+    'Tem Produto','SKUs Presentes','Destaque','Ruptura','Material PDV','Precificador',
+    'Preço Tabela','Frequência','Pedido Feito','Qty GR','Qty GM','Qty CM','Qty CC',
+    'Pac GR','Pac GM','Pac CM','Pac CC','Preço GR','Preço GM','Preço CM','Preço CC','Total Pedido',
+    'Receptividade','Concorrentes','Conc. Dominante','Motivo Resistência','Observações'];
+
+  const rows = visitas.map(v => {
+    const d = v.dados||{};
+    const p = d.pdv||{};
+    const pr = d.presenca||{};
+    const c = d.comercial||{};
+    const m = d.mercado||{};
+    const qty = c.pedidoQty||{};
+    const preco = c.pedidoPreco||{};
+    let total = 0;
+    ['GR','GM','CM','CC'].forEach(s => { total += (qty[s]||0)*(preco[s]||0); });
+    return [
+      new Date(v.criado_em).toLocaleString('pt-BR'),
+      v.promotor, p.nomeFantasia, p.tipo, p.cnpj, p.ie, p.endereco, p.cidade, p.uf,
+      p.nomeComprador, p.telefone, p.distribuidor,
+      pr.temProduto, (pr.skusPresentes||[]).join(';'), pr.destaque,
+      pr.ruptura?'Sim':'Não', pr.materialPDV?'Sim':'Não', pr.precificador?'Sim':'Não',
+      c.precoTabela, c.frequencia, c.pedidoFeito,
+      qty.GR||0, qty.GM||0, qty.CM||0, qty.CC||0,
+      (qty.GR||0)*48, (qty.GM||0)*48, (qty.CM||0)*50, (qty.CC||0)*50,
+      preco.GR||0, preco.GM||0, preco.CM||0, preco.CC||0, total.toFixed(2),
+      c.receptividade, (m.concorrentes||[]).join(';'), m.concDominante, m.motivoResistencia,
+      d.observacoes
+    ].map(v => `"${String(v||'').replace(/"/g,'""')}"`);
+  });
+
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `cleantabaco_visitas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('✓ CSV exportado!');
 }
 
 function mascaraCNPJ(input) {
@@ -891,6 +1162,12 @@ async function salvarVisita() {
         CM: parseInt(document.getElementById('qtyCM').textContent),
         CC: parseInt(document.getElementById('qtyCC').textContent),
       },
+      pedidoPreco: {
+        GR: parseFloat(document.getElementById('precoGR').value)||0,
+        GM: parseFloat(document.getElementById('precoGM').value)||0,
+        CM: parseFloat(document.getElementById('precoCM').value)||0,
+        CC: parseFloat(document.getElementById('precoCC').value)||0,
+      },
       receptividade: getRadio('receptividade'),
     },
     mercado: {
@@ -947,6 +1224,9 @@ function limparFormulario() {
   document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('checked'); el.querySelector('input').checked = false; });
   document.getElementById('bloquePedidos').style.display = 'none';
   ['qtyGR','qtyGM','qtyCM','qtyCC'].forEach(id => document.getElementById(id).textContent = '0');
+  ['precoGR','precoGM','precoCM','precoCC'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['totalGR','totalGM','totalCM','totalCC'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent=''; });
+  const tp = document.getElementById('totalPedido'); if(tp) tp.textContent='R$ 0,00';
   ['temProduto','destaque','precoTabela','frequencia','pedidoFeito','receptividade','motivoResistencia'].forEach(grupo => {
     const pills = document.querySelectorAll('#' + grupo + ' .radio-pill');
     pills.forEach(p => p.classList.remove('active'));
@@ -1139,6 +1419,16 @@ function renderPainel() {
   document.getElementById('gPedidos').textContent = pedidos;
   document.getElementById('gRuptura').textContent = ruptura;
 
+  // Valor total de pedidos
+  let valorTotal = 0;
+  visitasGestor.forEach(v => {
+    const qty = v.dados?.comercial?.pedidoQty||{};
+    const preco = v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s => { valorTotal += (qty[s]||0)*(preco[s]||0); });
+  });
+  const elVT = document.getElementById('gValorTotal');
+  if (elVT) elVT.textContent = valorTotal > 0 ? `R$ ${valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+
   // Ranking
   const contagem = {};
   visitasGestor.forEach(v => { contagem[v.promotor] = (contagem[v.promotor]||0)+1; });
@@ -1260,15 +1550,31 @@ function abrirDetalheGestor(id) {
 
 function renderModal(v, isGestor) {
   const d = v.dados||{};
+  const c = d.comercial||{};
   const data = new Date(v.criado_em);
   const dataStr = data.toLocaleDateString('pt-BR') + ' às ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   document.getElementById('modalTitulo').textContent = d.pdv?.nomeFantasia || 'Visita';
 
-  const pedidos = d.comercial?.pedidoFeito === 'Sim' ? `
-    <div class="rel-row"><span class="rel-key">GR</span><span class="rel-val">${d.comercial.pedidoQty?.GR||0} cx</span></div>
-    <div class="rel-row"><span class="rel-key">GM</span><span class="rel-val">${d.comercial.pedidoQty?.GM||0} cx</span></div>
-    <div class="rel-row"><span class="rel-key">CM</span><span class="rel-val">${d.comercial.pedidoQty?.CM||0} cx</span></div>
-    <div class="rel-row"><span class="rel-key">CC</span><span class="rel-val">${d.comercial.pedidoQty?.CC||0} cx</span></div>
+  const skuNomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  const qty = c.pedidoQty||{};
+  const preco = c.pedidoPreco||{};
+  let totalPed = 0;
+  const pedidos = c.pedidoFeito === 'Sim' ? `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+      <tr style="background:var(--cream);"><th style="padding:6px 8px;text-align:left;font-size:11px;color:var(--text-muted);">SKU</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Cx</th><th style="padding:6px 8px;text-align:center;font-size:11px;color:var(--text-muted);">Pac</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">R$/cx</th><th style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-muted);">Total</th></tr>
+      ${['GR','GM','CM','CC'].filter(s=>qty[s]>0).map(s => {
+        const sub = (qty[s]||0)*(preco[s]||0);
+        totalPed += sub;
+        return `<tr style="border-bottom:1px solid #F1EFE8;">
+          <td style="padding:7px 8px;font-weight:700;">${skuNomes[s]}</td>
+          <td style="padding:7px 8px;text-align:center;">${qty[s]}</td>
+          <td style="padding:7px 8px;text-align:center;">${qty[s]*PACOTES[s]}</td>
+          <td style="padding:7px 8px;text-align:right;">${preco[s]>0?'R$ '+preco[s].toFixed(2):'—'}</td>
+          <td style="padding:7px 8px;text-align:right;font-weight:700;">${sub>0?'R$ '+sub.toFixed(2):'—'}</td>
+        </tr>`;
+      }).join('')}
+      ${totalPed > 0 ? `<tr style="background:var(--purple-light);"><td colspan="4" style="padding:8px;text-align:right;font-weight:700;color:var(--purple);">TOTAL</td><td style="padding:8px;text-align:right;font-weight:900;color:var(--purple);">R$ ${totalPed.toFixed(2)}</td></tr>` : ''}
+    </table>
   ` : '<div style="font-size:13px;color:var(--text-muted);">Sem pedido</div>';
 
   const fotosArr = v.fotos||[];
@@ -1330,9 +1636,17 @@ function renderModal(v, isGestor) {
     ${d.observacoes ? `<div class="rel-section"><div class="rel-title">Observações</div><div class="rel-obs">${d.observacoes}</div></div>` : ''}
   `;
 
-  document.getElementById('modalActions').innerHTML = isGestor ? `
-    <button class="modal-btn-excluir" onclick="excluirVisitaGestor('${v.id}')">🗑 Excluir visita</button>
-  ` : '';
+  document.getElementById('modalActions').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+      ${c.pedidoFeito === 'Sim' ? `
+        <div style="display:flex;gap:8px;">
+          <button onclick="copiarWhatsApp(visitaDetalheAtual)" style="flex:1;padding:12px;background:#25D366;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📱 Copiar WhatsApp</button>
+          <button onclick="gerarPDF(visitaDetalheAtual)" style="flex:1;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📄 Gerar PDF</button>
+        </div>
+      ` : ''}
+      ${isGestor ? `<button class="modal-btn-excluir" onclick="excluirVisitaGestor('${v.id}')">🗑 Excluir visita</button>` : ''}
+    </div>
+  `;
 
   document.getElementById('modalDetalhe').classList.add('open');
 }
