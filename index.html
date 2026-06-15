@@ -627,32 +627,83 @@ input[type="file"] { display: none; }
           <div class="filtro-group"><label>De</label><input type="date" id="gFiltroDe"></div>
           <div class="filtro-group"><label>Até</label><input type="date" id="gFiltroAte"></div>
         </div>
-        <button class="btn-filtrar" onclick="carregarGestor()">Filtrar</button>
-        <button onclick="exportarCSV()" style="padding:12px;background:var(--mint);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">↓ Exportar CSV</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-filtrar" style="flex:1;" onclick="carregarGestor()">Filtrar</button>
+          <button onclick="exportarCSV()" style="flex:1;padding:12px;background:var(--mint);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">↓ CSV</button>
+        </div>
       </div>
 
+      <!-- KPIs PRINCIPAIS -->
       <div class="resumo-grid">
         <div class="resumo-card purple"><div class="resumo-label">Total visitas</div><div class="resumo-valor" id="gTotal">—</div><div class="resumo-sub">no período</div></div>
-        <div class="resumo-card mint"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% dos PDVs</div></div>
-        <div class="resumo-card orange"><div class="resumo-label">Pedidos</div><div class="resumo-valor" id="gPedidos">—</div><div class="resumo-sub">gerados</div></div>
+        <div class="resumo-card mint"><div class="resumo-label">PDVs únicos</div><div class="resumo-valor" id="gPDVs">—</div><div class="resumo-sub">estabelecimentos distintos</div></div>
+        <div class="resumo-card orange"><div class="resumo-label">Taxa conversão</div><div class="resumo-valor" id="gConversao">—</div><div class="resumo-sub">visitas com pedido</div></div>
         <div class="resumo-card red"><div class="resumo-label">Ruptura</div><div class="resumo-valor" id="gRuptura">—</div><div class="resumo-sub">PDVs com falta</div></div>
-        <div class="resumo-card mint" style="grid-column:1/-1;"><div class="resumo-label">Valor total pedidos</div><div class="resumo-valor" id="gValorTotal" style="font-size:22px;">—</div><div class="resumo-sub">soma de todos os pedidos com valor</div></div>
+        <div class="resumo-card purple"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% presença de marca</div></div>
+        <div class="resumo-card mint"><div class="resumo-label">Ticket médio</div><div class="resumo-valor" id="gTicket" style="font-size:20px;">—</div><div class="resumo-sub">por pedido com valor</div></div>
+        <div class="resumo-card orange" style="grid-column:1/-1;"><div class="resumo-label">💰 Valor total pedidos</div><div class="resumo-valor" id="gValorTotal" style="font-size:22px;">—</div><div class="resumo-sub">soma de todos os pedidos com valor no período</div></div>
       </div>
 
+      <!-- PERFORMANCE POR PROMOTOR -->
       <div class="card" style="margin-bottom:14px;">
-        <div class="card-title">Visitas por promotor</div>
+        <div class="card-title">📊 Performance por Promotor</div>
         <div id="gRanking"><div class="empty">Sem dados</div></div>
       </div>
 
+      <!-- EVOLUÇÃO SEMANAL -->
       <div class="card" style="margin-bottom:14px;">
-        <div class="card-title">Presença por SKU</div>
-        <div id="gSKUs"><div class="empty">Sem dados</div></div>
+        <div class="card-title">📈 Evolução Semanal de Visitas</div>
+        <div id="gEvolucao"><div class="empty">Sem dados</div></div>
       </div>
 
+      <!-- PRESENÇA SKU + TIPO PDV -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div class="card">
+          <div class="card-title">📦 Presença por SKU</div>
+          <div id="gSKUs"><div class="empty">Sem dados</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏪 Visitas por Tipo PDV</div>
+          <div id="gTipoPDV"><div class="empty">Sem dados</div></div>
+        </div>
+      </div>
+
+      <!-- RECEPTIVIDADE -->
       <div class="card" style="margin-bottom:14px;">
-        <div class="card-title">Concorrentes mais frequentes</div>
+        <div class="card-title">🤝 Receptividade por Promotor</div>
+        <div id="gReceptividade"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <!-- FREQUÊNCIA RECOMPRA -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">🔄 Frequência de Recompra dos Clientes</div>
+        <div id="gFrequencia"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <!-- INTELIGÊNCIA CONCORRENTES -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">🔍 Inteligência de Mercado — Concorrentes</div>
         <div id="gConc"><div class="empty">Sem dados</div></div>
       </div>
+
+      <!-- DOMÍNIO POR FABRICANTE -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">🏭 Domínio por Fabricante</div>
+        <div id="gFabricante"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <!-- MOTIVOS RESISTÊNCIA -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">⚠️ Motivos de Resistência</div>
+        <div id="gResistencia"><div class="empty">Sem dados</div></div>
+      </div>
+
+      <!-- PDVs SEM VISITA RECENTE -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">📅 PDVs Sem Visita nos Últimos 30 Dias</div>
+        <div id="gSemVisita"><div class="empty">Sem dados</div></div>
+      </div>
+
     </div>
   </div>
 
@@ -1414,95 +1465,292 @@ function renderPainel() {
   const pedidos = visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').length;
   const ruptura = visitasGestor.filter(v => v.dados?.presenca?.ruptura).length;
 
-  document.getElementById('gTotal').textContent = total;
-  document.getElementById('gProduto').textContent = total ? Math.round(comProduto/total*100)+'%' : '—';
-  document.getElementById('gPedidos').textContent = pedidos;
-  document.getElementById('gRuptura').textContent = ruptura;
+  // PDVs únicos
+  const pdvsUnicos = new Set(visitasGestor.map(v => v.dados?.pdv?.cnpj || v.dados?.pdv?.nomeFantasia).filter(Boolean));
 
-  // Valor total de pedidos
-  let valorTotal = 0;
+  // Valor total e ticket médio
+  let valorTotal = 0; let pedidosComValor = 0;
   visitasGestor.forEach(v => {
     const qty = v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
-    ['GR','GM','CM','CC'].forEach(s => { valorTotal += (qty[s]||0)*(preco[s]||0); });
+    let sub = 0;
+    ['GR','GM','CM','CC'].forEach(s => { sub += (qty[s]||0)*(preco[s]||0); });
+    if (sub > 0) { valorTotal += sub; pedidosComValor++; }
   });
-  const elVT = document.getElementById('gValorTotal');
-  if (elVT) elVT.textContent = valorTotal > 0 ? `R$ ${valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+  const ticketMedio = pedidosComValor > 0 ? valorTotal/pedidosComValor : 0;
 
-  // Ranking
-  const contagem = {};
-  visitasGestor.forEach(v => { contagem[v.promotor] = (contagem[v.promotor]||0)+1; });
-  const sorted = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
-  const max = sorted[0]?.[1]||1;
-  document.getElementById('gRanking').innerHTML = sorted.length ? sorted.map(([nome,qtd]) => `
-    <div class="ranking-item">
-      <div class="rank-avatar">${nome.charAt(0)}</div>
-      <div class="rank-nome">${nome}</div>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(qtd/max*100)}%"></div></div>
-      <div class="rank-count">${qtd}</div>
-    </div>
-  `).join('') : '<div class="empty">Sem dados</div>';
+  // KPIs
+  document.getElementById('gTotal').textContent = total;
+  document.getElementById('gPDVs').textContent = pdvsUnicos.size;
+  document.getElementById('gConversao').textContent = total ? Math.round(pedidos/total*100)+'%' : '—';
+  document.getElementById('gRuptura').textContent = ruptura;
+  document.getElementById('gProduto').textContent = total ? Math.round(comProduto/total*100)+'%' : '—';
+  document.getElementById('gTicket').textContent = ticketMedio > 0 ? `R$ ${ticketMedio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
+  document.getElementById('gValorTotal').textContent = valorTotal > 0 ? `R$ ${valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+  const elPedidos = document.getElementById('gPedidos'); if(elPedidos) elPedidos.textContent = pedidos;
 
-  // SKUs
+  // --- PERFORMANCE POR PROMOTOR ---
+  const prom = {};
+  visitasGestor.forEach(v => {
+    const n = v.promotor;
+    if (!prom[n]) prom[n] = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0 };
+    prom[n].visitas++;
+    if (v.dados?.comercial?.pedidoFeito === 'Sim') prom[n].pedidos++;
+    if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) prom[n].parceiros++;
+    if (v.dados?.presenca?.ruptura) prom[n].ruptura++;
+    const qty = v.dados?.comercial?.pedidoQty||{};
+    const preco = v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s => { prom[n].valor += (qty[s]||0)*(preco[s]||0); });
+  });
+  const sortedProm = Object.entries(prom).sort((a,b)=>b[1].visitas-a[1].visitas);
+  const maxV = sortedProm[0]?.[1].visitas||1;
+  document.getElementById('gRanking').innerHTML = sortedProm.length ? `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:380px;">
+      <tr style="border-bottom:2px solid var(--border);">
+        <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Promotor</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Visitas</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Pedidos</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Conv.</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Parceiros</th>
+        <th style="text-align:right;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Valor</th>
+      </tr>
+      ${sortedProm.map(([nome,d]) => `
+        <tr style="border-bottom:1px solid #F1EFE8;">
+          <td style="padding:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:var(--purple);flex-shrink:0;">${nome.charAt(0)}</div>
+              <div>
+                <div style="font-weight:700;font-size:13px;">${nome}</div>
+                <div style="width:${Math.round(d.visitas/maxV*80)}px;height:3px;background:var(--purple);border-radius:2px;margin-top:3px;"></div>
+              </div>
+            </div>
+          </td>
+          <td style="text-align:center;padding:8px;font-weight:700;">${d.visitas}</td>
+          <td style="text-align:center;padding:8px;">${d.pedidos}</td>
+          <td style="text-align:center;padding:8px;">
+            <span style="background:${d.visitas>0&&Math.round(d.pedidos/d.visitas*100)>=50?'var(--mint-light)':'var(--orange-light)'};color:${d.visitas>0&&Math.round(d.pedidos/d.visitas*100)>=50?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">
+              ${d.visitas > 0 ? Math.round(d.pedidos/d.visitas*100)+'%' : '—'}
+            </span>
+          </td>
+          <td style="text-align:center;padding:8px;">${d.parceiros}</td>
+          <td style="text-align:right;padding:8px;font-weight:700;font-size:12px;">${d.valor>0?'R$ '+d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>
+        </tr>
+      `).join('')}
+    </table></div>
+  ` : '<div class="empty">Sem dados</div>';
+
+  // --- EVOLUÇÃO SEMANAL ---
+  const semanas = {};
+  visitasGestor.forEach(v => {
+    const d = new Date(v.criado_em);
+    const ini = new Date(d); ini.setDate(d.getDate() - d.getDay());
+    const key = ini.toISOString().split('T')[0];
+    semanas[key] = (semanas[key]||0)+1;
+  });
+  const semanasOrdenadas = Object.entries(semanas).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+  const maxSem = Math.max(...semanasOrdenadas.map(s=>s[1]),1);
+  document.getElementById('gEvolucao').innerHTML = semanasOrdenadas.length ? semanasOrdenadas.map(([data,qtd]) => {
+    const dt = new Date(data+'T12:00:00');
+    const label = dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const pct = Math.round(qtd/maxSem*100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;">
+      <div style="font-size:11px;color:var(--text-muted);width:40px;flex-shrink:0;">${label}</div>
+      <div style="flex:1;height:20px;background:var(--border);border-radius:4px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:var(--purple);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;">
+          ${pct>20?`<span style="font-size:11px;font-weight:700;color:#fff;">${qtd}</span>`:''}
+        </div>
+      </div>
+      ${pct<=20?`<span style="font-size:11px;font-weight:700;color:var(--text-muted);">${qtd}</span>`:''}
+    </div>`;
+  }).join('') : '<div class="empty">Sem dados suficientes</div>';
+
+  // --- SKUs ---
   const skus = ['GR','GM','CM','CC'];
-  const nomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
-  const cores = {GR:'#533AB7',GM:'#1D9E75',CM:'#D85A30',CC:'#BA7517'};
+  const nomeSku = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  const corSku = {GR:'#1E1648',GM:'#1A8C62',CM:'#C4720A',CC:'#C42040'};
   const cSku = {GR:0,GM:0,CM:0,CC:0};
-  visitasGestor.forEach(v => { (v.dados?.presenca?.skusPresentes||[]).forEach(s => { if(cSku[s]!==undefined) cSku[s]++; }); });
+  const pedSku = {GR:0,GM:0,CM:0,CC:0};
+  visitasGestor.forEach(v => {
+    (v.dados?.presenca?.skusPresentes||[]).forEach(s => { if(cSku[s]!==undefined) cSku[s]++; });
+    const qty = v.dados?.comercial?.pedidoQty||{};
+    skus.forEach(s => { pedSku[s] += qty[s]||0; });
+  });
   document.getElementById('gSKUs').innerHTML = skus.map(s => {
     const pct = total ? Math.round(cSku[s]/total*100) : 0;
     return `<div class="sku-row">
-      <div class="sku-lbl">${s}</div>
-      <div style="flex:1;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">${nomes[s]}</div>
-      <div class="sku-bar-wrap"><div class="sku-bar-fill" style="width:${pct}%;background:${cores[s]}"></div></div></div>
+      <div class="sku-lbl" style="color:${corSku[s]}">${s}</div>
+      <div style="flex:1;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;">${nomeSku[s]}</div>
+        <div class="sku-bar-wrap"><div class="sku-bar-fill" style="width:${pct}%;background:${corSku[s]}"></div></div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${pedSku[s]} cx pedidas</div>
+      </div>
       <div class="sku-pct">${pct}%</div>
     </div>`;
   }).join('');
 
-  // Concorrentes
-  // Concorrentes com preço médio e fabricante
+  // --- TIPO PDV ---
+  const cTipo = {};
+  visitasGestor.forEach(v => { const t = v.dados?.pdv?.tipo||'Outros'; cTipo[t]=(cTipo[t]||0)+1; });
+  const sortedTipo = Object.entries(cTipo).sort((a,b)=>b[1]-a[1]);
+  const maxTipo = sortedTipo[0]?.[1]||1;
+  document.getElementById('gTipoPDV').innerHTML = sortedTipo.length ? sortedTipo.map(([tipo,qtd]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
+      <div style="font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tipo}</div>
+      <div style="width:60px;height:6px;background:var(--border);border-radius:3px;flex-shrink:0;">
+        <div style="width:${Math.round(qtd/maxTipo*100)}%;height:100%;background:var(--purple-mid);border-radius:3px;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);width:20px;text-align:right;">${qtd}</div>
+    </div>
+  `).join('') : '<div class="empty">Sem dados</div>';
+
+  // --- RECEPTIVIDADE POR PROMOTOR ---
+  const recep = {};
+  visitasGestor.forEach(v => {
+    const n = v.promotor;
+    const r = (v.dados?.comercial?.receptividade||'').replace(/[🥶😐🤝]/g,'').trim();
+    if (!recep[n]) recep[n] = {Frio:0,Neutro:0,Parceiro:0};
+    if (r && recep[n][r] !== undefined) recep[n][r]++;
+  });
+  document.getElementById('gReceptividade').innerHTML = Object.keys(recep).length ? `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:300px;">
+      <tr style="border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--text-muted);">Promotor</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:#C42040;">🥶 Frio</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--amber);">😐 Neutro</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--mint);">🤝 Parceiro</th>
+      </tr>
+      ${Object.entries(recep).map(([nome,r]) => `
+        <tr style="border-bottom:1px solid #F1EFE8;">
+          <td style="padding:8px;font-weight:600;">${nome}</td>
+          <td style="text-align:center;padding:8px;"><span style="background:#FFE8EC;color:#C42040;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;">${r.Frio}</span></td>
+          <td style="text-align:center;padding:8px;"><span style="background:var(--orange-light);color:var(--amber);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;">${r.Neutro}</span></td>
+          <td style="text-align:center;padding:8px;"><span style="background:var(--mint-light);color:var(--mint);padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;">${r.Parceiro}</span></td>
+        </tr>
+      `).join('')}
+    </table></div>
+  ` : '<div class="empty">Sem dados</div>';
+
+  // --- FREQUÊNCIA RECOMPRA ---
+  const freqMap = {};
+  visitasGestor.forEach(v => { const f = v.dados?.comercial?.frequencia||'Não informado'; freqMap[f]=(freqMap[f]||0)+1; });
+  const freqOrder = ['Semanal','Quinzenal','Mensal','Esporádico','Nunca comprou'];
+  const freqCores = {Semanal:'var(--mint)',Quinzenal:'var(--purple)',Mensal:'var(--amber)',Esporádico:'var(--orange)','Nunca comprou':'var(--red)'};
+  const freqTotal = Object.values(freqMap).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('gFrequencia').innerHTML = Object.keys(freqMap).length ? freqOrder.filter(f=>freqMap[f]).concat(Object.keys(freqMap).filter(f=>!freqOrder.includes(f))).map(f => {
+    const qtd = freqMap[f]||0;
+    const pct = Math.round(qtd/freqTotal*100);
+    const cor = freqCores[f]||'var(--purple-mid)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F1EFE8;">
+      <div style="font-size:13px;flex:1;">${f}</div>
+      <div style="width:80px;height:8px;background:var(--border);border-radius:4px;flex-shrink:0;">
+        <div style="width:${pct}%;height:100%;background:${cor};border-radius:4px;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);width:30px;text-align:right;">${qtd}</div>
+      <div style="font-size:11px;color:var(--text-muted);width:28px;text-align:right;">${pct}%</div>
+    </div>`;
+  }).join('') : '<div class="empty">Sem dados</div>';
+
+  // --- CONCORRENTES ---
   const FAB = {
     'Djarum Black Cravo':'JTI','Djarum Black Menta':'JTI','Djarum Black Ice':'JTI',
     'Camel Kretek':'JTI','Camel Cápsula Menta':'JTI','LA Menthol':'JTI',
-    'Lucky Strike Menta':'BAT','Lucky Strike Cápsula':'BAT',
-    'Marlboro Menta/Cáps.':'PMB'
+    'Lucky Strike Menta':'BAT','Lucky Strike Cápsula':'BAT','Marlboro Menta/Cáps.':'PMB'
   };
-  const FAB_COR = { JTI:'#1A6FA8', BAT:'#A85A1A', PMB:'#6A1AA8' };
-  const FAB_BG  = { JTI:'#E8F4FD', BAT:'#FDF3E8', PMB:'#F3E8FD' };
-
-  const cConc = {};
-  const precoConc = {};
+  const FAB_COR = {JTI:'#1A6FA8',BAT:'#A85A1A',PMB:'#6A1AA8'};
+  const FAB_BG  = {JTI:'#E8F4FD',BAT:'#FDF3E8',PMB:'#F3E8FD'};
+  const cConc = {}; const precoConc = {};
   visitasGestor.forEach(v => {
     const concs = v.dados?.mercado?.concorrentes||[];
     const dets  = v.dados?.mercado?.concDetalhes||{};
     concs.forEach(c => {
       if(c!=='Nenhum') {
         cConc[c]=(cConc[c]||0)+1;
-        if(dets[c]?.preco) {
-          if(!precoConc[c]) precoConc[c]=[];
-          precoConc[c].push(parseFloat(dets[c].preco));
-        }
+        if(dets[c]?.preco) { if(!precoConc[c]) precoConc[c]=[]; precoConc[c].push(parseFloat(dets[c].preco)); }
       }
     });
   });
   const sortedConc = Object.entries(cConc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxConc = sortedConc[0]?.[1]||1;
   document.getElementById('gConc').innerHTML = sortedConc.length ? sortedConc.map(([nome,qtd]) => {
     const fab = FAB[nome]||'';
     const precos = precoConc[nome]||[];
     const precoMedio = precos.length ? (precos.reduce((a,b)=>a+b,0)/precos.length).toFixed(2) : null;
-    return `
-      <div class="conc-row">
-        <div>
-          <div style="font-size:14px;">${nome}</div>
-          ${fab ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${FAB_BG[fab]};color:${FAB_COR[fab]}">${fab}</span>` : ''}
+    const pct = Math.round(qtd/maxConc*100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1EFE8;">
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-size:13px;font-weight:600;">${nome}</span>
+          ${fab?`<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:${FAB_BG[fab]};color:${FAB_COR[fab]}">${fab}</span>`:''}
         </div>
-        <div style="text-align:right;">
-          <div class="conc-count">${qtd}x</div>
-          ${precoMedio ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">R$ ${precoMedio} médio</div>` : ''}
-        </div>
+        <div style="height:5px;background:var(--border);border-radius:3px;"><div style="width:${pct}%;height:100%;background:${fab?FAB_COR[fab]:'var(--text-muted)'};border-radius:3px;"></div></div>
       </div>
-    `;
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-weight:700;font-size:13px;">${qtd}x</div>
+        ${precoMedio?`<div style="font-size:11px;color:var(--mint);font-weight:600;">R$ ${precoMedio}</div>`:''}
+      </div>
+    </div>`;
   }).join('') : '<div class="empty">Sem dados</div>';
+
+  // --- DOMÍNIO POR FABRICANTE ---
+  const fabCount = {JTI:0,BAT:0,PMB:0,Outros:0};
+  visitasGestor.forEach(v => {
+    (v.dados?.mercado?.concorrentes||[]).forEach(c => {
+      if(c==='Nenhum') return;
+      const f = FAB[c];
+      if(f) fabCount[f]++; else fabCount['Outros']++;
+    });
+  });
+  const totalFab = Object.values(fabCount).reduce((a,b)=>a+b,0)||1;
+  const fabCores2 = {JTI:'#1A6FA8',BAT:'#A85A1A',PMB:'#6A1AA8',Outros:'#6B6480'};
+  document.getElementById('gFabricante').innerHTML = Object.entries(fabCount).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([fab,qtd]) => {
+    const pct = Math.round(qtd/totalFab*100);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1EFE8;">
+      <div style="font-size:14px;font-weight:700;color:${fabCores2[fab]};width:40px;">${fab}</div>
+      <div style="flex:1;height:10px;background:var(--border);border-radius:5px;">
+        <div style="width:${pct}%;height:100%;background:${fabCores2[fab]};border-radius:5px;"></div>
+      </div>
+      <div style="font-size:13px;font-weight:700;">${qtd}</div>
+      <div style="font-size:12px;color:var(--text-muted);width:36px;text-align:right;">${pct}%</div>
+    </div>`;
+  }).join('') || '<div class="empty">Sem dados</div>';
+
+  // --- MOTIVOS RESISTÊNCIA ---
+  const motivos = {};
+  visitasGestor.forEach(v => { const m = v.dados?.mercado?.motivoResistencia; if(m&&m!=='N/A') motivos[m]=(motivos[m]||0)+1; });
+  const sortedMotivos = Object.entries(motivos).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('gResistencia').innerHTML = sortedMotivos.length ? sortedMotivos.map(([m,qtd]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F1EFE8;font-size:14px;">
+      <span>${m}</span>
+      <span style="background:var(--red-light);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">${qtd}x</span>
+    </div>
+  `).join('') : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0;">Nenhuma resistência registrada ✓</div>';
+
+  // --- PDVs SEM VISITA RECENTE (últimos 30 dias) ---
+  const agora = new Date();
+  const limite30 = new Date(agora); limite30.setDate(agora.getDate()-30);
+  const ultimaVisita = {};
+  // Pega TODAS as visitas do banco (visitasGestor já filtrado, então mostra baseado no que tem)
+  visitasGestor.forEach(v => {
+    const key = v.dados?.pdv?.nomeFantasia;
+    if (!key) return;
+    const dt = new Date(v.criado_em);
+    if (!ultimaVisita[key] || dt > ultimaVisita[key].data) {
+      ultimaVisita[key] = { data: dt, promotor: v.promotor, cidade: v.dados?.pdv?.cidade };
+    }
+  });
+  const semVisita = Object.entries(ultimaVisita).filter(([,info]) => info.data < limite30).sort((a,b)=>a[1].data-b[1].data);
+  document.getElementById('gSemVisita').innerHTML = semVisita.length ? semVisita.map(([nome,info]) => {
+    const dias = Math.floor((agora-info.data)/(1000*60*60*24));
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F1EFE8;">
+      <div>
+        <div style="font-size:13px;font-weight:700;">${nome}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${info.cidade||'—'} · Último: ${info.promotor}</div>
+      </div>
+      <span style="background:var(--red-light);color:var(--red);font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;">${dias}d atrás</span>
+    </div>`;
+  }).join('') : '<div style="font-size:13px;color:var(--mint);padding:8px 0;">✓ Todos os PDVs visitados nos últimos 30 dias</div>';
 }
 
 function renderListaGestor() {
