@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cleantabaco · Gestor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0D1117;
+  --card: #161B27;
+  --card2: #1E2535;
+  --border: #2D3748;
+  --text: #F0F6FC;
+  --muted: #8B949E;
+  --green: #3FB950;
+  --green-bg: rgba(63,185,80,0.12);
+  --red: #F85149;
+  --red-bg: rgba(248,81,73,0.12);
+  --blue: #58A6FF;
+  --blue-bg: rgba(88,166,255,0.12);
+  --yellow: #D29922;
+  --yellow-bg: rgba(210,153,34,0.12);
+  --purple: #BC8CFF;
+  --purple-bg: rgba(188,140,255,0.12);
+  --orange: #FFA657;
+  --orange-bg: rgba(255,166,87,0.12);
+  --sidebar-w: 220px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+
+/* LOGIN */
+.login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 24px; }
+.login-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 40px 36px; width: 100%; max-width: 360px; text-align: center; }
+.login-logo { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
+.login-logo span { color: var(--green); }
+.login-sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+.login-field { text-align: left; margin-bottom: 16px; }
+.login-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+.login-field input { width: 100%; padding: 11px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; font-family: inherit; }
+.login-field input:focus { outline: none; border-color: var(--blue); }
+.login-btn { width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 8px; }
+.login-btn:hover { opacity: 0.9; }
+.login-err { color: var(--red); font-size: 13px; margin-top: 10px; display: none; }
+
+/* LAYOUT */
+.app { display: none; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
+.sidebar-logo-text { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
+.sidebar-logo-text span { color: var(--green); }
+.sidebar-logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+.nav-item:hover { background: var(--card2); color: var(--text); }
+.nav-item.active { background: var(--blue-bg); color: var(--blue); font-weight: 700; }
+.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.sidebar-footer { padding: 16px 10px; border-top: 1px solid var(--border); }
+.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin-bottom: 8px; }
+.sidebar-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); border: 1px solid var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: var(--blue); flex-shrink: 0; }
+.sidebar-name { font-size: 13px; font-weight: 600; }
+.sidebar-role { font-size: 11px; color: var(--muted); }
+.btn-logout { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-size: 12px; cursor: pointer; font-family: inherit; }
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* MAIN */
+.main { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* TOPBAR */
+.topbar { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--card); position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-size: 16px; font-weight: 700; }
+.topbar-filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filter-item { display: flex; flex-direction: column; gap: 3px; }
+.filter-item label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+.filter-item select, .filter-item input[type="date"] { padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; font-family: inherit; min-width: 130px; }
+.filter-item select:focus, .filter-item input:focus { outline: none; border-color: var(--blue); }
+.btn-filter { padding: 8px 16px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: flex-end; }
+.btn-csv { padding: 8px 14px; background: var(--green-bg); border: 1px solid var(--green); border-radius: var(--radius-sm); color: var(--green); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: flex-end; }
+
+/* CONTENT */
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+.tab-page { display: none; }
+.tab-page.active { display: block; }
+
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+.kpi-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi-card.blue::after { background: var(--blue); }
+.kpi-card.green::after { background: var(--green); }
+.kpi-card.yellow::after { background: var(--yellow); }
+.kpi-card.red::after { background: var(--red); }
+.kpi-card.purple::after { background: var(--purple); }
+.kpi-card.orange::after { background: var(--orange); }
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.kpi-value { font-size: 36px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+.kpi-card.blue .kpi-value { color: var(--blue); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.yellow .kpi-value { color: var(--yellow); }
+.kpi-card.red .kpi-value { color: var(--red); }
+.kpi-card.purple .kpi-value { color: var(--purple); }
+.kpi-card.orange .kpi-value { color: var(--orange); }
+.kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 24px; opacity: 0.2; }
+
+/* GRID LAYOUTS */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 20px; }
+
+/* CHART CARD */
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.chart-card.full { margin-bottom: 20px; }
+.chart-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: 0.2px; }
+.chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+
+/* BARS */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 12px; color: var(--muted); width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; height: 10px; background: var(--card2); border-radius: 5px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
+.bar-val { font-size: 12px; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; }
+.bar-val2 { font-size: 11px; color: var(--muted); width: 32px; text-align: right; flex-shrink: 0; }
+
+/* MINI BARS (horizontal stacked) */
+.stacked-bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; margin-bottom: 8px; }
+.stacked-seg { height: 100%; transition: width 0.5s; }
+
+/* DONUT */
+.donut-wrap { display: flex; align-items: center; gap: 20px; }
+.donut-svg { flex-shrink: 0; }
+.donut-legend { flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { font-size: 12px; color: var(--muted); flex: 1; }
+.legend-val { font-size: 13px; font-weight: 700; }
+.legend-pct { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+/* SEMAFORO */
+.semaforo-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.semaforo-item:last-child { border-bottom: none; }
+.semaforo-label { font-size: 13px; color: var(--text); }
+.semaforo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.semaforo-badge { display: flex; align-items: center; gap: 6px; }
+.s-dot { width: 10px; height: 10px; border-radius: 50%; }
+.s-val { font-size: 14px; font-weight: 800; }
+
+/* TABELA */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 11px 12px; border-bottom: 1px solid rgba(45,55,72,0.5); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--card2); }
+.data-table .td-nome { font-weight: 600; }
+.chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.chip-green { background: var(--green-bg); color: var(--green); }
+.chip-red { background: var(--red-bg); color: var(--red); }
+.chip-blue { background: var(--blue-bg); color: var(--blue); }
+.chip-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.chip-muted { background: var(--card2); color: var(--muted); }
+.chip-orange { background: var(--orange-bg); color: var(--orange); }
+.chip-purple { background: var(--purple-bg); color: var(--purple); }
+
+/* EVOLUÇÃO LINE */
+.line-chart { position: relative; height: 80px; }
+.line-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+.line-label { font-size: 10px; color: var(--muted); text-align: center; }
+
+/* AVATAR */
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+
+/* FAB BADGE */
+.fab-badge { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px; }
+.fab-jti { background: #0D2137; color: #58A6FF; }
+.fab-bat { background: #2D1A08; color: #FFA657; }
+.fab-pmb { background: #1E0D35; color: #BC8CFF; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+.spinner-wrap { text-align: center; padding: 48px; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--card2); color: var(--text); padding: 12px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; display: none; border: 1px solid var(--border); }
+.toast.show { display: block; }
+
+/* MOBILE NAV */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding-bottom: 70px; }
+  .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+  .topbar-filters { gap: 6px; }
+  .filter-item select, .filter-item input[type="date"] { min-width: 100px; font-size: 12px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-value { font-size: 26px; }
+  .grid-2, .grid-3, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+  .content { padding: 14px; }
+  .bottom-nav { display: flex; }
+  .bar-label { width: 80px; font-size: 11px; }
+}
+
+/* BOTTOM NAV (mobile only) */
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); z-index: 100; }
+.bottom-nav-inner { display: flex; }
+.bottom-nav-item { flex: 1; padding: 10px 4px; text-align: center; cursor: pointer; color: var(--muted); border: none; background: none; font-family: inherit; }
+.bottom-nav-item.active { color: var(--blue); }
+.bottom-nav-item .bn-icon { font-size: 20px; display: block; }
+.bottom-nav-item .bn-label { font-size: 10px; font-weight: 600; display: block; margin-top: 2px; }
+
+/* DIVIDER */
+.section-divider { height: 1px; background: var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Clean<span>tabaco</span></div>
+    <div class="login-sub">Painel de Gestão · Acesso restrito</div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter')entrar()">
+    </div>
+    <button class="login-btn" onclick="entrar()">Entrar</button>
+    <div class="login-err" id="loginErr">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen">
+
+  <!-- SIDEBAR (desktop) -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Clean<span>tabaco</span></div>
+      <div class="sidebar-logo-sub">Painel de Gestão</div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" onclick="mudarAba('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </button>
+      <button class="nav-item" onclick="mudarAba('mercado')">
+        <span class="nav-icon">🏪</span> Mercado
+      </button>
+      <button class="nav-item" onclick="mudarAba('inteligencia')">
+        <span class="nav-icon">🔍</span> Inteligência
+      </button>
+      <button class="nav-item" onclick="mudarAba('equipe')">
+        <span class="nav-icon">👥</span> Equipe
+      </button>
+      <button class="nav-item" onclick="mudarAba('visitas')">
+        <span class="nav-icon">📋</span> Visitas
+      </button>
+      <div style="height:16px;"></div>
+      <button class="nav-item" onclick="exportarCSV()">
+        <span class="nav-icon">↓</span> Exportar CSV
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">L</div>
+        <div>
+          <div class="sidebar-name">Leandro</div>
+          <div class="sidebar-role">Gestor</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Overview</div>
+      <div class="topbar-filters">
+        <div class="filter-item">
+          <label>Promotor</label>
+          <select id="fPromotor">
+            <option value="">Todos</option>
+            <option>Francisco</option><option>Anderson</option><option>André</option>
+            <option>Cristiano</option><option>Jarbas</option><option>Kayan</option><option>Wil</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>De</label>
+          <input type="date" id="fDe">
+        </div>
+        <div class="filter-item">
+          <label>Até</label>
+          <input type="date" id="fAte">
+        </div>
+        <button class="btn-filter" onclick="carregar()">Atualizar</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ===================== OVERVIEW ===================== -->
+      <div class="tab-page active" id="tab-overview">
+
+        <div class="kpi-grid">
+          <div class="kpi-card blue">
+            <div class="kpi-icon">📍</div>
+            <div class="kpi-label">Visitas realizadas</div>
+            <div class="kpi-value" id="kVisitas">—</div>
+            <div class="kpi-sub" id="kVisitasSub">no período selecionado</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-label">Valor total pedidos</div>
+            <div class="kpi-value" id="kValor" style="font-size:24px;">—</div>
+            <div class="kpi-sub" id="kValorSub">pedidos com valor informado</div>
+          </div>
+          <div class="kpi-card yellow">
+            <div class="kpi-icon">🎯</div>
+            <div class="kpi-label">Taxa de conversão</div>
+            <div class="kpi-value" id="kConversao">—</div>
+            <div class="kpi-sub" id="kConversaoSub">visitas que geraram pedido</div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-label">Presença de marca</div>
+            <div class="kpi-value" id="kPresenca">—</div>
+            <div class="kpi-sub">PDVs com produto nosso</div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="kpi-card red" style="margin-bottom:0;">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-label">Ruptura</div>
+            <div class="kpi-value" id="kRuptura">—</div>
+            <div class="kpi-sub">PDVs com falta de produto</div>
+          </div>
+          <div class="kpi-card orange" style="margin-bottom:0;">
+            <div class="kpi-icon">🏪</div>
+            <div class="kpi-label">PDVs únicos</div>
+            <div class="kpi-value" id="kPDVs">—</div>
+            <div class="kpi-sub">estabelecimentos distintos</div>
+          </div>
+          <div class="kpi-card blue" style="margin-bottom:0;">
+            <div class="kpi-icon">🎫</div>
+            <div class="kpi-label">Ticket médio</div>
+            <div class="kpi-value" id="kTicket" style="font-size:22px;">—</div>
+            <div class="kpi-sub">por pedido com valor</div>
+          </div>
+        </div>
+
+        <div class="chart-card full">
+          <div class="chart-title">📈 Evolução de Visitas e Pedidos por Semana</div>
+          <div class="chart-sub">Últimas 8 semanas</div>
+          <canvas id="chartEvolucao" height="100"></canvas>
+          <div class="line-labels" id="chartEvolucaoLabels"></div>
+        </div>
+
+      </div>
+
+      <!-- ===================== MERCADO ===================== -->
+      <div class="tab-page" id="tab-mercado">
+
+        <div class="grid-2-1">
+          <div class="chart-card">
+            <div class="chart-title">🏪 Visitas e Pedidos por Tipo de Comércio</div>
+            <div class="chart-sub">Onde a equipe está presente e onde converte</div>
+            <div id="chartTipoComercio"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📦 SKU mais pedido</div>
+            <div class="chart-sub">Em pacotes no período</div>
+            <div class="donut-wrap" style="margin-top:10px;">
+              <svg class="donut-svg" id="donutSKU" width="100" height="100" viewBox="0 0 100 100"></svg>
+              <div class="donut-legend" id="donutSKULegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">🔄 Frequência de Recompra</div>
+            <div class="chart-sub">Com qual frequência os clientes compram</div>
+            <div id="chartFrequencia" style="margin-top:12px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📍 Presença por SKU nos PDVs</div>
+            <div class="chart-sub">% de PDVs visitados que têm cada produto</div>
+            <div id="chartSKUPresenca" style="margin-top:12px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================== INTELIGÊNCIA ===================== -->
+      <div class="tab-page" id="tab-inteligencia">
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">🏭 Domínio por Fabricante</div>
+            <div class="chart-sub">Presença de concorrentes nos PDVs visitados</div>
+            <div id="chartFabricante" style="margin-top:16px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">⚠️ Principais Barreiras de Mercado</div>
+            <div class="chart-sub">Por que o PDV não compra ou compra pouco</div>
+            <div id="chartBarreiras" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <div class="chart-card full">
+          <div class="chart-title">🔍 Concorrentes — Frequência e Preço Médio no PDV</div>
+          <div class="chart-sub">Marcas mais presentes nos pontos visitados, com preço médio registrado pelos promotores</div>
+          <div style="margin-top:16px;overflow-x:auto;">
+            <table class="data-table" id="tabelaConcorrentes">
+              <thead><tr>
+                <th>Marca</th>
+                <th>Fabricante</th>
+                <th>Presença</th>
+                <th>Frequência</th>
+                <th>Preço médio PDV</th>
+              </tr></thead>
+              <tbody id="tConcBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">🏷️ Exposição do Produto</div>
+            <div class="chart-sub">Como nosso produto está exposto nos PDVs</div>
+            <div id="chartExposicao" style="margin-top:16px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📋 Material de PDV e Precificador</div>
+            <div class="chart-sub">Presença de materiais de apoio à venda</div>
+            <div id="chartMaterial" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================== EQUIPE ===================== -->
+      <div class="tab-page" id="tab-equipe">
+
+        <div class="chart-card full">
+          <div class="chart-title">👥 Performance Individual — Promotores</div>
+          <div class="chart-sub">Visitas realizadas, pedidos gerados, conversão e valor no período</div>
+          <div style="margin-top:16px;overflow-x:auto;">
+            <table class="data-table">
+              <thead><tr>
+                <th>Promotor</th>
+                <th>Visitas</th>
+                <th>PDVs únicos</th>
+                <th>Pedidos</th>
+                <th>Conversão</th>
+                <th>Valor gerado</th>
+                <th>Receptividade</th>
+              </tr></thead>
+              <tbody id="tEquipeBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">🤝 Receptividade por Promotor</div>
+            <div class="chart-sub">Perfil de relacionamento nos PDVs</div>
+            <div id="chartReceptividade" style="margin-top:16px;"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📅 PDVs sem visita nos últimos 30 dias</div>
+            <div class="chart-sub">Alertas de cobertura de território</div>
+            <div id="chartSemVisita" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================== VISITAS ===================== -->
+      <div class="tab-page" id="tab-visitas">
+        <div class="chart-card full">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div class="chart-title">📋 Registro de Visitas</div>
+              <div class="chart-sub">Clique em uma visita para ver detalhes completos</div>
+            </div>
+            <input type="text" id="buscaVisitas" oninput="renderTabVisitas()" placeholder="Buscar PDV, cidade, promotor..." style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:inherit;width:220px;">
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead><tr>
+                <th>Data</th><th>Promotor</th><th>PDV</th><th>Tipo</th><th>Cidade</th>
+                <th>Produto</th><th>Pedido</th><th>Valor</th><th>Recept.</th>
+              </tr></thead>
+              <tbody id="tVisitasBody"></tbody>
+            </table>
+          </div>
+          <div id="tVisitasPag" style="margin-top:14px;text-align:center;font-size:13px;color:var(--muted);"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bottom-nav-item active" onclick="mudarAba('overview')"><span class="bn-icon">📊</span><span class="bn-label">Overview</span></button>
+      <button class="bottom-nav-item" onclick="mudarAba('mercado')"><span class="bn-icon">🏪</span><span class="bn-label">Mercado</span></button>
+      <button class="bottom-nav-item" onclick="mudarAba('inteligencia')"><span class="bn-icon">🔍</span><span class="bn-label">Intel.</span></button>
+      <button class="bottom-nav-item" onclick="mudarAba('equipe')"><span class="bn-icon">👥</span><span class="bn-label">Equipe</span></button>
+      <button class="bottom-nav-item" onclick="mudarAba('visitas')"><span class="bn-icon">📋</span><span class="bn-label">Visitas</span></button>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- MODAL DETALHE -->
+<div id="modalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;overflow-y:auto;padding:20px;align-items:flex-start;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;overflow:hidden;margin:auto;">
+    <div style="background:var(--card2);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);">
+      <div style="font-size:15px;font-weight:700;" id="modalTitulo">Detalhe</div>
+      <button onclick="fecharModal()" style="background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="padding:20px;max-height:75vh;overflow-y:auto;" id="modalBody"></div>
+    <div style="padding:0 20px 20px;display:flex;gap:8px;" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const SENHA = 'Lx9#mK2p';
+const PACOTES = {GR:48,GM:48,CM:50,CC:50};
+const SKU_NOMES = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+const FAB = {'Djarum Black Cravo':'JTI','Djarum Black Menta':'JTI','Djarum Black Ice':'JTI','Camel Kretek':'JTI','Camel Cápsula Menta':'JTI','LA Menthol':'JTI','Lucky Strike Menta':'BAT','Lucky Strike Cápsula':'BAT','Marlboro Menta/Cáps.':'PMB'};
+const SKU_CORES = {GR:'#58A6FF',GM:'#3FB950',CM:'#FFA657',CC:'#BC8CFF'};
+
+let visitas = [];
+let abaAtual = 'overview';
+let visitasPag = 0;
+const POR_PAG = 30;
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function entrar() {
+  const s = document.getElementById('loginSenha').value;
+  if (s !== SENHA) { document.getElementById('loginErr').style.display = 'block'; return; }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  // datas padrão
+  const hoje = new Date();
+  const trintaDias = new Date(); trintaDias.setDate(hoje.getDate()-30);
+  document.getElementById('fAte').value = hoje.toISOString().split('T')[0];
+  document.getElementById('fDe').value = trintaDias.toISOString().split('T')[0];
+  carregar();
+}
+
+function logout() {
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginSenha').value = '';
+}
+
+async function carregar() {
+  const promotor = document.getElementById('fPromotor').value;
+  const de = document.getElementById('fDe').value;
+  const ate = document.getElementById('fAte').value;
+  let url = `${API}/api/listar?`;
+  if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+  if (de) url += `de=${de}T00:00:00Z&`;
+  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  try {
+    const res = await fetch(url, {headers:{'Content-Type':'application/json'}});
+    const data = await res.json();
+    visitas = data.visitas || [];
+    renderTudo();
+  } catch(e) { toast('Erro ao carregar dados'); }
+}
+
+function mudarAba(aba) {
+  abaAtual = aba;
+  const titulos = {overview:'Overview',mercado:'Mercado',inteligencia:'Inteligência de Mercado',equipe:'Equipe',visitas:'Visitas'};
+  document.getElementById('topbarTitle').textContent = titulos[aba];
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+aba).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));
+  const idx = ['overview','mercado','inteligencia','equipe','visitas'].indexOf(aba);
+  document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+  document.querySelectorAll('.bottom-nav-item')[idx]?.classList.add('active');
+  if (aba === 'visitas') renderTabVisitas();
+}
+
+function renderTudo() {
+  renderOverview();
+  renderMercado();
+  renderInteligencia();
+  renderEquipe();
+  renderTabVisitas();
+}
+
+// ========= OVERVIEW =========
+function renderOverview() {
+  const total = visitas.length;
+  const comProduto = visitas.filter(v=>v.dados?.presenca?.temProduto==='Sim').length;
+  const pedidos = visitas.filter(v=>v.dados?.comercial?.pedidoFeito==='Sim').length;
+  const ruptura = visitas.filter(v=>v.dados?.presenca?.ruptura).length;
+  const pdvsUnicos = new Set(visitas.map(v=>v.dados?.pdv?.cnpj||v.dados?.pdv?.nomeFantasia).filter(Boolean));
+  let valorTotal=0; let pedidosComValor=0;
+  visitas.forEach(v=>{
+    const pac=v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    const preco=v.dados?.comercial?.pedidoPreco||{};
+    let sub=0; ['GR','GM','CM','CC'].forEach(s=>{sub+=(pac[s]||0)*(preco[s]||0);});
+    if(sub>0){valorTotal+=sub;pedidosComValor++;}
+  });
+  const ticket = pedidosComValor>0 ? valorTotal/pedidosComValor : 0;
+  document.getElementById('kVisitas').textContent = total;
+  document.getElementById('kValor').textContent = valorTotal>0?'R$ '+valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+  document.getElementById('kConversao').textContent = total?Math.round(pedidos/total*100)+'%':'—';
+  document.getElementById('kConversaoSub').textContent = `${pedidos} de ${total} visitas`;
+  document.getElementById('kPresenca').textContent = total?Math.round(comProduto/total*100)+'%':'—';
+  document.getElementById('kRuptura').textContent = ruptura;
+  document.getElementById('kPDVs').textContent = pdvsUnicos.size;
+  document.getElementById('kTicket').textContent = ticket>0?'R$ '+ticket.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—';
+
+  // Evolução semanal
+  const semanas = {};
+  visitas.forEach(v=>{
+    const d=new Date(v.criado_em);
+    const ini=new Date(d); ini.setDate(d.getDate()-d.getDay());
+    const key=ini.toISOString().split('T')[0];
+    if(!semanas[key]) semanas[key]={visitas:0,pedidos:0};
+    semanas[key].visitas++;
+    if(v.dados?.comercial?.pedidoFeito==='Sim') semanas[key].pedidos++;
+  });
+  const sems = Object.entries(semanas).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+  const canvas = document.getElementById('chartEvolucao');
+  const labelsEl = document.getElementById('chartEvolucaoLabels');
+  if(!sems.length){canvas.style.display='none'; return;}
+  canvas.style.display='block';
+  canvas.width = canvas.parentElement.offsetWidth || 600;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height||100;
+  ctx.clearRect(0,0,W,H);
+  const maxV = Math.max(...sems.map(s=>s[1].visitas),1);
+  const n=sems.length; const step=W/n; const pad=20;
+  ctx.strokeStyle='rgba(255,255,255,0.05)';
+  for(let i=1;i<5;i++){const y=H-pad-(H-pad*2)*i/4; ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Linha visitas
+  ctx.beginPath(); ctx.strokeStyle='#58A6FF'; ctx.lineWidth=2.5;
+  sems.forEach((s,i)=>{
+    const x=step*i+step/2; const y=H-pad-(H-pad*2)*(s[1].visitas/maxV);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }); ctx.stroke();
+  // Linha pedidos
+  ctx.beginPath(); ctx.strokeStyle='#3FB950'; ctx.lineWidth=2.5; ctx.setLineDash([4,4]);
+  sems.forEach((s,i)=>{
+    const x=step*i+step/2; const y=H-pad-(H-pad*2)*(s[1].pedidos/maxV);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }); ctx.stroke(); ctx.setLineDash([]);
+  // Pontos
+  sems.forEach((s,i)=>{
+    const x=step*i+step/2;
+    const yV=H-pad-(H-pad*2)*(s[1].visitas/maxV);
+    const yP=H-pad-(H-pad*2)*(s[1].pedidos/maxV);
+    ctx.fillStyle='#58A6FF'; ctx.beginPath(); ctx.arc(x,yV,4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#3FB950'; ctx.beginPath(); ctx.arc(x,yP,4,0,Math.PI*2); ctx.fill();
+  });
+  labelsEl.innerHTML = sems.map(s=>{
+    const dt=new Date(s[0]+'T12:00:00');
+    return `<div class="line-label">${dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}<br><span style="color:#58A6FF;font-weight:700;">${s[1].visitas}</span> <span style="color:#3FB950;font-weight:700;">${s[1].pedidos}</span></div>`;
+  }).join('');
+}
+
+// ========= MERCADO =========
+function renderMercado() {
+  const total = visitas.length || 1;
+
+  // Tipo de comércio
+  const tipos = {};
+  visitas.forEach(v=>{
+    const t=v.dados?.pdv?.tipo||'Outros';
+    if(!tipos[t]) tipos[t]={v:0,p:0};
+    tipos[t].v++;
+    if(v.dados?.comercial?.pedidoFeito==='Sim') tipos[t].p++;
+  });
+  const tiposSort = Object.entries(tipos).sort((a,b)=>b[1].v-a[1].v).slice(0,8);
+  const maxT = tiposSort[0]?.[1].v||1;
+  document.getElementById('chartTipoComercio').innerHTML = tiposSort.length ? tiposSort.map(([tipo,d])=>`
+    <div class="bar-row">
+      <div class="bar-label" title="${tipo}">${tipo}</div>
+      <div style="flex:1;">
+        <div class="bar-track" style="margin-bottom:3px;">
+          <div class="bar-fill" style="width:${Math.round(d.v/maxT*100)}%;background:#58A6FF;"></div>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${d.v?Math.round(d.p/d.v*100):0}%;background:#3FB950;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+        <div style="font-size:12px;font-weight:700;color:#58A6FF;">${d.v}</div>
+        <div style="font-size:11px;color:#3FB950;">${d.p} ped</div>
+      </div>
+    </div>
+  `).join('') + `<div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted);">
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:3px;background:#58A6FF;display:inline-block;border-radius:2px;"></span> Visitas</span>
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:3px;background:#3FB950;display:inline-block;border-radius:2px;"></span> % com pedido</span>
+  </div>` : '<div class="empty-state"><div class="empty-icon">🏪</div>Sem dados</div>';
+
+  // Donut SKU pedido
+  const cPac = {GR:0,GM:0,CM:0,CC:0};
+  visitas.forEach(v=>{
+    const pac=v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    ['GR','GM','CM','CC'].forEach(s=>{cPac[s]+=(pac[s]||0);});
+  });
+  const totalPac = Object.values(cPac).reduce((a,b)=>a+b,0)||1;
+  const skuCores = ['#58A6FF','#3FB950','#FFA657','#BC8CFF'];
+  const skus = ['GR','GM','CM','CC'];
+  let angulo = -Math.PI/2;
+  const svgEl = document.getElementById('donutSKU');
+  svgEl.innerHTML = '';
+  skus.forEach((s,i)=>{
+    const pct = cPac[s]/totalPac;
+    const arco = pct * 2 * Math.PI;
+    if(pct===0) return;
+    const x1=50+40*Math.cos(angulo), y1=50+40*Math.sin(angulo);
+    const x2=50+40*Math.cos(angulo+arco), y2=50+40*Math.sin(angulo+arco);
+    const large=arco>Math.PI?1:0;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M50,50 L${x1},${y1} A40,40,0,${large},1,${x2},${y2} Z`);
+    path.setAttribute('fill',skuCores[i]);
+    svgEl.appendChild(path);
+    angulo+=arco;
+  });
+  // círculo branco do meio
+  const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circ.setAttribute('cx','50'); circ.setAttribute('cy','50'); circ.setAttribute('r','22');
+  circ.setAttribute('fill','var(--card)'); svgEl.appendChild(circ);
+  document.getElementById('donutSKULegend').innerHTML = skus.map((s,i)=>`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${skuCores[i]};"></div>
+      <div class="legend-label">${SKU_NOMES[s]}</div>
+      <div class="legend-val">${cPac[s]}</div>
+      <div class="legend-pct">${Math.round(cPac[s]/totalPac*100)}%</div>
+    </div>
+  `).join('');
+
+  // Frequência recompra
+  const freqs = {};
+  visitas.forEach(v=>{const f=v.dados?.comercial?.frequencia||'Não informado'; freqs[f]=(freqs[f]||0)+1;});
+  const freqOrd = ['Semanal','Quinzenal','Mensal','Esporádico','Nunca comprou'];
+  const freqCor = {Semanal:'#3FB950',Quinzenal:'#58A6FF',Mensal:'#FFA657',Esporádico:'#BC8CFF','Nunca comprou':'#F85149'};
+  const freqTotal = Object.values(freqs).reduce((a,b)=>a+b,0)||1;
+  const freqEntries = freqOrd.filter(f=>freqs[f]).map(f=>[f,freqs[f]]);
+  document.getElementById('chartFrequencia').innerHTML = freqEntries.length ? freqEntries.map(([f,q])=>`
+    <div class="bar-row">
+      <div class="bar-label">${f}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(q/freqTotal*100)}%;background:${freqCor[f]||'#8B949E'};"></div></div>
+      <div class="bar-val" style="color:${freqCor[f]||'#8B949E'}">${q}</div>
+      <div class="bar-val2">${Math.round(q/freqTotal*100)}%</div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="empty-icon">🔄</div>Sem dados</div>';
+
+  // Presença SKU
+  const cSku={GR:0,GM:0,CM:0,CC:0};
+  visitas.forEach(v=>{(v.dados?.presenca?.skusPresentes||[]).forEach(s=>{if(cSku[s]!==undefined)cSku[s]++;});});
+  document.getElementById('chartSKUPresenca').innerHTML = skus.map((s,i)=>{
+    const pct=visitas.length?Math.round(cSku[s]/visitas.length*100):0;
+    return `<div class="bar-row">
+      <div class="bar-label" style="font-weight:700;color:${skuCores[i]};width:40px;">${s}</div>
+      <div style="flex:1;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">${SKU_NOMES[s]}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${skuCores[i]};"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${cPac[s]} pac pedidos</div>
+      </div>
+      <div class="bar-val" style="color:${skuCores[i]}">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ========= INTELIGÊNCIA =========
+function renderInteligencia() {
+  // Fabricante
+  const fabCount={JTI:0,BAT:0,PMB:0,Outros:0};
+  visitas.forEach(v=>{
+    (v.dados?.mercado?.concorrentes||[]).forEach(c=>{
+      if(c==='Nenhum') return;
+      const f=FAB[c]; if(f) fabCount[f]++; else fabCount['Outros']++;
+    });
+  });
+  const totalFab=Object.values(fabCount).reduce((a,b)=>a+b,0)||1;
+  const fabCores={JTI:'#58A6FF',BAT:'#FFA657',PMB:'#BC8CFF',Outros:'#8B949E'};
+  document.getElementById('chartFabricante').innerHTML = Object.entries(fabCount).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([fab,q])=>{
+    const pct=Math.round(q/totalFab*100);
+    return `<div class="bar-row">
+      <div style="width:50px;"><span class="fab-badge fab-${fab.toLowerCase()}">${fab}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${fabCores[fab]};"></div></div>
+      <div class="bar-val" style="color:${fabCores[fab]}">${q}</div>
+      <div class="bar-val2">${pct}%</div>
+    </div>`;
+  }).join('') || '<div class="empty-state"><div class="empty-icon">🏭</div>Sem dados</div>';
+
+  // Barreiras
+  const barr={};
+  visitas.forEach(v=>{const m=v.dados?.mercado?.motivoResistencia; if(m&&m!=='N/A') barr[m]=(barr[m]||0)+1;});
+  const barrSort=Object.entries(barr).sort((a,b)=>b[1]-a[1]);
+  const barrTotal=barrSort.reduce((a,b)=>a+b[1],0)||1;
+  const barrIcon={'Preço':'💲','Fidelidade concorrente':'🔒','Falta de visita':'👣','Giro baixo':'📉'};
+  document.getElementById('chartBarreiras').innerHTML = barrSort.length ? barrSort.map(([b,q])=>`
+    <div class="bar-row">
+      <div class="bar-label">${barrIcon[b]||'⚠️'} ${b}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(q/barrTotal*100)}%;background:#F85149;"></div></div>
+      <div class="bar-val" style="color:#F85149;">${q}</div>
+      <div class="bar-val2">${Math.round(q/barrTotal*100)}%</div>
+    </div>
+  `).join('') : '<div style="color:var(--green);font-size:13px;padding:8px 0;">✓ Nenhuma barreira registrada</div>';
+
+  // Tabela concorrentes
+  const cConc={}, precoConc={};
+  visitas.forEach(v=>{
+    const concs=v.dados?.mercado?.concorrentes||[];
+    const dets=v.dados?.mercado?.concDetalhes||{};
+    concs.forEach(c=>{
+      if(c==='Nenhum') return;
+      cConc[c]=(cConc[c]||0)+1;
+      if(dets[c]?.preco){if(!precoConc[c])precoConc[c]=[]; precoConc[c].push(parseFloat(dets[c].preco));}
+    });
+  });
+  const concSort=Object.entries(cConc).sort((a,b)=>b[1]-a[1]);
+  const totalV=visitas.length||1;
+  document.getElementById('tConcBody').innerHTML = concSort.length ? concSort.map(([nome,q])=>{
+    const fab=FAB[nome]||'';
+    const precos=precoConc[nome]||[];
+    const pm=precos.length?(precos.reduce((a,b)=>a+b,0)/precos.length).toFixed(2):null;
+    const pct=Math.round(q/totalV*100);
+    return `<tr>
+      <td class="td-nome">${nome}</td>
+      <td>${fab?`<span class="fab-badge fab-${fab.toLowerCase()}">${fab}</span>`:''}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:60px;height:6px;background:var(--card2);border-radius:3px;"><div style="width:${pct}%;height:100%;background:${fab?fabCores2[fab]:'#8B949E'};border-radius:3px;"></div></div>
+        <span style="font-weight:700;">${q}x</span> <span style="color:var(--muted);font-size:11px;">${pct}%</span>
+      </div></td>
+      <td><span class="chip chip-muted">${q}x</span></td>
+      <td style="font-weight:700;color:var(--green);">${pm?'R$ '+pm:'—'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">Sem dados</td></tr>';
+
+  // Exposição
+  const exp={};
+  visitas.forEach(v=>{const d=v.dados?.presenca?.destaque||'Não informado'; exp[d]=(exp[d]||0)+1;});
+  const expCor={'Destaque':'#3FB950','Neutro':'#58A6FF','Escondido':'#F85149','Não informado':'#8B949E'};
+  const expTotal=Object.values(exp).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('chartExposicao').innerHTML = Object.entries(exp).sort((a,b)=>b[1]-a[1]).map(([e,q])=>`
+    <div class="semaforo-item">
+      <div><div class="semaforo-label">${e}</div></div>
+      <div class="semaforo-badge">
+        <div class="s-dot" style="background:${expCor[e]||'#8B949E'};"></div>
+        <div class="s-val" style="color:${expCor[e]||'#8B949E'}">${q}</div>
+        <div style="font-size:11px;color:var(--muted);margin-left:4px;">${Math.round(q/expTotal*100)}%</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Material PDV
+  const matSim=visitas.filter(v=>v.dados?.presenca?.materialPDV).length;
+  const precSim=visitas.filter(v=>v.dados?.presenca?.precificador).length;
+  const tot=visitas.length||1;
+  document.getElementById('chartMaterial').innerHTML = `
+    <div class="semaforo-item">
+      <div><div class="semaforo-label">Material de PDV / display</div><div class="semaforo-sub">presente nos PDVs visitados</div></div>
+      <div class="semaforo-badge">
+        <div class="s-dot" style="background:${matSim/tot>0.5?'#3FB950':'#F85149'};"></div>
+        <div class="s-val" style="color:${matSim/tot>0.5?'#3FB950':'#F85149'}">${matSim}</div>
+        <div style="font-size:11px;color:var(--muted);margin-left:4px;">${Math.round(matSim/tot*100)}%</div>
+      </div>
+    </div>
+    <div class="semaforo-item">
+      <div><div class="semaforo-label">Precificador exposto</div><div class="semaforo-sub">visibilidade do preço para o consumidor</div></div>
+      <div class="semaforo-badge">
+        <div class="s-dot" style="background:${precSim/tot>0.5?'#3FB950':'#F85149'};"></div>
+        <div class="s-val" style="color:${precSim/tot>0.5?'#3FB950':'#F85149'}">${precSim}</div>
+        <div style="font-size:11px;color:var(--muted);margin-left:4px;">${Math.round(precSim/tot*100)}%</div>
+      </div>
+    </div>
+  `;
+}
+
+const fabCores2={JTI:'#58A6FF',BAT:'#FFA657',PMB:'#BC8CFF',Outros:'#8B949E'};
+
+// ========= EQUIPE =========
+function renderEquipe() {
+  const prom={};
+  visitas.forEach(v=>{
+    const n=v.promotor;
+    if(!prom[n]) prom[n]={visitas:0,pedidos:0,valor:0,pdvs:new Set(),frio:0,neutro:0,parceiro:0};
+    prom[n].visitas++;
+    const key=v.dados?.pdv?.cnpj||v.dados?.pdv?.nomeFantasia;
+    if(key) prom[n].pdvs.add(key);
+    if(v.dados?.comercial?.pedidoFeito==='Sim') prom[n].pedidos++;
+    const pac=v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    const preco=v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s=>{prom[n].valor+=(pac[s]||0)*(preco[s]||0);});
+    const r=(v.dados?.comercial?.receptividade||'').replace(/[🥶😐🤝]/g,'').trim();
+    if(r==='Frio') prom[n].frio++;
+    else if(r==='Neutro') prom[n].neutro++;
+    else if(r==='Parceiro') prom[n].parceiro++;
+  });
+  const sorted=Object.entries(prom).sort((a,b)=>b[1].visitas-a[1].visitas);
+  document.getElementById('tEquipeBody').innerHTML = sorted.length ? sorted.map(([nome,d])=>{
+    const conv=d.visitas?Math.round(d.pedidos/d.visitas*100):0;
+    const convChip=conv>=50?'chip-green':conv>=25?'chip-yellow':'chip-red';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="background:var(--blue-bg);color:var(--blue);">${nome.charAt(0)}</div>
+        <span style="font-weight:700;">${nome}</span>
+      </div></td>
+      <td style="font-weight:800;font-size:15px;">${d.visitas}</td>
+      <td>${d.pdvs.size}</td>
+      <td>${d.pedidos}</td>
+      <td><span class="chip ${convChip}">${conv}%</span></td>
+      <td style="font-weight:700;color:var(--green);">${d.valor>0?'R$ '+d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+      <td><span style="color:#F85149;font-weight:700;">${d.frio}</span> <span style="color:var(--muted);">·</span> <span style="color:var(--yellow);font-weight:700;">${d.neutro}</span> <span style="color:var(--muted);">·</span> <span style="color:var(--green);font-weight:700;">${d.parceiro}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Sem dados</td></tr>';
+
+  // Receptividade
+  document.getElementById('chartReceptividade').innerHTML = sorted.length ? sorted.map(([nome,d])=>{
+    const tot=d.frio+d.neutro+d.parceiro||1;
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:600;">${nome}</span>
+        <span style="font-size:11px;color:var(--muted);">${tot} PDVs</span>
+      </div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px;">
+        <div style="background:#F85149;width:${Math.round(d.frio/tot*100)}%;border-radius:3px;"></div>
+        <div style="background:#D29922;width:${Math.round(d.neutro/tot*100)}%;border-radius:3px;"></div>
+        <div style="background:#3FB950;width:${Math.round(d.parceiro/tot*100)}%;border-radius:3px;"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:4px;font-size:11px;">
+        <span style="color:#F85149;">🥶 ${d.frio}</span>
+        <span style="color:#D29922;">😐 ${d.neutro}</span>
+        <span style="color:#3FB950;">🤝 ${d.parceiro}</span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state">Sem dados</div>';
+
+  // PDVs sem visita
+  const agora=new Date();
+  const ult={};
+  visitas.forEach(v=>{
+    const key=v.dados?.pdv?.nomeFantasia; if(!key) return;
+    const dt=new Date(v.criado_em);
+    if(!ult[key]||dt>ult[key].data) ult[key]={data:dt,promotor:v.promotor,cidade:v.dados?.pdv?.cidade};
+  });
+  const semVisita=Object.entries(ult).filter(([,i])=>(agora-i.data)/(1000*60*60*24)>30).sort((a,b)=>a[1].data-b[1].data);
+  document.getElementById('chartSemVisita').innerHTML = semVisita.length ? semVisita.map(([nome,i])=>{
+    const dias=Math.floor((agora-i.data)/(1000*60*60*24));
+    return `<div class="semaforo-item">
+      <div><div class="semaforo-label">${nome}</div><div class="semaforo-sub">${i.cidade||'—'} · ${i.promotor}</div></div>
+      <span class="chip chip-red">${dias}d</span>
+    </div>`;
+  }).join('') : '<div style="color:var(--green);font-size:13px;padding:8px 0;">✓ Todos os PDVs visitados nos últimos 30 dias</div>';
+}
+
+// ========= VISITAS =========
+function renderTabVisitas() {
+  const busca=(document.getElementById('buscaVisitas')?.value||'').toLowerCase();
+  const filtradas=visitas.filter(v=>{
+    const d=v.dados||{};
+    return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca);
+  });
+  const inicio=visitasPag*POR_PAG;
+  const pagina=filtradas.slice(inicio,inicio+POR_PAG);
+  document.getElementById('tVisitasBody').innerHTML = pagina.length ? pagina.map(v=>{
+    const d=v.dados||{};
+    const dt=new Date(v.criado_em);
+    const dtStr=dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const pac=d.comercial?.pedidoPac||d.comercial?.pedidoQty||{};
+    const preco=d.comercial?.pedidoPreco||{};
+    let val=0; ['GR','GM','CM','CC'].forEach(s=>{val+=(pac[s]||0)*(preco[s]||0);});
+    const tp=d.presenca?.temProduto;
+    const tpChip=tp==='Sim'?'chip-green':tp==='Não'?'chip-red':'chip-yellow';
+    const r=(d.comercial?.receptividade||'').replace(/[🥶😐🤝]/g,'').trim();
+    const rChip=r==='Parceiro'?'chip-green':r==='Frio'?'chip-red':'chip-muted';
+    return `<tr style="cursor:pointer;" onclick="abrirVisita('${v.id}')">
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${dtStr}</td>
+      <td style="font-weight:600;">${v.promotor}</td>
+      <td class="td-nome">${d.pdv?.nomeFantasia||'—'}</td>
+      <td style="font-size:12px;color:var(--muted);">${d.pdv?.tipo||'—'}</td>
+      <td style="font-size:12px;color:var(--muted);">${d.pdv?.cidade||'—'}</td>
+      <td><span class="chip ${tpChip}">${tp||'—'}</span></td>
+      <td>${d.comercial?.pedidoFeito==='Sim'?'<span class="chip chip-green">Sim</span>':'<span class="chip chip-muted">Não</span>'}</td>
+      <td style="font-weight:700;color:var(--green);">${val>0?'R$ '+val.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</td>
+      <td><span class="chip ${rChip}">${r||'—'}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma visita encontrada</td></tr>';
+  const totalPags=Math.ceil(filtradas.length/POR_PAG);
+  document.getElementById('tVisitasPag').innerHTML = totalPags>1 ? `
+    <button onclick="pagVisitas(-1)" style="padding:6px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-family:inherit;margin-right:8px;">← Anterior</button>
+    <span>Página ${visitasPag+1} de ${totalPags} · ${filtradas.length} visitas</span>
+    <button onclick="pagVisitas(1)" style="padding:6px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);cursor:pointer;font-family:inherit;margin-left:8px;">Próxima →</button>
+  ` : `<span>${filtradas.length} visitas</span>`;
+}
+
+function pagVisitas(dir) {
+  const busca=(document.getElementById('buscaVisitas')?.value||'').toLowerCase();
+  const filtradas=visitas.filter(v=>{
+    const d=v.dados||{};
+    return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca);
+  });
+  const totalPags=Math.ceil(filtradas.length/POR_PAG);
+  visitasPag=Math.max(0,Math.min(totalPags-1,visitasPag+dir));
+  renderTabVisitas();
+}
+
+function abrirVisita(id) {
+  const v=visitas.find(x=>x.id===id); if(!v) return;
+  const d=v.dados||{};
+  const dt=new Date(v.criado_em);
+  const dtStr=dt.toLocaleDateString('pt-BR')+' às '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modalTitulo').textContent = d.pdv?.nomeFantasia||'Visita';
+  const pac=d.comercial?.pedidoPac||d.comercial?.pedidoQty||{};
+  const preco=d.comercial?.pedidoPreco||{};
+  let totalPed=0;
+  const itensPed=['GR','GM','CM','CC'].filter(s=>pac[s]>0).map(s=>{
+    const sub=(pac[s]||0)*(preco[s]||0); totalPed+=sub;
+    const cx=Math.floor(pac[s]/PACOTES[s]); const resto=pac[s]%PACOTES[s];
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px;font-weight:700;">${SKU_NOMES[s]}</td>
+      <td style="padding:8px;text-align:center;font-weight:800;">${pac[s]} pac</td>
+      <td style="padding:8px;text-align:center;color:var(--muted);font-size:12px;">${cx}cx${resto>0?'+'+resto:''}  </td>
+      <td style="padding:8px;text-align:right;color:var(--green);font-weight:700;">${sub>0?'R$ '+sub.toFixed(2):'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="background:var(--card2);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Data</div>
+        <div style="font-weight:700;">${dtStr}</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Promotor</div>
+        <div style="font-weight:700;">${v.promotor}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">PDV</div>
+      ${[['Tipo',d.pdv?.tipo],['CNPJ',d.pdv?.cnpj],['IE',d.pdv?.ie],['Endereço',d.pdv?.endereco],['Cidade/UF',(d.pdv?.cidade||'')+(d.pdv?.uf?' / '+d.pdv.uf:'')],['Comprador',d.pdv?.nomeComprador],['Telefone',d.pdv?.telefone],['Distribuidor',d.pdv?.distribuidor]].filter(([,v])=>v).map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(45,55,72,0.4);font-size:13px;">
+          <span style="color:var(--muted);">${k}</span><span style="font-weight:600;">${v}</span>
+        </div>`).join('')}
+    </div>
+    ${itensPed?`<div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Pedido</div>
+      <table style="width:100%;border-collapse:collapse;">${itensPed}</table>
+      ${totalPed>0?`<div style="background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-top:8px;display:flex;justify-content:space-between;">
+        <span style="font-weight:700;color:var(--green);">TOTAL</span>
+        <span style="font-weight:900;color:var(--green);font-size:16px;">R$ ${totalPed.toFixed(2)}</span>
+      </div>`:''}
+    </div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="background:var(--card2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Produto</div>
+        <div style="font-weight:800;color:${d.presenca?.temProduto==='Sim'?'var(--green)':d.presenca?.temProduto==='Não'?'var(--red)':'var(--yellow)'};">${d.presenca?.temProduto||'—'}</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Exposição</div>
+        <div style="font-weight:800;font-size:12px;">${d.presenca?.destaque||'—'}</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Recept.</div>
+        <div style="font-weight:800;font-size:12px;">${(d.comercial?.receptividade||'—').replace(/[🥶😐🤝]/g,'').trim()}</div>
+      </div>
+    </div>
+    ${(d.mercado?.concorrentes||[]).filter(c=>c!=='Nenhum').length?`
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Concorrentes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${(d.mercado?.concorrentes||[]).filter(c=>c!=='Nenhum').map(c=>`<span class="chip chip-muted">${c}</span>`).join('')}</div>
+    </div>`:''}
+    ${d.observacoes?`<div style="background:var(--card2);border-radius:8px;padding:12px;font-size:13px;color:var(--muted);">${d.observacoes}</div>`:''}
+  `;
+  const hasPedido = d.comercial?.pedidoFeito==='Sim';
+  document.getElementById('modalActions').innerHTML = hasPedido ? `
+    <button onclick="copiarWA('${id}')" style="flex:1;padding:12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📱 WhatsApp</button>
+    <button onclick="gerarPDF('${id}')" style="flex:1;padding:12px;background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📄 PDF</button>
+  ` : '';
+  const mo=document.getElementById('modalOverlay');
+  mo.style.display='flex';
+}
+
+function fecharModal(){document.getElementById('modalOverlay').style.display='none';}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)fecharModal();});
+
+function copiarWA(id){
+  const v=visitas.find(x=>x.id===id); if(!v) return;
+  const d=v.dados||{}, p=d.pdv||{}, c=d.comercial||{};
+  const pac=c.pedidoPac||c.pedidoQty||{}, preco=c.pedidoPreco||{};
+  let itens='', total=0;
+  ['GR','GM','CM','CC'].forEach(s=>{
+    if(pac[s]>0){
+      const cx=Math.floor(pac[s]/PACOTES[s]); const resto=pac[s]%PACOTES[s];
+      const sub=(pac[s]||0)*(preco[s]||0); total+=sub;
+      itens+=`• ${SKU_NOMES[s]} (${s}): *${pac[s]} pac*${cx>0?' / '+cx+'cx'+(resto>0?'+'+resto:''):''}${sub>0?' · R$ '+sub.toFixed(2):''}\n`;
+    }
+  });
+  const dt=new Date(v.criado_em).toLocaleDateString('pt-BR');
+  const txt=`🟢 *PEDIDO CLEANTABACO*\n📅 ${dt} · ${v.promotor}\n\n📋 *CLIENTE*\n*${p.nomeFantasia||'—'}*\nCNPJ: ${p.cnpj||'—'}\nIE: ${p.ie||'—'}\nEndereço: ${p.endereco||'—'}, ${p.cidade||'—'}/${p.uf||'—'}\nComprador: ${p.nomeComprador||'—'}${p.telefone?' · '+p.telefone:''}\n\n📦 *PEDIDO*\n${itens.trim()}${total>0?'\n\n💰 *TOTAL: R$ '+total.toFixed(2)+'*':''}\n\n🚚 *DISTRIBUIDOR*\n${p.distribuidor||'—'}${d.observacoes?'\n\n📝 '+d.observacoes:''}\n\n_Cleantabaco PDV_`;
+  navigator.clipboard.writeText(txt).then(()=>toast('✓ Copiado para área de transferência'));
+}
+
+function gerarPDF(id){
+  const v=visitas.find(x=>x.id===id); if(!v) return;
+  const d=v.dados||{}, p=d.pdv||{}, c=d.comercial||{};
+  const pac=c.pedidoPac||c.pedidoQty||{}, preco=c.pedidoPreco||{};
+  const dt=new Date(v.criado_em).toLocaleDateString('pt-BR');
+  const hora=new Date(v.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  let linhas='', total=0;
+  ['GR','GM','CM','CC'].forEach(s=>{
+    if(pac[s]>0){
+      const cx=Math.floor(pac[s]/PACOTES[s]); const resto=pac[s]%PACOTES[s];
+      const sub=(pac[s]||0)*(preco[s]||0); total+=sub;
+      linhas+=`<tr><td>${SKU_NOMES[s]} (${s})</td><td style="text-align:center;font-weight:700;">${pac[s]} pac</td><td style="text-align:center;">${cx}cx${resto>0?'+'+resto+' pac':''}</td><td style="text-align:right;">${preco[s]>0?'R$ '+Number(preco[s]).toFixed(2)+'/pac':'—'}</td><td style="text-align:right;font-weight:700;">${sub>0?'R$ '+sub.toFixed(2):'—'}</td></tr>`;
+    }
+  });
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;color:#111;padding:32px;max-width:700px;margin:0 auto;}h1{font-size:20px;color:#1E1648;margin-bottom:4px;}.sub{color:#666;font-size:12px;margin-bottom:24px;}.sec{margin-bottom:20px;}.sec-title{font-size:11px;font-weight:700;color:#1E1648;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #1E1648;padding-bottom:4px;margin-bottom:10px;}.row{display:flex;gap:8px;margin-bottom:4px;}.lbl{color:#666;min-width:130px;}.val{font-weight:600;}table{width:100%;border-collapse:collapse;}th{background:#1E1648;color:#fff;padding:8px 10px;font-size:12px;text-align:left;}td{padding:8px 10px;border-bottom:1px solid #E0DDD8;}.total-row{background:#EAE8FA;font-weight:700;}.footer{margin-top:32px;font-size:11px;color:#999;border-top:1px solid #E0DDD8;padding-top:12px;}</style></head><body><h1>🟢 Pedido Cleantabaco</h1><div class="sub">Emitido em ${dt} às ${hora} · Promotor: ${v.promotor}</div><div class="sec"><div class="sec-title">Dados do Cliente</div><div class="row"><span class="lbl">Nome Fantasia</span><span class="val">${p.nomeFantasia||'—'}</span></div><div class="row"><span class="lbl">CNPJ</span><span class="val">${p.cnpj||'—'}</span></div><div class="row"><span class="lbl">Inscrição Estadual</span><span class="val">${p.ie||'—'}</span></div><div class="row"><span class="lbl">Endereço</span><span class="val">${p.endereco||'—'}</span></div><div class="row"><span class="lbl">Cidade/UF</span><span class="val">${p.cidade||'—'} / ${p.uf||'—'}</span></div><div class="row"><span class="lbl">Comprador</span><span class="val">${p.nomeComprador||'—'}</span></div><div class="row"><span class="lbl">Telefone</span><span class="val">${p.telefone||'—'}</span></div><div class="row"><span class="lbl">Distribuidor</span><span class="val">${p.distribuidor||'—'}</span></div></div><div class="sec"><div class="sec-title">Itens do Pedido</div><table><thead><tr><th>Produto</th><th style="text-align:center">Pacotes</th><th style="text-align:center">Caixas equiv.</th><th style="text-align:right">R$/pac</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${linhas}${total>0?`<tr class="total-row"><td colspan="4" style="text-align:right">TOTAL</td><td style="text-align:right">R$ ${total.toFixed(2)}</td></tr>`:''}</tbody></table></div>${d.observacoes?`<div class="sec"><div class="sec-title">Observações</div><p>${d.observacoes}</p></div>`:''}<div class="footer">Cleantabaco Distribuidora · ${dt}</div></body></html>`;
+  const w=window.open('','_blank'); w.document.write(html); w.document.close(); setTimeout(()=>w.print(),500);
+}
+
+function exportarCSV() {
+  if(!visitas.length){toast('Sem dados para exportar');return;}
+  const SEP=';';
+  const header=['Data','Promotor','PDV','Tipo','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor','Tem Produto','SKUs','Destaque','Ruptura','Material PDV','Precificador','Preco Tabela','Frequencia','Pedido Feito','Pac GR','Pac GM','Pac CM','Pac CC','Cx GR','Cx GM','Cx CM','Cx CC','Preco GR/pac','Preco GM/pac','Preco CM/pac','Preco CC/pac','Total Pedido','Receptividade','Concorrentes','Conc Dominante','Motivo Resistencia','Observacoes'];
+  const rows=visitas.map(v=>{
+    const d=v.dados||{},p=d.pdv||{},pr=d.presenca||{},c=d.comercial||{},m=d.mercado||{};
+    const pac=c.pedidoPac||c.pedidoQty||{}, preco=c.pedidoPreco||{};
+    let total=0; ['GR','GM','CM','CC'].forEach(s=>{total+=(pac[s]||0)*(preco[s]||0);});
+    const cel=v=>String(v||'').replace(/;/g,' ');
+    const fmt=v=>String(v||'').replace(/\./g,',');
+    return [
+      new Date(v.criado_em).toLocaleString('pt-BR'),cel(v.promotor),cel(p.nomeFantasia),cel(p.tipo),cel(p.cnpj),cel(p.ie),cel(p.endereco),cel(p.cidade),cel(p.uf),cel(p.nomeComprador),cel(p.telefone),cel(p.distribuidor),
+      cel(pr.temProduto),(pr.skusPresentes||[]).join('|'),cel(pr.destaque),pr.ruptura?'Sim':'Nao',pr.materialPDV?'Sim':'Nao',pr.precificador?'Sim':'Nao',
+      cel(c.precoTabela),cel(c.frequencia),cel(c.pedidoFeito),
+      pac.GR||0,pac.GM||0,pac.CM||0,pac.CC||0,
+      Math.floor((pac.GR||0)/48),Math.floor((pac.GM||0)/48),Math.floor((pac.CM||0)/50),Math.floor((pac.CC||0)/50),
+      fmt(preco.GR||0),fmt(preco.GM||0),fmt(preco.CM||0),fmt(preco.CC||0),fmt(total.toFixed(2)),
+      cel(c.receptividade),(m.concorrentes||[]).join('|'),cel(m.concDominante),cel(m.motivoResistencia),cel(d.observacoes)
+    ].map(v=>`"${String(v||'')}"`.replace(/\n/g,' ')).join(SEP);
+  });
+  const csv='sep=;\n'+[header.join(SEP),...rows].join('\r\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url;
+  a.download=`cleantabaco_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('✓ CSV exportado!');
+}
+</script>
+</body>
+</html>
