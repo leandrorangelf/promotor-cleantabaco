@@ -495,6 +495,48 @@ button:active { transform: translateY(1px); }
 .page-intro + .form-section { padding-top: 20px; }
 .page-intro h1 { font-size: clamp(25px, 3vw, 36px); line-height: 1.15; letter-spacing: -1px; margin: 0; color: var(--text); }
 .page-intro p { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+.nav-group-label { color: #707C94; font-size: 10px; font-weight: 800; letter-spacing: 1px; padding: 14px 12px 4px; }
+.camera-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.camera-btn { min-height: 54px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); font-weight: 700; cursor: pointer; }
+.camera-btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
+.foto-lightbox-download { position: fixed; top: 18px; right: 76px; min-height: 44px; padding: 0 16px; border: 1px solid rgba(255,255,255,.28); border-radius: 22px; background: rgba(255,255,255,.1); color: #fff; font-weight: 700; cursor: pointer; }
+.followup-card { display: none; margin: 0 0 18px; padding: 16px; border: 1px solid #CFC6FF; border-radius: var(--radius-sm); background: var(--purple-light); }
+.followup-card.open { display: block; }
+.followup-title { color: var(--purple); font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+.followup-text { color: var(--text-muted); font-size: 13px; line-height: 1.45; }
+.followup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.followup-btn { padding: 10px 13px; border: 1px solid var(--purple); border-radius: 10px; background: #fff; color: var(--purple); font-weight: 700; cursor: pointer; }
+.followup-btn.done { background: var(--mint); border-color: var(--mint); color: #fff; }
+.status-chip { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+.status-negociacao { background: var(--orange-light); color: var(--amber); }
+.status-confirmado { background: var(--purple-light); color: var(--purple); }
+.status-entregue { background: var(--mint-light); color: var(--mint); }
+.status-sem { background: #EEF1F7; color: var(--text-muted); }
+.analysis-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 16px; }
+.decision-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.decision-card h3 { font-size: 14px; color: var(--purple); margin-bottom: 14px; }
+.segment-table { width: 100%; border-collapse: collapse; min-width: 760px; font-size: 13px; }
+.segment-table th { padding: 10px 8px; text-align: right; color: var(--text-muted); border-bottom: 2px solid var(--border); font-size: 11px; }
+.segment-table th:first-child, .segment-table td:first-child { text-align: left; }
+.segment-table td { padding: 11px 8px; text-align: right; border-bottom: 1px solid #EDF0F6; }
+.bar-row { display: grid; grid-template-columns: minmax(110px,1fr) 2fr 48px; gap: 10px; align-items: center; padding: 8px 0; }
+.bar-track { height: 10px; overflow: hidden; border-radius: 6px; background: #E9EDF5; }
+.bar-fill { height: 100%; border-radius: 6px; background: var(--purple); }
+.suggestion-grid { display: grid; gap: 14px; }
+.suggestion-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.suggestion-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+.suggestion-name { font-size: 16px; font-weight: 800; }
+.suggestion-address { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
+.suggestion-products { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+.suggestion-product { padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #FAFBFE; }
+.suggestion-product label { display: block; font-size: 10px; font-weight: 800; color: var(--text-muted); margin-bottom: 5px; }
+.suggestion-product input { width: 100%; min-height: 38px; border: 1px solid var(--border); border-radius: 8px; padding: 7px; font-weight: 800; color: var(--text); }
+.suggestion-actions { display: flex; gap: 8px; margin-top: 14px; }
+.share-btn { padding: 11px 15px; border: 0; border-radius: 10px; background: var(--purple); color: #fff; font-weight: 800; cursor: pointer; }
+.visit-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+.visit-summary-item { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+.visit-summary-item strong { display: block; font-size: 22px; color: var(--text); }
+.visit-summary-item span { color: var(--text-muted); font-size: 11px; }
 @media (min-width: 900px) {
   .page-intro { padding: 38px 40px 0; }
   #pNova .page-intro { max-width: 960px; padding-inline: 28px; }
@@ -502,6 +544,11 @@ button:active { transform: translateY(1px); }
 @media (max-width: 899px) {
   .page-intro { padding: 20px 14px 0; }
   .page-intro h1 { font-size: 26px; }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .suggestion-products { grid-template-columns: 1fr 1fr; }
+  .visit-summary { grid-template-columns: 1fr 1fr; }
+  #appGestor .nav { overflow-x: auto; }
+  #appGestor .nav-group-label { display: none; }
 }
 </style>
 </head>
@@ -577,7 +624,7 @@ button:active { transform: translateY(1px); }
     <div class="form-section active" id="sec0">
       <div class="card">
         <div class="card-title">📋 Cadastro do PDV</div>
-        <div class="field"><label>Nome Fantasia *</label><input type="text" id="nomeFantasia" placeholder="Ex: Bar do João"></div>
+        <div class="field"><label>Nome Fantasia *</label><input type="text" id="nomeFantasia" placeholder="Ex: Bar do João" oninput="verificarAcompanhamentoPedido()"></div>
         <div class="field">
           <label>Tipo de Estabelecimento *</label>
           <select id="tipoEstab">
@@ -684,6 +731,20 @@ button:active { transform: translateY(1px); }
             <div class="radio-pill" onclick="selecionarRadio('pedidoFeito',this);togglePedidos(this)">Sim</div>
             <div class="radio-pill active" onclick="selecionarRadio('pedidoFeito',this);togglePedidos(this)">Não</div>
           </div>
+        </div>
+        <div class="followup-card" id="followupPedido">
+          <div class="followup-title">Acompanhamento da visita anterior</div>
+          <div class="followup-text" id="followupTexto"></div>
+          <div class="followup-actions" id="followupActions"></div>
+        </div>
+        <div class="field">
+          <label>Andamento comercial</label>
+          <select id="statusPedido" onchange="atualizarStatusPedido(this.value)">
+            <option value="Sem negociação">Sem negociação</option>
+            <option value="Em negociação">Em negociação</option>
+            <option value="Pedido confirmado">Pedido confirmado</option>
+            <option value="Pedido entregue">Pedido entregue</option>
+          </select>
         </div>
         <div id="bloquePedidos" style="display:none;">
           <div class="sep"></div>
@@ -846,11 +907,13 @@ button:active { transform: translateY(1px); }
     <div class="form-section" id="sec4">
       <div class="card">
         <div class="card-title">📸 Fotos</div>
+        <input type="file" id="fotoCameraInput" accept="image/*" capture="environment" onchange="processarFotos(event)">
         <input type="file" id="fotoInput" accept="image/*" multiple onchange="processarFotos(event)">
-        <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
-          <div class="foto-icon">📷</div>
-          <div class="foto-text">Toque para adicionar fotos<br><span style="font-size:12px;">Câmera ou galeria</span></div>
+        <div class="camera-actions">
+          <button type="button" class="camera-btn primary" onclick="document.getElementById('fotoCameraInput').click()">Tirar foto</button>
+          <button type="button" class="camera-btn" onclick="document.getElementById('fotoInput').click()">Escolher da galeria</button>
         </div>
+        <div class="foto-text" style="margin-top:10px;">No celular, permita o acesso à câmera quando o aparelho solicitar.</div>
         <div class="foto-grid" id="fotoGrid"></div>
       </div>
       <div class="card">
@@ -888,8 +951,11 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
   <div class="nav">
-    <button class="nav-btn active" onclick="mudarAbaG('painel')">Painel</button>
-    <button class="nav-btn" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
+    <div class="nav-group-label">GESTÃO</div>
+    <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
+    <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
   </div>
 
   <div class="page active" id="gPainel">
@@ -1002,8 +1068,27 @@ button:active { transform: translateY(1px); }
   <div class="page" id="gVisitas">
     <div class="page-intro"><h1>Visitas</h1><p>Encontre rapidamente qualquer atendimento realizado.</p></div>
     <div class="gestor-wrap">
+      <div class="visit-summary" id="gRelacaoResumo"></div>
       <input type="text" class="busca-input" id="gBusca" oninput="renderListaGestor()" placeholder="Buscar por PDV, cidade, promotor...">
       <div id="gLista"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="gAnalises">
+    <div class="page-intro"><h1>Análises por segmento</h1><p>Compare conversão, presença, ruptura, pedidos e ticket por tipo de PDV.</p></div>
+    <div class="gestor-wrap">
+      <div class="analysis-grid">
+        <div class="decision-card"><h3>Conversão por segmento</h3><div id="gConversaoSegmento"></div></div>
+        <div class="decision-card"><h3>Funil dos pedidos</h3><div id="gFunilPedidos"></div></div>
+      </div>
+      <div class="decision-card" style="overflow-x:auto;"><h3>Indicadores para decisão</h3><div id="gTabelaSegmentos"></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="gSugestoes">
+    <div class="page-intro"><h1>Sugestões de venda</h1><p>Quantidades em pacotes, calculadas a partir do histórico registrado de cada PDV.</p></div>
+    <div class="gestor-wrap">
+      <div class="suggestion-grid" id="gSugestoesLista"></div>
     </div>
   </div>
 </div>
@@ -1021,6 +1106,7 @@ button:active { transform: translateY(1px); }
 </div>
 
 <div class="foto-lightbox" id="fotoLightbox" role="dialog" aria-modal="true" aria-label="Visualização da foto">
+  <button class="foto-lightbox-download" type="button" onclick="baixarFotoAtual()">Baixar foto</button>
   <button class="foto-lightbox-close" type="button" onclick="fecharFoto()" aria-label="Fechar foto">×</button>
   <img id="fotoLightboxImg" src="" alt="Foto anexada à visita">
 </div>
@@ -1053,6 +1139,7 @@ let fotos = [];
 let editandoId = null;
 let visitaDetalheAtual = null;
 let fotosModalAtual = [];
+let acompanhamentoVisitaId = null;
 
 const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
 
@@ -1142,8 +1229,10 @@ function mudarAbaG(aba) {
   document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
-  document.querySelectorAll('#appGestor .nav-btn')[aba === 'painel' ? 0 : 1].classList.add('active');
+  document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
   if (aba === 'visitas') renderListaGestor();
+  if (aba === 'analises') renderAnalisesGerenciais();
+  if (aba === 'sugestoes') renderSugestoesVenda();
 }
 
 // SECOES DO FORMULÁRIO
@@ -1169,6 +1258,56 @@ function selecionarRadio(grupo, el) {
 function getRadio(grupo) {
   const el = document.querySelector('#' + grupo + ' .radio-pill.active');
   return el ? el.textContent.trim() : '';
+}
+
+function normalizarTexto(valor) {
+  return String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+function statusDaVisita(v) {
+  const c = v?.dados?.comercial||{};
+  if (c.statusPedido) return c.statusPedido;
+  if (c.pedidoEntregue) return 'Pedido entregue';
+  if (c.pedidoFeito === 'Sim') return 'Pedido confirmado';
+  return 'Sem negociação';
+}
+
+function statusClass(status) {
+  if (status === 'Pedido entregue') return 'status-entregue';
+  if (status === 'Pedido confirmado') return 'status-confirmado';
+  if (status === 'Em negociação') return 'status-negociacao';
+  return 'status-sem';
+}
+
+function verificarAcompanhamentoPedido() {
+  const nome = normalizarTexto(document.getElementById('nomeFantasia').value);
+  const box = document.getElementById('followupPedido');
+  if (!nome || editandoId) { box.classList.remove('open'); acompanhamentoVisitaId = null; return; }
+  const anterior = [...visitasPromotor]
+    .filter(v => normalizarTexto(v.dados?.pdv?.nomeFantasia) === nome)
+    .sort((a,b) => new Date(b.criado_em)-new Date(a.criado_em))[0];
+  if (!anterior) { box.classList.remove('open'); acompanhamentoVisitaId = null; return; }
+  acompanhamentoVisitaId = anterior.id;
+  const status = statusDaVisita(anterior);
+  const data = new Date(anterior.criado_em).toLocaleDateString('pt-BR');
+  document.getElementById('followupTexto').innerHTML = `Última visita em <strong>${data}</strong>. Situação registrada: <span class="status-chip ${statusClass(status)}">${status}</span>`;
+  const actions = [];
+  if (status !== 'Pedido confirmado' && status !== 'Pedido entregue') actions.push('<button type="button" class="followup-btn" onclick="atualizarStatusPedido(\'Pedido confirmado\')">Confirmar pedido</button>');
+  if (status !== 'Pedido entregue') actions.push('<button type="button" class="followup-btn done" onclick="atualizarStatusPedido(\'Pedido entregue\')">Confirmar entrega</button>');
+  document.getElementById('followupActions').innerHTML = actions.join('') || '<span class="followup-text">Pedido concluído.</span>';
+  box.classList.add('open');
+}
+
+function atualizarStatusPedido(status) {
+  document.getElementById('statusPedido').value = status;
+  if (status === 'Pedido confirmado' || status === 'Pedido entregue') {
+    document.querySelectorAll('#pedidoFeito .radio-pill').forEach(p => p.classList.toggle('active', p.textContent.trim() === 'Sim'));
+    document.getElementById('bloquePedidos').style.display = 'block';
+  }
+  if (acompanhamentoVisitaId && document.getElementById('followupPedido').classList.contains('open')) {
+    document.getElementById('followupActions').innerHTML = `<span class="status-chip ${statusClass(status)}">Nesta visita: ${status}</span>`;
+  }
+  toast(status === 'Pedido entregue' ? 'Entrega confirmada nesta visita' : 'Andamento atualizado');
 }
 
 function toggleCheck(item, id) {
@@ -1235,7 +1374,11 @@ function renderConcDetalhes() {
 }
 
 function togglePedidos(el) {
-  document.getElementById('bloquePedidos').style.display = el.textContent.trim() === 'Sim' ? 'block' : 'none';
+  const sim = el.textContent.trim() === 'Sim';
+  document.getElementById('bloquePedidos').style.display = sim ? 'block' : 'none';
+  const status = document.getElementById('statusPedido');
+  if (sim && status.value === 'Sem negociação') status.value = 'Pedido confirmado';
+  if (!sim && (status.value === 'Pedido confirmado' || status.value === 'Pedido entregue')) status.value = 'Sem negociação';
 }
 
 function alterarQty(id, delta) {
@@ -1508,6 +1651,21 @@ function fecharFoto() {
   document.body.style.overflow = '';
 }
 
+async function baixarFotoAtual() {
+  const src = document.getElementById('fotoLightboxImg').src;
+  if (!src) return;
+  const nome = `foto_visita_${new Date().toISOString().replace(/[:.]/g,'-')}.jpg`;
+  try {
+    const resposta = await fetch(src);
+    const blob = await resposta.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    const a = document.createElement('a'); a.href = src; a.download = nome; a.target = '_blank'; document.body.appendChild(a); a.click(); a.remove();
+  }
+}
+
 // SALVAR
 async function salvarVisita() {
   const nome = document.getElementById('nomeFantasia').value.trim();
@@ -1542,6 +1700,9 @@ async function salvarVisita() {
       precoTabela: getRadio('precoTabela'),
       frequencia: getRadio('frequencia'),
       pedidoFeito: getRadio('pedidoFeito'),
+      statusPedido: document.getElementById('statusPedido').value,
+      pedidoEntregue: document.getElementById('statusPedido').value === 'Pedido entregue',
+      acompanhamentoDe: acompanhamentoVisitaId,
       pedidoPac: {
         GR: parseInt(document.getElementById('qtyGR').textContent),
         GM: parseInt(document.getElementById('qtyGM').textContent),
@@ -1602,13 +1763,15 @@ function limparFormulario() {
   ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('tipoEstab').value = '';
   document.getElementById('uf').value = '';
-  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null;
+  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null;
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#concorrentes .conc-item').forEach(el => el.classList.remove('active'));
   const cd = document.getElementById('concDetalhes'); if(cd) cd.innerHTML = '';
   document.querySelectorAll('.check-item').forEach(el => { el.classList.remove('checked'); el.querySelector('input').checked = false; });
   document.getElementById('bloquePedidos').style.display = 'none';
+  document.getElementById('statusPedido').value = 'Sem negociação';
+  document.getElementById('followupPedido').classList.remove('open');
   ['qtyGR','qtyGM','qtyCM','qtyCC'].forEach(id => document.getElementById(id).textContent = '0');
   ['precoGR','precoGM','precoCM','precoCC'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   ['totalGR','totalGM','totalCM','totalCC'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent=''; });
@@ -1649,6 +1812,7 @@ function renderHistorico() {
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const skus = (d.presenca?.skusPresentes||[]).length;
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
+    const status = statusDaVisita(v);
     return `
       <div class="visita-card">
         <div class="visita-header">
@@ -1660,6 +1824,7 @@ function renderHistorico() {
           <span class="badge badge-purple">${d.presenca?.temProduto||''}</span>
           ${skus > 0 ? `<span class="badge badge-green">${skus} SKU${skus>1?'s':''}</span>` : ''}
           ${temPedido ? `<span class="badge badge-orange">Pedido feito</span>` : ''}
+          <span class="status-chip ${statusClass(status)}">${status}</span>
         </div>
         <div class="visita-actions">
           <button class="btn-detalhes" onclick="abrirDetalhePromotor('${v.id}')">Ver detalhes</button>
@@ -1729,6 +1894,7 @@ function editarVisita(id) {
   setRadio('frequencia', d.comercial?.frequencia);
   setRadio('pedidoFeito', d.comercial?.pedidoFeito);
   setRadio('receptividade', d.comercial?.receptividade);
+  document.getElementById('statusPedido').value = statusDaVisita(v);
   setRadio('motivoResistencia', d.mercado?.motivoResistencia);
 
   // Pedidos
@@ -1736,7 +1902,7 @@ function editarVisita(id) {
     document.getElementById('bloquePedidos').style.display = 'block';
     ['GR','GM','CM','CC'].forEach(s => {
       const el = document.getElementById('qty'+s);
-      if (el) el.textContent = d.comercial.pedidoQty?.[s] || 0;
+      if (el) el.textContent = (d.comercial.pedidoPac||d.comercial.pedidoQty||{})[s] || 0;
     });
   }
 
@@ -1805,7 +1971,7 @@ async function carregarGestor() {
 function renderPainel() {
   const total = visitasGestor.length;
   const comProduto = visitasGestor.filter(v => v.dados?.presenca?.temProduto === 'Sim').length;
-  const pedidos = visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').length;
+  const pedidos = visitasGestor.filter(v => ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))).length;
   const ruptura = visitasGestor.filter(v => v.dados?.presenca?.ruptura).length;
 
   // PDVs únicos
@@ -1814,7 +1980,7 @@ function renderPainel() {
   // Valor total e ticket médio
   let valorTotal = 0; let pedidosComValor = 0;
   visitasGestor.forEach(v => {
-    const qty = v.dados?.comercial?.pedidoQty||{};
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
     let sub = 0;
     ['GR','GM','CM','CC'].forEach(s => { sub += (qty[s]||0)*(preco[s]||0); });
@@ -1841,7 +2007,7 @@ function renderPainel() {
     if (v.dados?.comercial?.pedidoFeito === 'Sim') prom[n].pedidos++;
     if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) prom[n].parceiros++;
     if (v.dados?.presenca?.ruptura) prom[n].ruptura++;
-    const qty = v.dados?.comercial?.pedidoQty||{};
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
     ['GR','GM','CM','CC'].forEach(s => { prom[n].valor += (qty[s]||0)*(preco[s]||0); });
   });
@@ -1916,7 +2082,7 @@ function renderPainel() {
   const pedSku = {GR:0,GM:0,CM:0,CC:0};
   visitasGestor.forEach(v => {
     (v.dados?.presenca?.skusPresentes||[]).forEach(s => { if(cSku[s]!==undefined) cSku[s]++; });
-    const qty = v.dados?.comercial?.pedidoQty||{};
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     skus.forEach(s => { pedSku[s] += qty[s]||0; });
   });
   document.getElementById('gSKUs').innerHTML = skus.map(s => {
@@ -1926,7 +2092,7 @@ function renderPainel() {
       <div style="flex:1;">
         <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;">${nomeSku[s]}</div>
         <div class="sku-bar-wrap"><div class="sku-bar-fill" style="width:${pct}%;background:${corSku[s]}"></div></div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${pedSku[s]} cx pedidas</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${pedSku[s]} pacotes pedidos</div>
       </div>
       <div class="sku-pct">${pct}%</div>
     </div>`;
@@ -2096,12 +2262,111 @@ function renderPainel() {
   }).join('') : '<div style="font-size:13px;color:var(--mint);padding:8px 0;">✓ Todos os PDVs visitados nos últimos 30 dias</div>';
 }
 
+function renderAnalisesGerenciais() {
+  const grupos = {};
+  visitasGestor.forEach(v => {
+    const tipo = v.dados?.pdv?.tipo || 'Outros';
+    if (!grupos[tipo]) grupos[tipo] = { visitas:0, pedidos:0, entregues:0, produto:0, ruptura:0, valor:0, pedidosValor:0 };
+    const g = grupos[tipo];
+    g.visitas++;
+    const status = statusDaVisita(v);
+    if (status === 'Pedido confirmado' || status === 'Pedido entregue') g.pedidos++;
+    if (status === 'Pedido entregue') g.entregues++;
+    if (v.dados?.presenca?.temProduto === 'Sim') g.produto++;
+    if (v.dados?.presenca?.ruptura) g.ruptura++;
+    const c = v.dados?.comercial||{};
+    const qty = c.pedidoPac||c.pedidoQty||{};
+    const preco = c.pedidoPreco||{};
+    const subtotal = ['GR','GM','CM','CC'].reduce((s,sku) => s+(qty[sku]||0)*(preco[sku]||0),0);
+    if (subtotal > 0) { g.valor += subtotal; g.pedidosValor++; }
+  });
+  const linhas = Object.entries(grupos).sort((a,b)=>b[1].visitas-a[1].visitas);
+  document.getElementById('gConversaoSegmento').innerHTML = linhas.length ? linhas.map(([tipo,g]) => {
+    const pct = Math.round(g.pedidos/g.visitas*100);
+    return `<div class="bar-row"><span>${tipo}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><strong>${pct}%</strong></div>`;
+  }).join('') : '<div class="empty">Sem dados no período</div>';
+
+  const funil = {
+    'Em negociação': visitasGestor.filter(v=>statusDaVisita(v)==='Em negociação').length,
+    'Pedido confirmado': visitasGestor.filter(v=>statusDaVisita(v)==='Pedido confirmado').length,
+    'Pedido entregue': visitasGestor.filter(v=>statusDaVisita(v)==='Pedido entregue').length
+  };
+  const maxFunil = Math.max(...Object.values(funil),1);
+  document.getElementById('gFunilPedidos').innerHTML = Object.entries(funil).map(([status,qtd]) => `
+    <div class="bar-row"><span>${status}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(qtd/maxFunil*100)}%;background:${status==='Pedido entregue'?'var(--mint)':status==='Pedido confirmado'?'var(--purple)':'var(--amber)'}"></div></div><strong>${qtd}</strong></div>`).join('');
+
+  document.getElementById('gTabelaSegmentos').innerHTML = linhas.length ? `<table class="segment-table"><thead><tr><th>Segmento</th><th>Visitas</th><th>Conversão</th><th>Presença</th><th>Ruptura</th><th>Entregues</th><th>Ticket médio</th></tr></thead><tbody>${linhas.map(([tipo,g])=>`<tr>
+    <td><strong>${tipo}</strong></td><td>${g.visitas}</td><td>${Math.round(g.pedidos/g.visitas*100)}%</td><td>${Math.round(g.produto/g.visitas*100)}%</td><td>${Math.round(g.ruptura/g.visitas*100)}%</td><td>${g.entregues}</td><td>${g.pedidosValor?`R$ ${(g.valor/g.pedidosValor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—'}</td>
+  </tr>`).join('')}</tbody></table>` : '<div class="empty">Sem dados no período</div>';
+}
+
+function renderSugestoesVenda() {
+  const porPdv = {};
+  const mediaGlobal = {GR:[],GM:[],CM:[],CC:[]};
+  visitasGestor.forEach(v => {
+    const p = v.dados?.pdv||{};
+    const key = p.cnpj || normalizarTexto(p.nomeFantasia);
+    if (!key) return;
+    if (!porPdv[key]) porPdv[key] = [];
+    porPdv[key].push(v);
+    const q = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    Object.keys(mediaGlobal).forEach(s => { if ((q[s]||0)>0) mediaGlobal[s].push(q[s]); });
+  });
+  const medias = Object.fromEntries(Object.entries(mediaGlobal).map(([s,valores]) => [s, valores.length ? Math.round(valores.reduce((a,b)=>a+b,0)/valores.length) : 6]));
+  const cards = Object.entries(porPdv).map(([key,lista]) => {
+    lista.sort((a,b)=>new Date(b.criado_em)-new Date(a.criado_em));
+    const ultima = lista[0];
+    const p = ultima.dados?.pdv||{};
+    const sugestao = {};
+    ['GR','GM','CM','CC'].forEach(s => {
+      const historico = lista.map(v => (v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{})[s]||0).filter(Boolean);
+      sugestao[s] = historico.length ? Math.max(1,Math.round(historico.reduce((a,b)=>a+b,0)/historico.length)) : medias[s];
+    });
+    return { key, ultima, p, sugestao };
+  }).sort((a,b)=>String(a.p.nomeFantasia).localeCompare(String(b.p.nomeFantasia),'pt-BR'));
+  window.sugestoesAtuais = cards;
+  document.getElementById('gSugestoesLista').innerHTML = cards.length ? cards.map((item,i) => `
+    <div class="suggestion-card">
+      <div class="suggestion-head"><div><div class="suggestion-name">${item.p.nomeFantasia||'PDV sem nome'}</div><div class="suggestion-address">${[item.p.endereco,item.p.cidade,item.p.uf].filter(Boolean).join(' · ')||'Endereço não informado'}</div></div><span class="status-chip ${statusClass(statusDaVisita(item.ultima))}">${statusDaVisita(item.ultima)}</span></div>
+      <div class="suggestion-products">
+        ${[['GR','Gudang Red'],['GM','Gudang Menta'],['CM','Cretec Menta'],['CC','Cretec Cereja']].map(([s,n])=>`<div class="suggestion-product"><label>${n} · pacotes</label><input type="number" min="0" step="1" id="sug-${i}-${s}" value="${item.sugestao[s]}"></div>`).join('')}
+      </div>
+      <div class="suggestion-actions"><button class="share-btn" type="button" onclick="compartilharSugestao(${i})">Compartilhar sugestão</button></div>
+    </div>`).join('') : '<div class="empty">Nenhum PDV disponível para sugestão</div>';
+}
+
+async function compartilharSugestao(i) {
+  const item = (window.sugestoesAtuais||[])[i];
+  if (!item) return;
+  const p = item.p;
+  const nomes = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  const linhas = Object.keys(nomes).map(s => `• ${nomes[s]}: ${parseInt(document.getElementById(`sug-${i}-${s}`).value)||0} pacotes`).join('\n');
+  const endereco = [p.endereco,p.cidade,p.uf].filter(Boolean).join(', ') || 'Não informado';
+  const texto = `SUGESTÃO DE VENDA · CLEANTABACO\n\nPDV: ${p.nomeFantasia||'—'}\nEndereço: ${endereco}\nComprador: ${p.nomeComprador||'—'}\nTelefone: ${p.telefone||'—'}\n\n${linhas}`;
+  if (navigator.share) {
+    try { await navigator.share({title:`Sugestão · ${p.nomeFantasia||'PDV'}`,text:texto}); return; } catch(e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(texto); toast('Sugestão copiada para compartilhar'); }
+  catch(e) {
+    const area = document.createElement('textarea'); area.value = texto; document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove(); toast('Sugestão copiada para compartilhar');
+  }
+}
+
 function renderListaGestor() {
   const busca = document.getElementById('gBusca').value.toLowerCase();
   const filtradas = visitasGestor.filter(v => {
     const d = v.dados||{};
     return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca);
   });
+  const confirmados = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido confirmado').length;
+  const entregues = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
+  const negociacao = visitasGestor.filter(v => statusDaVisita(v) === 'Em negociação').length;
+  const resumo = document.getElementById('gRelacaoResumo');
+  if (resumo) resumo.innerHTML = `
+    <div class="visit-summary-item"><strong>${visitasGestor.length}</strong><span>visitas no período</span></div>
+    <div class="visit-summary-item"><strong>${negociacao}</strong><span>em negociação</span></div>
+    <div class="visit-summary-item"><strong>${confirmados}</strong><span>pedidos confirmados</span></div>
+    <div class="visit-summary-item"><strong>${entregues}</strong><span>pedidos entregues</span></div>`;
   if (!filtradas.length) {
     document.getElementById('gLista').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>';
     return;
@@ -2112,6 +2377,7 @@ function renderListaGestor() {
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const skus = (d.presenca?.skusPresentes||[]).join(', ')||'—';
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
+    const status = statusDaVisita(v);
     return `
       <div class="visita-gestor" onclick="abrirDetalheGestor('${v.id}')">
         <div class="vg-header">
@@ -2126,6 +2392,7 @@ function renderListaGestor() {
           <span class="badge badge-purple">${d.presenca?.temProduto||'—'}</span>
           ${temPedido ? '<span class="badge badge-orange">Pedido</span>' : ''}
           ${d.presenca?.ruptura ? '<span class="badge badge-red">Ruptura</span>' : ''}
+          <span class="status-chip ${statusClass(status)}">${status}</span>
         </div>
       </div>
     `;
@@ -2205,6 +2472,7 @@ function renderModal(v, isGestor) {
       <div class="rel-row"><span class="rel-key">Preço tabela</span><span class="rel-val">${d.comercial?.precoTabela||'—'}</span></div>
       <div class="rel-row"><span class="rel-key">Frequência</span><span class="rel-val">${d.comercial?.frequencia||'—'}</span></div>
       <div class="rel-row"><span class="rel-key">Pedido</span><span class="rel-val">${d.comercial?.pedidoFeito||'—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Andamento</span><span class="rel-val"><span class="status-chip ${statusClass(statusDaVisita(v))}">${statusDaVisita(v)}</span></span></div>
       ${pedidos}
       <div class="rel-row"><span class="rel-key">Receptividade</span><span class="rel-val">${d.comercial?.receptividade||'—'}</span></div>
     </div>
