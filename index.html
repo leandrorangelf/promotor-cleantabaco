@@ -537,6 +537,10 @@ button:active { transform: translateY(1px); }
 .visit-summary-item { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
 .visit-summary-item strong { display: block; font-size: 22px; color: var(--text); }
 .visit-summary-item span { color: var(--text-muted); font-size: 11px; }
+.filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 300px; }
+.export-btn { padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); font-size: 12px; font-weight: 800; cursor: pointer; }
+.export-btn.orders { background: var(--mint); border-color: var(--mint); color: #fff; }
+.btn-limpar-filtros { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; }
 @media (min-width: 900px) {
   .page-intro { padding: 38px 40px 0; }
   #pNova .page-intro { max-width: 960px; padding-inline: 28px; }
@@ -547,8 +551,14 @@ button:active { transform: translateY(1px); }
   .analysis-grid { grid-template-columns: 1fr; }
   .suggestion-products { grid-template-columns: 1fr 1fr; }
   .visit-summary { grid-template-columns: 1fr 1fr; }
+  .filter-actions { min-width: 0; grid-template-columns: 1fr; }
   #appGestor .nav { overflow-x: auto; }
   #appGestor .nav-group-label { display: none; }
+}
+@media (min-width: 900px) {
+  #gPainel .filtros { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); align-items: end; gap: 12px; }
+  #gPainel .filtros > .filtro-row { display: contents; }
+  #gPainel .filter-actions { grid-column: 1 / -1; min-width: 0; grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
 </style>
 </head>
@@ -985,9 +995,15 @@ button:active { transform: translateY(1px); }
           <div class="filtro-group"><label>De</label><input type="date" id="gFiltroDe"></div>
           <div class="filtro-group"><label>Até</label><input type="date" id="gFiltroAte"></div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-filtrar" style="flex:1;" onclick="carregarGestor()">Filtrar</button>
-          <button onclick="exportarCSV()" style="flex:1;padding:12px;background:var(--mint);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">↓ CSV</button>
+        <div class="filtro-row">
+          <div class="filtro-group"><label>Cidade</label><input type="text" id="gFiltroCidade" placeholder="Todas"></div>
+          <div class="filtro-group"><label>Situação do pedido</label><select id="gFiltroStatus"><option value="">Todas</option><option>Sem negociação</option><option>Em negociação</option><option>Pedido confirmado</option><option>Pedido entregue</option></select></div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn-filtrar" onclick="carregarGestor()">Aplicar filtros</button>
+          <button class="btn-limpar-filtros" onclick="limparFiltrosGestor()">Limpar filtros</button>
+          <button class="export-btn" onclick="exportarCSV()">Exportar visitas</button>
+          <button class="export-btn orders" onclick="exportarPedidosCSV()">Exportar pedidos completos</button>
         </div>
       </div>
 
@@ -999,6 +1015,9 @@ button:active { transform: translateY(1px); }
         <div class="resumo-card red"><div class="resumo-label">Ruptura</div><div class="resumo-valor" id="gRuptura">—</div><div class="resumo-sub">PDVs com falta</div></div>
         <div class="resumo-card purple"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% presença de marca</div></div>
         <div class="resumo-card mint"><div class="resumo-label">Ticket médio</div><div class="resumo-valor" id="gTicket" style="font-size:20px;">—</div><div class="resumo-sub">por pedido com valor</div></div>
+        <div class="resumo-card purple"><div class="resumo-label">Pedidos</div><div class="resumo-valor" id="gPedidos">—</div><div class="resumo-sub">confirmados ou entregues</div></div>
+        <div class="resumo-card mint"><div class="resumo-label">Pacotes vendidos</div><div class="resumo-valor" id="gPacotes">—</div><div class="resumo-sub">soma de todos os produtos</div></div>
+        <div class="resumo-card orange"><div class="resumo-label">Entregues</div><div class="resumo-valor" id="gEntregues">—</div><div class="resumo-sub">pedidos confirmados no PDV</div></div>
         <div class="resumo-card orange" style="grid-column:1/-1;"><div class="resumo-label">💰 Valor total pedidos</div><div class="resumo-valor" id="gValorTotal" style="font-size:22px;">—</div><div class="resumo-sub">soma de todos os pedidos com valor no período</div></div>
       </div>
 
@@ -1550,11 +1569,11 @@ function exportarCSV() {
 
   const header = ['Data','Promotor','PDV','Tipo','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor',
     'Tem Produto','SKUs Presentes','Destaque','Ruptura','Material PDV','Precificador',
-    'Preco Tabela','Frequencia','Pedido Feito',
+    'Preco Tabela','Frequencia','Pedido Feito','Situacao Pedido','Acompanhamento De',
     'Pac GR','Pac GM','Pac CM','Pac CC',
     'Cx GR','Cx GM','Cx CM','Cx CC',
     'Preco GR/pac','Preco GM/pac','Preco CM/pac','Preco CC/pac','Total Pedido',
-    'Receptividade','Concorrentes','Conc Dominante','Motivo Resistencia','Observacoes'];
+    'Receptividade','Concorrentes','Conc Dominante','Motivo Resistencia','Quantidade Fotos','Observacoes'];
 
   const rows = visitas.map(v => {
     const d = v.dados||{};
@@ -1576,13 +1595,13 @@ function exportarCSV() {
       cel(p.endereco), cel(p.cidade), cel(p.uf), cel(p.nomeComprador), cel(p.telefone), cel(p.distribuidor),
       cel(pr.temProduto), (pr.skusPresentes||[]).join('|'), cel(pr.destaque),
       pr.ruptura?'Sim':'Nao', pr.materialPDV?'Sim':'Nao', pr.precificador?'Sim':'Nao',
-      cel(c.precoTabela), cel(c.frequencia), cel(c.pedidoFeito),
+      cel(c.precoTabela), cel(c.frequencia), cel(c.pedidoFeito), cel(statusDaVisita(v)), cel(c.acompanhamentoDe),
       qty.GR||0, qty.GM||0, qty.CM||0, qty.CC||0,
       Math.floor((qty.GR||0)/48), Math.floor((qty.GM||0)/48), Math.floor((qty.CM||0)/50), Math.floor((qty.CC||0)/50),
       fmt(preco.GR||0), fmt(preco.GM||0), fmt(preco.CM||0), fmt(preco.CC||0), fmt(total.toFixed(2)),
-      cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia),
+      cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia), (v.fotos||[]).length,
       cel(d.observacoes)
-    ].map(v => `"${String(v||'')}"`).join(SEP);
+    ].map(v => `"${String(v ?? '').replace(/"/g,'""').replace(/\r?\n/g,' ')}"`).join(SEP);
   });
 
   const csv = 'sep=;\n' + [header.join(SEP), ...rows].join('\r\n');
@@ -1591,7 +1610,46 @@ function exportarCSV() {
   const a = document.createElement('a');
   a.href = url; a.download = `cleantabaco_visitas_${new Date().toISOString().split('T')[0]}.csv`;
   a.click(); URL.revokeObjectURL(url);
-  toast('✓ CSV exportado!');
+  toast('Visitas completas exportadas');
+}
+
+function exportarPedidosCSV() {
+  const visitasPedido = visitasGestor.filter(v => {
+    const c = v.dados?.comercial||{};
+    const q = c.pedidoPac||c.pedidoQty||{};
+    return ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v)) || Object.values(q).some(n => Number(n)>0);
+  });
+  if (!visitasPedido.length) { toast('Nenhum pedido nos filtros atuais'); return; }
+
+  const skus = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
+  const porCaixa = {GR:48,GM:48,CM:50,CC:50};
+  const header = ['Data da visita','Promotor','Situação do pedido','PDV','Tipo PDV','CNPJ','IE','Endereço','Cidade','UF','Comprador','Telefone','Distribuidor','SKU','Produto','Pacotes','Caixas equivalentes','Preço por pacote','Subtotal do item','Total do pedido','Receptividade','Observações'];
+  const rows = [];
+  visitasPedido.forEach(v => {
+    const d=v.dados||{}, p=d.pdv||{}, c=d.comercial||{};
+    const qty=c.pedidoPac||c.pedidoQty||{}, preco=c.pedidoPreco||{};
+    const total=Object.keys(skus).reduce((s,k)=>s+(Number(qty[k])||0)*(Number(preco[k])||0),0);
+    const itens=Object.keys(skus).filter(k => (Number(qty[k])||0)>0);
+    (itens.length?itens:['']).forEach(k => {
+      const pac=k?(Number(qty[k])||0):0;
+      const valor=k?(Number(preco[k])||0):0;
+      rows.push([
+        new Date(v.criado_em).toLocaleString('pt-BR'),v.promotor,statusDaVisita(v),p.nomeFantasia,p.tipo,p.cnpj,p.ie,p.endereco,p.cidade,p.uf,p.nomeComprador,p.telefone,p.distribuidor,
+        k,k?skus[k]:'',pac,k?(pac/porCaixa[k]).toFixed(2):'',valor.toFixed(2),(pac*valor).toFixed(2),total.toFixed(2),c.receptividade,d.observacoes
+      ]);
+    });
+  });
+  baixarCSV(`cleantabaco_pedidos_completos_${new Date().toISOString().split('T')[0]}.csv`,header,rows);
+  toast(`${visitasPedido.length} pedido(s) exportado(s)`);
+}
+
+function baixarCSV(nome, header, rows) {
+  const cell = valor => `"${String(valor ?? '').replace(/"/g,'""').replace(/\r?\n/g,' ')}"`;
+  const csv = 'sep=;\n' + [header.map(cell).join(';'),...rows.map(row=>row.map(cell).join(';'))].join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function mascaraCNPJ(input) {
@@ -1956,16 +2014,37 @@ async function carregarGestor() {
   try {
     const res = await fetch(url, { headers: headers() });
     const data = await res.json();
-    visitasGestor = data.visitas || [];
-
-    const tipo = document.getElementById('gFiltroTipo').value;
-    if (tipo) visitasGestor = visitasGestor.filter(v => v.dados?.pdv?.tipo === tipo);
+    visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
 
     renderPainel();
     renderListaGestor();
   } catch(e) {
     toast('Erro ao carregar dados');
   }
+}
+
+function aplicarFiltrosLocaisGestor(lista) {
+  const tipo = document.getElementById('gFiltroTipo').value;
+  const cidade = normalizarTexto(document.getElementById('gFiltroCidade').value);
+  const statusFiltro = document.getElementById('gFiltroStatus').value;
+  return lista.filter(v => {
+    if (tipo && v.dados?.pdv?.tipo !== tipo) return false;
+    if (cidade && !normalizarTexto(v.dados?.pdv?.cidade).includes(cidade)) return false;
+    if (statusFiltro && statusDaVisita(v) !== statusFiltro) return false;
+    return true;
+  });
+}
+
+function limparFiltrosGestor() {
+  document.getElementById('gFiltroPromotor').value = '';
+  document.getElementById('gFiltroTipo').value = '';
+  document.getElementById('gFiltroCidade').value = '';
+  document.getElementById('gFiltroStatus').value = '';
+  const hoje = new Date();
+  const trintaDias = new Date(); trintaDias.setDate(hoje.getDate()-30);
+  document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
+  document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
+  carregarGestor();
 }
 
 function renderPainel() {
@@ -1979,14 +2058,16 @@ function renderPainel() {
 
   // Valor total e ticket médio
   let valorTotal = 0; let pedidosComValor = 0;
+  let totalPacotes = 0;
   visitasGestor.forEach(v => {
     const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
     let sub = 0;
-    ['GR','GM','CM','CC'].forEach(s => { sub += (qty[s]||0)*(preco[s]||0); });
+    ['GR','GM','CM','CC'].forEach(s => { sub += (qty[s]||0)*(preco[s]||0); totalPacotes += qty[s]||0; });
     if (sub > 0) { valorTotal += sub; pedidosComValor++; }
   });
   const ticketMedio = pedidosComValor > 0 ? valorTotal/pedidosComValor : 0;
+  const entregues = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
 
   // KPIs
   document.getElementById('gTotal').textContent = total;
@@ -1997,6 +2078,8 @@ function renderPainel() {
   document.getElementById('gTicket').textContent = ticketMedio > 0 ? `R$ ${ticketMedio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
   document.getElementById('gValorTotal').textContent = valorTotal > 0 ? `R$ ${valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
   const elPedidos = document.getElementById('gPedidos'); if(elPedidos) elPedidos.textContent = pedidos;
+  const elPacotes = document.getElementById('gPacotes'); if(elPacotes) elPacotes.textContent = totalPacotes.toLocaleString('pt-BR');
+  const elEntregues = document.getElementById('gEntregues'); if(elEntregues) elEntregues.textContent = entregues;
 
   // --- PERFORMANCE POR PROMOTOR ---
   const prom = {};
