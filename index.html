@@ -149,6 +149,15 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .visita-actions { display: flex; gap: 8px; margin-top: 10px; }
 .btn-editar { flex: 1; padding: 10px; background: var(--purple-light); color: var(--purple); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .btn-excluir { padding: 10px 16px; background: var(--red-light); color: var(--red); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.revisita-banner { display: none; margin: 0 14px 12px; padding: 14px; border: 1px solid var(--mint); border-radius: var(--radius); background: var(--mint-light); }
+.revisita-banner.open { display: block; }
+.revisita-title { font-size: 13px; font-weight: 800; color: var(--mint); margin-bottom: 4px; }
+.revisita-text { font-size: 13px; color: var(--text); line-height: 1.45; margin-bottom: 10px; }
+.revisita-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.revisita-actions button { flex: 1; min-width: 120px; padding: 10px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.revisita-save { background: var(--mint); color: #fff; }
+.revisita-photo { background: #fff; color: var(--purple); }
+.revisita-edit { background: var(--purple-light); color: var(--purple); }
 .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-right: 4px; margin-top: 4px; }
 .badge-green { background: var(--mint-light); color: var(--mint); }
 .badge-orange { background: var(--orange-light); color: var(--amber); }
@@ -629,6 +638,16 @@ button:active { transform: translateY(1px); }
     <div class="page-intro">
       <h1>Nova visita</h1>
       <p>Registre os dados do ponto de venda em cinco etapas rápidas.</p>
+    </div>
+
+    <div class="revisita-banner" id="revisitaAviso">
+      <div class="revisita-title" id="revisitaTitulo">Revisita rapida</div>
+      <div class="revisita-text" id="revisitaTexto">Dados do PDV carregados. Atualize apenas pedido, fotos ou observacoes se precisar.</div>
+      <div class="revisita-actions">
+        <button type="button" class="revisita-save" onclick="salvarVisita()">Salvar revisita</button>
+        <button type="button" class="revisita-photo" onclick="irSecao(4)">Foto/obs.</button>
+        <button type="button" class="revisita-edit" onclick="irSecao(0)">Editar cadastro</button>
+      </div>
     </div>
 
     <!-- SECAO 1: PDV -->
@@ -1200,6 +1219,7 @@ let editandoId = null;
 let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let acompanhamentoVisitaId = null;
+let revisitaRapidaAtiva = false;
 
 const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
 
@@ -1338,6 +1358,29 @@ function getRadio(grupo) {
 
 function normalizarTexto(valor) {
   return String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+function setRadioValor(grupo, valor, fallbackIndex=0) {
+  const pills = [...document.querySelectorAll('#' + grupo + ' .radio-pill')];
+  if (!pills.length) return;
+  let aplicado = false;
+  const alvo = normalizarTexto(valor);
+  pills.forEach((p, i) => {
+    const match = alvo && normalizarTexto(p.textContent) === alvo;
+    p.classList.toggle('active', match);
+    if (match) aplicado = true;
+  });
+  if (!aplicado) {
+    pills.forEach((p, i) => p.classList.toggle('active', i === fallbackIndex));
+  }
+}
+
+function setCheckValor(id, ativo) {
+  const input = document.getElementById(id);
+  const item = input?.closest('.check-item');
+  if (!input || !item) return;
+  input.checked = !!ativo;
+  item.classList.toggle('checked', !!ativo);
 }
 
 function statusDaVisita(v) {
@@ -1883,7 +1926,8 @@ function limparFormulario() {
   ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('tipoEstab').value = '';
   document.getElementById('uf').value = '';
-  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null;
+  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null; revisitaRapidaAtiva = false;
+  document.getElementById('revisitaAviso')?.classList.remove('open');
   try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
@@ -1897,11 +1941,13 @@ function limparFormulario() {
   ['precoGR','precoGM','precoCM','precoCC'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   ['totalGR','totalGM','totalCM','totalCC'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent=''; });
   const tp = document.getElementById('totalPedido'); if(tp) tp.textContent='R$ 0,00';
-  ['temProduto','destaque','precoTabela','frequencia','pedidoFeito','receptividade','motivoResistencia'].forEach(grupo => {
-    const pills = document.querySelectorAll('#' + grupo + ' .radio-pill');
-    pills.forEach(p => p.classList.remove('active'));
-    if (pills.length) pills[0].classList.add('active');
-  });
+  setRadioValor('temProduto', '', 0);
+  setRadioValor('destaque', '', 1);
+  setRadioValor('precoTabela', '', 0);
+  setRadioValor('frequencia', '', 2);
+  setRadioValor('pedidoFeito', '', 1);
+  setRadioValor('receptividade', '', 1);
+  setRadioValor('motivoResistencia', '', 4);
   irSecao(0);
   document.getElementById('btnSalvar').textContent = '✓ Salvar Visita';
 }
@@ -1964,6 +2010,7 @@ async function carregarClientes() {
   const el = document.getElementById('listaClientes');
   el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
   try {
+    await carregarVisitasPromotor();
     const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual));
     const d = await r.json();
     todosClientes = d.clientes || [];
@@ -1982,34 +2029,21 @@ function buscarClientes() {
   renderClientes(filtrados);
 }
 
-function renderClientes(lista) {
-  const el = document.getElementById('listaClientes');
-  if (!lista.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>' +
-      (todosClientes.length ? 'Nenhum PDV encontrado' : 'Nenhum PDV cadastrado ainda.<br>Realize uma visita para criar a carteira.') +
-      '</div></div>';
-    return;
-  }
-  el.innerHTML = lista.map(c => {
-    const local = [c.cidade, c.uf].filter(Boolean).join('/');
-    return `
-      <div class="visita-card" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})" style="cursor:pointer;">
-        <div class="visita-header">
-          <div class="visita-nome">${c.nome_fantasia}</div>
-          <span class="badge badge-purple" style="white-space:nowrap;flex-shrink:0;">${c.codigo}</span>
-        </div>
-        <div class="visita-info">${[c.tipo, local].filter(Boolean).join(' · ') || '—'}</div>
-        ${c.cnpj ? `<div class="visita-info">CNPJ: ${c.cnpj}</div>` : ''}
-        ${c.nome_comprador ? `<div class="visita-info">Comprador: ${c.nome_comprador}${c.telefone ? ' · ' + c.telefone : ''}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+function clienteMatchesVisita(cliente, visita) {
+  const p = visita?.dados?.pdv || {};
+  const cnpjCliente = String(cliente.cnpj || '').replace(/\D/g,'');
+  const cnpjVisita = String(p.cnpj || '').replace(/\D/g,'');
+  if (cnpjCliente && cnpjVisita && cnpjCliente === cnpjVisita) return true;
+  return normalizarTexto(cliente.nome_fantasia) === normalizarTexto(p.nomeFantasia);
 }
 
-function iniciarVisitaCliente(clienteJson) {
-  const c = JSON.parse(clienteJson);
-  mudarAbaP('nova');
-  limparFormulario();
+function ultimaVisitaCliente(cliente) {
+  return [...visitasPromotor]
+    .filter(v => clienteMatchesVisita(cliente, v))
+    .sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em))[0] || null;
+}
+
+function preencherCadastroCliente(c) {
   document.getElementById('nomeFantasia').value = c.nome_fantasia || '';
   const tipoEl = document.getElementById('tipoEstab');
   if (c.tipo) { for (const opt of tipoEl.options) { if (opt.value === c.tipo) { tipoEl.value = c.tipo; break; } } }
@@ -2022,7 +2056,99 @@ function iniciarVisitaCliente(clienteJson) {
   document.getElementById('nomeComprador').value = c.nome_comprador || '';
   document.getElementById('telefone').value = c.telefone || '';
   document.getElementById('distribuidor').value = c.distribuidor || '';
-  toast(c.codigo + ' · ' + c.nome_fantasia + ' carregado');
+}
+
+function aplicarBaseUltimaVisita(v) {
+  if (!v) return;
+  const d = v.dados || {};
+  setRadioValor('temProduto', d.presenca?.temProduto, 0);
+  setRadioValor('destaque', d.presenca?.destaque, 1);
+  setRadioValor('precoTabela', d.comercial?.precoTabela, 0);
+  setRadioValor('frequencia', d.comercial?.frequencia, 2);
+  setRadioValor('receptividade', d.comercial?.receptividade, 1);
+  setRadioValor('motivoResistencia', d.mercado?.motivoResistencia, 4);
+
+  skusSelecionados = [...(d.presenca?.skusPresentes || [])];
+  document.querySelectorAll('.sku-item').forEach(el => {
+    const sku = el.querySelector('.sku-name')?.textContent;
+    el.classList.toggle('active', skusSelecionados.includes(sku));
+  });
+
+  setCheckValor('ruptura', d.presenca?.ruptura);
+  setCheckValor('materialPDV', d.presenca?.materialPDV);
+  setCheckValor('precificador', d.presenca?.precificador);
+
+  concSelecionados = [...(d.mercado?.concorrentes || [])];
+  concDetalhes = {...(d.mercado?.concDetalhes || {})};
+  document.querySelectorAll('#concorrentes .conc-item').forEach(el => {
+    const txt = el.querySelector('.conc-fabricante') ? el.childNodes[0].textContent.trim() : el.textContent.trim();
+    el.classList.toggle('active', concSelecionados.includes(txt));
+  });
+  renderConcDetalhes();
+  document.getElementById('concDominante').value = d.mercado?.concDominante || '';
+
+  const precoAnterior = d.comercial?.pedidoPreco || {};
+  ['GR','GM','CM','CC'].forEach(s => {
+    const preco = document.getElementById('preco' + s);
+    if (preco && precoAnterior[s]) preco.value = precoAnterior[s];
+  });
+  calcularTotalPedido();
+}
+
+function renderClientes(lista) {
+  const el = document.getElementById('listaClientes');
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>' +
+      (todosClientes.length ? 'Nenhum PDV encontrado' : 'Nenhum PDV cadastrado ainda.<br>Realize uma visita para criar a carteira.') +
+      '</div></div>';
+    return;
+  }
+  el.innerHTML = lista.map(c => {
+    const local = [c.cidade, c.uf].filter(Boolean).join('/');
+    const ultima = ultimaVisitaCliente(c);
+    const ultimaTxt = ultima ? new Date(ultima.criado_em).toLocaleDateString('pt-BR') : '';
+    return `
+      <div class="visita-card" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})" style="cursor:pointer;">
+        <div class="visita-header">
+          <div class="visita-nome">${c.nome_fantasia}</div>
+          <span class="badge badge-purple" style="white-space:nowrap;flex-shrink:0;">${c.codigo}</span>
+        </div>
+        <div class="visita-info">${[c.tipo, local].filter(Boolean).join(' · ') || '—'}</div>
+        ${c.cnpj ? `<div class="visita-info">CNPJ: ${c.cnpj}</div>` : ''}
+        <div>
+          <span class="badge badge-green">Revisita rapida</span>
+          ${ultimaTxt ? `<span class="badge badge-orange">Ultima: ${ultimaTxt}</span>` : ''}
+        </div>
+        ${c.nome_comprador ? `<div class="visita-info">Comprador: ${c.nome_comprador}${c.telefone ? ' · ' + c.telefone : ''}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function iniciarVisitaCliente(clienteJson) {
+  const c = JSON.parse(clienteJson);
+  mudarAbaP('nova');
+  limparFormulario();
+  revisitaRapidaAtiva = true;
+  preencherCadastroCliente(c);
+  const ultima = ultimaVisitaCliente(c);
+  aplicarBaseUltimaVisita(ultima);
+  setRadioValor('pedidoFeito', '', 1);
+  document.getElementById('statusPedido').selectedIndex = 0;
+  document.getElementById('bloquePedidos').style.display = 'none';
+  acompanhamentoVisitaId = ultima?.id || null;
+  const aviso = document.getElementById('revisitaAviso');
+  aviso?.classList.add('open');
+  const titulo = document.getElementById('revisitaTitulo');
+  const texto = document.getElementById('revisitaTexto');
+  if (titulo) titulo.textContent = 'Revisita rapida: ' + (c.nome_fantasia || 'PDV');
+  if (texto) {
+    const ultimaTxt = ultima ? ' Ultima visita: ' + new Date(ultima.criado_em).toLocaleDateString('pt-BR') + '.' : '';
+    texto.textContent = 'Cadastro carregado. Pedido, fotos e observacoes ficam novos para esta visita.' + ultimaTxt;
+  }
+  document.getElementById('btnSalvar').textContent = 'Salvar Revisita';
+  irSecao(2);
+  toast('PDV carregado para revisita rapida');
   window.scrollTo(0, 0);
 }
 // ===== FIM CARTEIRA =====
