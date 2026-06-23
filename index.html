@@ -150,6 +150,18 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .btn-editar { flex: 1; padding: 10px; background: var(--purple-light); color: var(--purple); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .btn-excluir { padding: 10px 16px; background: var(--red-light); color: var(--red); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .btn-revisita { width: 100%; padding: 11px; background: var(--mint); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.revisita-search { margin: 0 14px 12px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: #fff; }
+.revisita-search-title { font-size: 13px; font-weight: 800; color: var(--purple); margin-bottom: 6px; }
+.revisita-search-text { font-size: 13px; color: var(--text-muted); line-height: 1.45; margin-bottom: 10px; }
+.revisita-search-row { display: flex; gap: 8px; }
+.revisita-search-row input { flex: 1; min-width: 0; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; }
+.revisita-search-row button { padding: 11px 14px; border: none; border-radius: var(--radius-sm); background: var(--purple); color: #fff; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
+.revisita-results { display: none; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+.revisita-results.open { display: block; }
+.revisita-result { width: 100%; text-align: left; padding: 10px 0; border: 0; border-bottom: 1px solid #F1EFE8; background: transparent; cursor: pointer; font-family: inherit; }
+.revisita-result:last-child { border-bottom: 0; }
+.revisita-result strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 3px; }
+.revisita-result span { display: block; font-size: 12px; color: var(--text-muted); }
 .revisita-banner { display: none; margin: 0 14px 12px; padding: 14px; border: 1px solid var(--mint); border-radius: var(--radius); background: var(--mint-light); }
 .revisita-banner.open { display: block; }
 .revisita-title { font-size: 13px; font-weight: 800; color: var(--mint); margin-bottom: 4px; }
@@ -639,6 +651,16 @@ button:active { transform: translateY(1px); }
     <div class="page-intro">
       <h1>Nova visita</h1>
       <p>Registre os dados do ponto de venda em cinco etapas rápidas.</p>
+    </div>
+
+    <div class="revisita-search">
+      <div class="revisita-search-title">Revisita de cliente cadastrado</div>
+      <div class="revisita-search-text">Busque um PDV da carteira para carregar os dados e preencher só o que mudou nesta visita.</div>
+      <div class="revisita-search-row">
+        <input type="text" id="buscaRevisita" placeholder="Buscar por nome ou CNPJ..." onkeydown="if(event.key==='Enter')buscarClienteRevisita()">
+        <button type="button" onclick="buscarClienteRevisita()">Buscar</button>
+      </div>
+      <div class="revisita-results" id="resultadoRevisita"></div>
     </div>
 
     <div class="revisita-banner" id="revisitaAviso">
@@ -1929,6 +1951,8 @@ function limparFormulario() {
   document.getElementById('uf').value = '';
   skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null; revisitaRapidaAtiva = false;
   document.getElementById('revisitaAviso')?.classList.remove('open');
+  const buscaRev = document.getElementById('buscaRevisita'); if (buscaRev) buscaRev.value = '';
+  const resRev = document.getElementById('resultadoRevisita'); if (resRev) { resRev.innerHTML = ''; resRev.classList.remove('open'); }
   try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
@@ -2028,6 +2052,37 @@ function buscarClientes() {
     (c.cnpj||'').includes(q)
   ) : todosClientes;
   renderClientes(filtrados);
+}
+
+async function buscarClienteRevisita() {
+  const box = document.getElementById('resultadoRevisita');
+  const termo = (document.getElementById('buscaRevisita').value || '').trim().toLowerCase();
+  if (!termo) {
+    box.innerHTML = '<div class="visita-info">Digite o nome ou CNPJ do cliente.</div>';
+    box.classList.add('open');
+    return;
+  }
+  box.innerHTML = '<div class="visita-info">Buscando na carteira...</div>';
+  box.classList.add('open');
+  if (!todosClientes.length) await carregarClientes();
+  const filtrados = todosClientes.filter(c =>
+    (c.nome_fantasia||'').toLowerCase().includes(termo) ||
+    (c.cnpj||'').toLowerCase().includes(termo)
+  ).slice(0, 5);
+  if (!filtrados.length) {
+    box.innerHTML = '<div class="visita-info">Nenhum cliente encontrado na carteira.</div>';
+    return;
+  }
+  box.innerHTML = filtrados.map(c => {
+    const local = [c.cidade, c.uf].filter(Boolean).join('/');
+    const subtitulo = [c.codigo, c.cnpj, local].filter(Boolean).join(' · ');
+    return `
+      <button type="button" class="revisita-result" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})">
+        <strong>${c.nome_fantasia || 'PDV sem nome'}</strong>
+        <span>${subtitulo || 'Cliente cadastrado'}</span>
+      </button>
+    `;
+  }).join('');
 }
 
 function clienteMatchesVisita(cliente, visita) {
