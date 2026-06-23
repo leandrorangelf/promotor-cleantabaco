@@ -1243,6 +1243,11 @@ let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let acompanhamentoVisitaId = null;
 let revisitaRapidaAtiva = false;
+let visitasPromotorCarregadoEm = 0;
+let clientesCarregadoEm = 0;
+let visitasPromotorPromise = null;
+let clientesPromise = null;
+const CACHE_MS = 60000;
 
 const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
 
@@ -1326,6 +1331,9 @@ function fazerLogin(nome, tipo) {
 function logout() {
   localStorage.removeItem('ct_user');
   usuarioAtual = null; tipoAtual = null;
+  visitasPromotorCarregadoEm = 0; clientesCarregadoEm = 0;
+  visitasPromotorPromise = null; clientesPromise = null;
+  visitasPromotor = []; todosClientes = [];
   document.getElementById('appPromotor').style.display = 'none';
   document.getElementById('appGestor').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
@@ -1338,8 +1346,14 @@ function mudarAbaP(aba) {
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appPromotor .nav-btn[data-p-page="${aba}"]`)?.classList.add('active');
-  if (aba === 'historico') carregarVisitasPromotor().then(() => renderHistorico());
-  if (aba === 'clientes') carregarClientes();
+  if (aba === 'historico') {
+    if (visitasPromotor.length) renderHistorico();
+    carregarVisitasPromotor().then(() => renderHistorico());
+  }
+  if (aba === 'clientes') {
+    if (todosClientes.length) renderClientes(todosClientes);
+    carregarClientes();
+  }
 }
 
 // NAVEGAÇÃO GESTOR
@@ -1932,7 +1946,8 @@ async function salvarVisita() {
       toast(editandoId ? '✓ Visita atualizada!' : '✓ Visita salva!');
       editandoId = null;
       limparFormulario();
-      await carregarVisitasPromotor();
+      await carregarVisitasPromotor(true);
+      clientesCarregadoEm = 0;
       mudarAbaP('historico');
     } else {
       toast('Erro: ' + (data.erro || 'tente novamente'));
@@ -1978,13 +1993,28 @@ function limparFormulario() {
 }
 
 // CARREGAR PROMOTOR
-async function carregarVisitasPromotor() {
+async function carregarVisitasPromotor(force=false) {
+  const agora = Date.now();
+  if (!force && visitasPromotor.length && agora - visitasPromotorCarregadoEm < CACHE_MS) {
+    document.getElementById('totalP').textContent = visitasPromotor.length;
+    return visitasPromotor;
+  }
+  if (!force && visitasPromotorPromise) return visitasPromotorPromise;
+  visitasPromotorPromise = (async () => {
   try {
     const res = await fetch(`${API}/api/listar?promotor=${encodeURIComponent(usuarioAtual)}`, { headers: headers() });
     const data = await res.json();
     visitasPromotor = data.visitas || [];
+    visitasPromotorCarregadoEm = Date.now();
     document.getElementById('totalP').textContent = visitasPromotor.length;
-  } catch(e) { visitasPromotor = []; }
+  } catch(e) {
+    if (!visitasPromotor.length) visitasPromotor = [];
+  } finally {
+    visitasPromotorPromise = null;
+  }
+  return visitasPromotor;
+  })();
+  return visitasPromotorPromise;
 }
 
 function renderHistorico() {
@@ -2031,18 +2061,31 @@ function renderHistorico() {
 // ===== CARTEIRA DE CLIENTES =====
 let todosClientes = [];
 
-async function carregarClientes() {
+async function carregarClientes(force=false, silencioso=false) {
   const el = document.getElementById('listaClientes');
-  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  const agora = Date.now();
+  if (!force && todosClientes.length && agora - clientesCarregadoEm < CACHE_MS) {
+    if (!silencioso) renderClientes(todosClientes);
+    return todosClientes;
+  }
+  if (!force && clientesPromise) return clientesPromise;
+  if (!silencioso && el) el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  clientesPromise = (async () => {
   try {
-    await carregarVisitasPromotor();
+    await carregarVisitasPromotor(force);
     const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual));
     const d = await r.json();
     todosClientes = d.clientes || [];
-    renderClientes(todosClientes);
+    clientesCarregadoEm = Date.now();
+    if (!silencioso) renderClientes(todosClientes);
   } catch(e) {
-    el.innerHTML = '<p style="padding:16px;color:var(--text-muted)">Erro ao carregar clientes.</p>';
+    if (!silencioso && el) el.innerHTML = '<p style="padding:16px;color:var(--text-muted)">Erro ao carregar clientes.</p>';
+  } finally {
+    clientesPromise = null;
   }
+  return todosClientes;
+  })();
+  return clientesPromise;
 }
 
 function buscarClientes() {
@@ -2064,7 +2107,7 @@ async function buscarClienteRevisita() {
   }
   box.innerHTML = '<div class="visita-info">Buscando na carteira...</div>';
   box.classList.add('open');
-  if (!todosClientes.length) await carregarClientes();
+  if (!todosClientes.length) await carregarClientes(false, true);
   const filtrados = todosClientes.filter(c =>
     (c.nome_fantasia||'').toLowerCase().includes(termo) ||
     (c.cnpj||'').toLowerCase().includes(termo)
@@ -2320,7 +2363,8 @@ async function excluirVisitaPromotor(id) {
     const data = await res.json();
     if (data.ok) {
       toast('Visita excluída');
-      await carregarVisitasPromotor();
+      await carregarVisitasPromotor(true);
+      clientesCarregadoEm = 0;
       renderHistorico();
     }
   } catch(e) { toast('Erro ao excluir'); }
