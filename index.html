@@ -2077,7 +2077,7 @@ async function buscarClienteRevisita() {
     const local = [c.cidade, c.uf].filter(Boolean).join('/');
     const subtitulo = [c.codigo, c.cnpj, local].filter(Boolean).join(' · ');
     return `
-      <button type="button" class="revisita-result" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})">
+      <button type="button" class="revisita-result" onclick="iniciarVisitaClienteId('${c.id}')">
         <strong>${c.nome_fantasia || 'PDV sem nome'}</strong>
         <span>${subtitulo || 'Cliente cadastrado'}</span>
       </button>
@@ -2164,7 +2164,7 @@ function renderClientes(lista) {
     const ultima = ultimaVisitaCliente(c);
     const ultimaTxt = ultima ? new Date(ultima.criado_em).toLocaleDateString('pt-BR') : '';
     return `
-      <div class="visita-card" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})" style="cursor:pointer;">
+      <div class="visita-card" onclick="iniciarVisitaClienteId('${c.id}')" style="cursor:pointer;">
         <div class="visita-header">
           <div class="visita-nome">${c.nome_fantasia}</div>
           <span class="badge badge-purple" style="white-space:nowrap;flex-shrink:0;">${c.codigo}</span>
@@ -2176,15 +2176,25 @@ function renderClientes(lista) {
         </div>
         ${c.nome_comprador ? `<div class="visita-info">Comprador: ${c.nome_comprador}${c.telefone ? ' · ' + c.telefone : ''}</div>` : ''}
         <div class="visita-actions">
-          <button type="button" class="btn-revisita" onclick="event.stopPropagation(); iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})">Iniciar revisita</button>
+          <button type="button" class="btn-revisita" onclick="event.stopPropagation(); iniciarVisitaClienteId('${c.id}')">Iniciar revisita</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
+function iniciarVisitaClienteId(id) {
+  const c = todosClientes.find(cliente => String(cliente.id) === String(id));
+  if (!c) {
+    toast('Cliente nao encontrado. Atualize a carteira e tente de novo.');
+    carregarClientes();
+    return;
+  }
+  iniciarVisitaCliente(c);
+}
+
 function iniciarVisitaCliente(clienteJson) {
-  const c = JSON.parse(clienteJson);
+  const c = typeof clienteJson === 'string' ? JSON.parse(clienteJson) : clienteJson;
   mudarAbaP('nova');
   limparFormulario();
   revisitaRapidaAtiva = true;
