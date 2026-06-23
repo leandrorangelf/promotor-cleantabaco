@@ -149,6 +149,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .visita-actions { display: flex; gap: 8px; margin-top: 10px; }
 .btn-editar { flex: 1; padding: 10px; background: var(--purple-light); color: var(--purple); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .btn-excluir { padding: 10px 16px; background: var(--red-light); color: var(--red); border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-revisita { width: 100%; padding: 11px; background: var(--mint); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
 .revisita-banner { display: none; margin: 0 14px 12px; padding: 14px; border: 1px solid var(--mint); border-radius: var(--radius); background: var(--mint-light); }
 .revisita-banner.open { display: block; }
 .revisita-title { font-size: 13px; font-weight: 800; color: var(--mint); margin-bottom: 4px; }
@@ -2116,10 +2117,12 @@ function renderClientes(lista) {
         <div class="visita-info">${[c.tipo, local].filter(Boolean).join(' · ') || '—'}</div>
         ${c.cnpj ? `<div class="visita-info">CNPJ: ${c.cnpj}</div>` : ''}
         <div>
-          <span class="badge badge-green">Revisita rapida</span>
           ${ultimaTxt ? `<span class="badge badge-orange">Ultima: ${ultimaTxt}</span>` : ''}
         </div>
         ${c.nome_comprador ? `<div class="visita-info">Comprador: ${c.nome_comprador}${c.telefone ? ' · ' + c.telefone : ''}</div>` : ''}
+        <div class="visita-actions">
+          <button type="button" class="btn-revisita" onclick="event.stopPropagation(); iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})">Iniciar revisita</button>
+        </div>
       </div>
     `;
   }).join('');
