@@ -608,8 +608,9 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
   <div class="nav">
-    <button class="nav-btn active" onclick="mudarAbaP('nova')">＋ Nova</button>
-    <button class="nav-btn" onclick="mudarAbaP('historico')">Histórico</button>
+    <button class="nav-btn active" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
+    <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes')">Carteira</button>
+    <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico')">Histórico</button>
   </div>
 
   <!-- NOVA VISITA -->
@@ -944,6 +945,18 @@ button:active { transform: translateY(1px); }
     <div class="hist-wrap">
       <input type="text" class="busca-input" id="buscaHist" oninput="renderHistorico()" placeholder="Buscar por nome ou cidade...">
       <div id="listaHist"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- CARTEIRA DE CLIENTES -->
+  <div class="page" id="pClientes">
+    <div class="page-intro">
+      <h1>Minha Carteira</h1>
+      <p>PDVs cadastrados — toque para iniciar uma revisita com dados já preenchidos.</p>
+    </div>
+    <div class="hist-wrap">
+      <input type="text" class="busca-input" id="buscaClientes" oninput="buscarClientes()" placeholder="Buscar por nome ou CNPJ...">
+      <div id="listaClientes"><div class="spinner-wrap"><div class="spinner"></div></div></div>
     </div>
   </div>
 </div>
@@ -1281,8 +1294,9 @@ function mudarAbaP(aba) {
   document.querySelectorAll('#appPromotor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
-  document.querySelectorAll('#appPromotor .nav-btn')[aba === 'nova' ? 0 : 1].classList.add('active');
+  document.querySelector(`#appPromotor .nav-btn[data-p-page="${aba}"]`)?.classList.add('active');
   if (aba === 'historico') carregarVisitasPromotor().then(() => renderHistorico());
+  if (aba === 'clientes') carregarClientes();
 }
 
 // NAVEGAÇÃO GESTOR
@@ -1942,6 +1956,76 @@ function renderHistorico() {
     `;
   }).join('');
 }
+
+// ===== CARTEIRA DE CLIENTES =====
+let todosClientes = [];
+
+async function carregarClientes() {
+  const el = document.getElementById('listaClientes');
+  el.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  try {
+    const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual));
+    const d = await r.json();
+    todosClientes = d.clientes || [];
+    renderClientes(todosClientes);
+  } catch(e) {
+    el.innerHTML = '<p style="padding:16px;color:var(--text-muted)">Erro ao carregar clientes.</p>';
+  }
+}
+
+function buscarClientes() {
+  const q = (document.getElementById('buscaClientes').value || '').toLowerCase();
+  const filtrados = q ? todosClientes.filter(c =>
+    (c.nome_fantasia||'').toLowerCase().includes(q) ||
+    (c.cnpj||'').includes(q)
+  ) : todosClientes;
+  renderClientes(filtrados);
+}
+
+function renderClientes(lista) {
+  const el = document.getElementById('listaClientes');
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>' +
+      (todosClientes.length ? 'Nenhum PDV encontrado' : 'Nenhum PDV cadastrado ainda.<br>Realize uma visita para criar a carteira.') +
+      '</div></div>';
+    return;
+  }
+  el.innerHTML = lista.map(c => {
+    const local = [c.cidade, c.uf].filter(Boolean).join('/');
+    return `
+      <div class="visita-card" onclick="iniciarVisitaCliente(${JSON.stringify(JSON.stringify(c))})" style="cursor:pointer;">
+        <div class="visita-header">
+          <div class="visita-nome">${c.nome_fantasia}</div>
+          <span class="badge badge-purple" style="white-space:nowrap;flex-shrink:0;">${c.codigo}</span>
+        </div>
+        <div class="visita-info">${[c.tipo, local].filter(Boolean).join(' · ') || '—'}</div>
+        ${c.cnpj ? `<div class="visita-info">CNPJ: ${c.cnpj}</div>` : ''}
+        ${c.nome_comprador ? `<div class="visita-info">Comprador: ${c.nome_comprador}${c.telefone ? ' · ' + c.telefone : ''}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function iniciarVisitaCliente(clienteJson) {
+  const c = JSON.parse(clienteJson);
+  mudarAbaP('nova');
+  limparFormulario();
+  document.getElementById('nomeFantasia').value = c.nome_fantasia || '';
+  const tipoEl = document.getElementById('tipoEstab');
+  if (c.tipo) { for (const opt of tipoEl.options) { if (opt.value === c.tipo) { tipoEl.value = c.tipo; break; } } }
+  document.getElementById('cnpj').value = c.cnpj || '';
+  document.getElementById('ie').value = c.ie || '';
+  document.getElementById('endereco').value = c.endereco || '';
+  document.getElementById('cidade').value = c.cidade || '';
+  const ufEl = document.getElementById('uf');
+  if (c.uf) { for (const opt of ufEl.options) { if (opt.value === c.uf) { ufEl.value = c.uf; break; } } }
+  document.getElementById('nomeComprador').value = c.nome_comprador || '';
+  document.getElementById('telefone').value = c.telefone || '';
+  document.getElementById('distribuidor').value = c.distribuidor || '';
+  toast(c.codigo + ' · ' + c.nome_fantasia + ' carregado');
+  window.scrollTo(0, 0);
+}
+// ===== FIM CARTEIRA =====
 
 function abrirDetalhePromotor(id) {
   const v = visitasPromotor.find(x => x.id === id);
