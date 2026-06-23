@@ -1,5 +1,47 @@
 import { neon } from '@neondatabase/serverless';
 
+async function garantirTabela(sql) {
+  await sql`
+    CREATE TABLE IF NOT EXISTS clientes (
+      id SERIAL PRIMARY KEY,
+      codigo TEXT NOT NULL,
+      promotor TEXT NOT NULL,
+      nome_fantasia TEXT NOT NULL,
+      cnpj TEXT DEFAULT '',
+      tipo TEXT DEFAULT '',
+      ie TEXT DEFAULT '',
+      endereco TEXT DEFAULT '',
+      cidade TEXT DEFAULT '',
+      uf TEXT DEFAULT '',
+      nome_comprador TEXT DEFAULT '',
+      telefone TEXT DEFAULT '',
+      distribuidor TEXT DEFAULT '',
+      criado_em TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(promotor, nome_fantasia)
+    )
+  `;
+
+  // Se a tabela acabou de ser criada (vazia), migra as visitas existentes
+  const [{ total }] = await sql`SELECT COUNT(*)::int as total FROM clientes`;
+  if (total === 0) {
+    const visitas = await sql`SELECT promotor, dados, criado_em FROM visitas ORDER BY criado_em ASC`;
+    for (const v of visitas) {
+      const dados = typeof v.dados === 'string' ? JSON.parse(v.dados) : v.dados;
+      const pdv = dados?.pdv;
+      if (!pdv?.nomeFantasia || !v.promotor) continue;
+      const existe = await sql`SELECT id FROM clientes WHERE promotor = ${v.promotor} AND lower(nome_fantasia) = lower(${pdv.nomeFantasia})`;
+      if (existe.length > 0) continue;
+      const [{ count }] = await sql`SELECT COUNT(*)::int as count FROM clientes WHERE promotor = ${v.promotor}`;
+      const codigo = 'PDV-' + String(count + 1).padStart(3, '0');
+      await sql`
+        INSERT INTO clientes (codigo, promotor, nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor, criado_em)
+        VALUES (${codigo}, ${v.promotor}, ${pdv.nomeFantasia}, ${pdv.cnpj||''}, ${pdv.tipo||''}, ${pdv.ie||''}, ${pdv.endereco||''}, ${pdv.cidade||''}, ${pdv.uf||''}, ${pdv.nomeComprador||''}, ${pdv.telefone||''}, ${pdv.distribuidor||''}, ${v.criado_em})
+        ON CONFLICT (promotor, nome_fantasia) DO NOTHING
+      `;
+    }
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -7,6 +49,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const sql = neon(process.env.DATABASE_URL);
+  await garantirTabela(sql);
 
   if (req.method === 'GET') {
     const { promotor, q } = req.query;
