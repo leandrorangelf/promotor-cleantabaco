@@ -1249,6 +1249,20 @@ function fazerLogin(nome, tipo) {
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;
+    // Restaura fotos do rascunho caso a página tenha sido recarregada
+    // pela câmera nativa do iOS ao voltar para o app
+    try {
+      const draftKey = 'ct_draft_fotos_' + nome;
+      const savedFotos = localStorage.getItem(draftKey);
+      if (savedFotos) {
+        const parsed = JSON.parse(savedFotos);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          fotos = parsed;
+          renderFotos();
+          toast('📸 ' + parsed.length + ' foto(s) do rascunho restaurada(s)');
+        }
+      }
+    } catch(e) {}
     carregarVisitasPromotor();
   }
 }
@@ -1716,6 +1730,11 @@ function renderFotos() {
   document.getElementById('fotoGrid').innerHTML = fotos.map((f,i) => `
     <div class="foto-thumb"><img src="${f}" alt="Foto ${i+1} da visita" onclick="abrirFoto(${i}, 'edicao')"><button class="foto-del" onclick="removerFoto(${i})" aria-label="Remover foto ${i+1}">×</button></div>
   `).join('');
+  // Persiste rascunho de fotos no localStorage para sobreviver ao reload
+  // causado pela câmera nativa no iOS ao retornar para o app
+  if (usuarioAtual && !editandoId) {
+    try { localStorage.setItem('ct_draft_fotos_' + usuarioAtual, JSON.stringify(fotos)); } catch(e) {}
+  }
 }
 
 function removerFoto(i) { fotos.splice(i,1); renderFotos(); }
@@ -1851,6 +1870,7 @@ function limparFormulario() {
   document.getElementById('tipoEstab').value = '';
   document.getElementById('uf').value = '';
   skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null;
+  try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#concorrentes .conc-item').forEach(el => el.classList.remove('active'));
@@ -2000,7 +2020,8 @@ function editarVisita(id) {
     if (item) { item.classList.toggle('checked', val); document.getElementById(campo).checked = val; }
   });
 
-  // Fotos
+  // Fotos (ao editar, descarta rascunho e usa as fotos da visita)
+  try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
   fotos = [...(v.fotos||[])];
   renderFotos();
 
