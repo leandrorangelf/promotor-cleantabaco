@@ -606,8 +606,37 @@ button:active { transform: translateY(1px); }
 .director-value { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
 .director-sub { margin-top: 6px; color: var(--text-muted); font-size: 12px; }
 .director-panels { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; }
+.exec-summary { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-bottom: 14px; align-items: start; }
+.exec-panel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.exec-title { font-size: 13px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+.exec-text { color: var(--text-muted); font-size: 14px; line-height: 1.55; }
+.exec-actions { display: grid; gap: 8px; }
+.exec-action { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EDF0F6; }
+.exec-action:last-child { border-bottom: 0; }
+.exec-action strong { font-size: 13px; }
+.exec-action span { font-size: 12px; color: var(--text-muted); }
+.resumo-card { cursor: pointer; min-height: 150px; display: flex; flex-direction: column; gap: 8px; }
+.resumo-card:hover { transform: translateY(-2px); border-color: #BFC8DA !important; box-shadow: 0 18px 42px rgba(27,39,72,.12); }
+.resumo-card:focus-visible { outline: 3px solid rgba(91,53,213,.25); outline-offset: 3px; }
+.resumo-topline { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.resumo-icon { width: 34px; height: 34px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; background: var(--purple-light); color: var(--purple); flex-shrink: 0; }
+.resumo-card.mint .resumo-icon { background: var(--mint-light); color: var(--mint); }
+.resumo-card.orange .resumo-icon { background: var(--orange-light); color: var(--amber); }
+.resumo-card.red .resumo-icon { background: var(--red-light); color: var(--red); }
+.resumo-insight { color: var(--text); font-size: 12px; line-height: 1.35; min-height: 32px; }
+.resumo-meter { height: 6px; background: #EDF0F6; border-radius: 99px; overflow: hidden; margin-top: auto; }
+.resumo-meter span { display: block; height: 100%; width: var(--pct,0%); background: var(--purple); border-radius: inherit; }
+.resumo-card.mint .resumo-meter span { background: var(--mint); }
+.resumo-card.orange .resumo-meter span { background: var(--amber); }
+.resumo-card.red .resumo-meter span { background: var(--red); }
+.resumo-link { font-size: 11px; color: var(--purple); font-weight: 900; text-transform: uppercase; letter-spacing: .4px; }
+.drill-list { display: grid; gap: 8px; }
+.drill-row { width: 100%; text-align: left; border: 1px solid var(--border); background: #fff; border-radius: var(--radius-sm); padding: 12px; cursor: pointer; font-family: inherit; }
+.drill-row:hover { border-color: var(--purple-mid); background: #FAF9FF; }
+.drill-row strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 3px; }
+.drill-row span { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.4; }
 @media (max-width: 899px) {
-  .admin-layout, .director-panels { grid-template-columns: 1fr; }
+  .admin-layout, .director-panels, .exec-summary { grid-template-columns: 1fr; }
   .director-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
@@ -1090,19 +1119,19 @@ button:active { transform: translateY(1px); }
         </div>
       </div>
 
-      <!-- KPIs PRINCIPAIS -->
-      <div class="resumo-grid">
-        <div class="resumo-card purple"><div class="resumo-label">Total visitas</div><div class="resumo-valor" id="gTotal">—</div><div class="resumo-sub">no período</div></div>
-        <div class="resumo-card mint"><div class="resumo-label">PDVs únicos</div><div class="resumo-valor" id="gPDVs">—</div><div class="resumo-sub">estabelecimentos distintos</div></div>
-        <div class="resumo-card orange"><div class="resumo-label">Taxa conversão</div><div class="resumo-valor" id="gConversao">—</div><div class="resumo-sub">visitas com pedido</div></div>
-        <div class="resumo-card red"><div class="resumo-label">Ruptura</div><div class="resumo-valor" id="gRuptura">—</div><div class="resumo-sub">PDVs com falta</div></div>
-        <div class="resumo-card purple"><div class="resumo-label">Com produto</div><div class="resumo-valor" id="gProduto">—</div><div class="resumo-sub">% presença de marca</div></div>
-        <div class="resumo-card mint"><div class="resumo-label">Ticket médio</div><div class="resumo-valor" id="gTicket" style="font-size:20px;">—</div><div class="resumo-sub">por pedido com valor</div></div>
-        <div class="resumo-card purple"><div class="resumo-label">Pedidos</div><div class="resumo-valor" id="gPedidos">—</div><div class="resumo-sub">confirmados ou entregues</div></div>
-        <div class="resumo-card mint"><div class="resumo-label">Pacotes vendidos</div><div class="resumo-valor" id="gPacotes">—</div><div class="resumo-sub">soma de todos os produtos</div></div>
-        <div class="resumo-card orange"><div class="resumo-label">Entregues</div><div class="resumo-valor" id="gEntregues">—</div><div class="resumo-sub">pedidos confirmados no PDV</div></div>
-        <div class="resumo-card orange" style="grid-column:1/-1;"><div class="resumo-label">💰 Valor total pedidos</div><div class="resumo-valor" id="gValorTotal" style="font-size:22px;">—</div><div class="resumo-sub">soma de todos os pedidos com valor no período</div></div>
+      <div class="exec-summary">
+        <div class="exec-panel">
+          <div class="exec-title">Leitura do periodo</div>
+          <div class="exec-text" id="gResumoInteligente">Carregando leitura dos indicadores...</div>
+        </div>
+        <div class="exec-panel">
+          <div class="exec-title">Prioridades sugeridas</div>
+          <div class="exec-actions" id="gAcoesInteligentes"></div>
+        </div>
       </div>
+
+      <!-- KPIs PRINCIPAIS -->
+      <div class="resumo-grid" id="gKpiGrid"></div>
 
       <!-- MAPA DE VISITAS POR ESTADO -->
       <div class="card" style="margin-bottom:14px;">
@@ -2936,6 +2965,151 @@ function renderPerformance() {
     </table></div>`;
 }
 
+function valorPedidoVisita(v) {
+  const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+  const preco = v.dados?.comercial?.pedidoPreco||{};
+  return ['GR','GM','CM','CC'].reduce((s,sku) => s + (qty[sku]||0)*(preco[sku]||0), 0);
+}
+
+function pacotesVisita(v) {
+  const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+  return ['GR','GM','CM','CC'].reduce((s,sku) => s + (qty[sku]||0), 0);
+}
+
+function dinheiro(v, casas=2) {
+  return `R$ ${Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas})}`;
+}
+
+function pct(valor, total) {
+  return total ? Math.round((valor/total)*100) : 0;
+}
+
+function visitasPorPdv(lista) {
+  const mapa = {};
+  lista.forEach(v => {
+    const p = v.dados?.pdv||{};
+    const key = p.cnpj || normalizarTexto(p.nomeFantasia);
+    if (!key) return;
+    const atual = mapa[key];
+    if (!atual || new Date(v.criado_em) > new Date(atual.criado_em)) mapa[key] = v;
+  });
+  return Object.values(mapa);
+}
+
+function descricaoVisita(v) {
+  const p = v.dados?.pdv||{};
+  const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+  const status = statusDaVisita(v);
+  const valor = valorPedidoVisita(v);
+  return `${v.promotor || 'Sem promotor'} · ${data} · ${p.cidade || 'cidade não informada'}${p.uf ? '/' + p.uf : ''} · ${status}${valor ? ' · ' + dinheiro(valor) : ''}`;
+}
+
+function renderKpiCard(k) {
+  return `
+    <button class="resumo-card ${k.cor}" type="button" onclick="abrirKpiDrilldown('${k.id}')" aria-label="Ver detalhes de ${k.label}">
+      <div class="resumo-topline">
+        <div>
+          <div class="resumo-label">${k.label}</div>
+          <div class="resumo-valor" style="${k.valorStyle||''}">${k.valor}</div>
+        </div>
+        <div class="resumo-icon">${k.icon}</div>
+      </div>
+      <div class="resumo-sub">${k.sub}</div>
+      <div class="resumo-insight">${k.insight}</div>
+      <div class="resumo-meter" style="--pct:${Math.max(0,Math.min(100,k.pct||0))}%"><span></span></div>
+      <div class="resumo-link">Ver composição</div>
+    </button>
+  `;
+}
+
+function renderPainelInteligente(m) {
+  const {
+    total, pdvsUnicos, pedidos, ruptura, comProduto, valorTotal, ticketMedio,
+    totalPacotes, entregues, pedidosComValor, visitasPedido, visitasComValor,
+    visitasRuptura, visitasComProduto, visitasEntregues, pdvsLista
+  } = m;
+
+  const conversao = pct(pedidos,total);
+  const presenca = pct(comProduto,total);
+  const rupturaPct = pct(ruptura,total);
+  const cobertura = total ? (total/pdvsUnicos.size).toFixed(1).replace('.',',') : '0';
+
+  const leitura = [];
+  leitura.push(`${total} visitas geraram ${pedidos} pedidos (${conversao}% de conversão) em ${pdvsUnicos.size} PDVs únicos.`);
+  leitura.push(valorTotal > 0 ? `O valor registrado foi ${dinheiro(valorTotal)}, com ticket médio de ${dinheiro(ticketMedio)} em ${pedidosComValor} pedido(s) com preço.` : 'Ainda não há valor de pedido registrado no período.');
+  leitura.push(`A presença de marca aparece em ${presenca}% das visitas e a ruptura está em ${rupturaPct}%.`);
+  leitura.push(`A cobertura média é de ${cobertura} visita(s) por PDV no período.`);
+  document.getElementById('gResumoInteligente').textContent = leitura.join(' ');
+
+  const acoes = [];
+  if (conversao < 10 && total) acoes.push(['Conversão crítica', 'Abrir pedidos e entender quais PDVs visitados não avançaram.']);
+  else if (conversao < 25 && total) acoes.push(['Conversão baixa', 'Priorizar retorno nos PDVs com produto, mas sem pedido.']);
+  else acoes.push(['Conversão sob controle', 'Manter cadência e usar ticket médio para puxar mix.']);
+  if (ruptura > 0) acoes.push(['Ruptura detectada', `${ruptura} ocorrência(s): cobrar reposição e revisar distribuidor.`]);
+  if (presenca < 70 && total) acoes.push(['Presença abaixo do ideal', 'Separar PDVs sem produto para plano de recuperação.']);
+  if (entregues === 0 && pedidos > 0) acoes.push(['Sem entregas confirmadas', 'Acompanhar pedidos confirmados até virarem entrega.']);
+  document.getElementById('gAcoesInteligentes').innerHTML = acoes.slice(0,4).map(([t,d]) => `
+    <div class="exec-action"><div><strong>${t}</strong><br><span>${d}</span></div></div>
+  `).join('');
+
+  window.kpiDrilldowns = {
+    visitas: { titulo:'Total de visitas', desc:'Todas as visitas que formam o período filtrado.', lista:visitasGestor },
+    pdvs: { titulo:'PDVs únicos', desc:'Última visita registrada para cada PDV distinto.', lista:pdvsLista },
+    conversao: { titulo:'Visitas com pedido', desc:'Pedidos confirmados ou entregues usados na taxa de conversão.', lista:visitasPedido },
+    ruptura: { titulo:'Rupturas encontradas', desc:'PDVs onde foi marcada falta de produto.', lista:visitasRuptura },
+    produto: { titulo:'PDVs com produto', desc:'Visitas onde a presença de produto foi marcada como Sim.', lista:visitasComProduto },
+    ticket: { titulo:'Pedidos com valor', desc:'Pedidos que possuem preço preenchido e entram no ticket médio.', lista:visitasComValor },
+    pedidos: { titulo:'Pedidos confirmados ou entregues', desc:'Base operacional dos pedidos no período.', lista:visitasPedido },
+    pacotes: { titulo:'Pacotes vendidos', desc:'Visitas que têm quantidade de pacotes informada.', lista:visitasGestor.filter(v => pacotesVisita(v) > 0) },
+    entregues: { titulo:'Pedidos entregues', desc:'Pedidos marcados como entregues no PDV.', lista:visitasEntregues },
+    valor: { titulo:'Valor total dos pedidos', desc:'Pedidos com valor preenchido que compõem o total financeiro.', lista:visitasComValor }
+  };
+
+  const cards = [
+    { id:'visitas', cor:'purple', icon:'V', label:'Total visitas', valor:total, sub:'execução em campo', insight:`${pdvsUnicos.size} PDVs tocados · média ${cobertura} visita/PDV`, pct:100 },
+    { id:'pdvs', cor:'mint', icon:'P', label:'PDVs únicos', valor:pdvsUnicos.size, sub:'estabelecimentos distintos', insight:`Base real de cobertura no período filtrado`, pct:pdvsUnicos.size ? Math.min(100,pdvsUnicos.size/80*100) : 0 },
+    { id:'conversao', cor:conversao < 10 ? 'red' : 'orange', icon:'%', label:'Taxa conversão', valor:total ? conversao+'%' : '—', sub:`${pedidos} pedido(s) em ${total} visita(s)`, insight:conversao < 10 ? 'Baixa: precisa olhar onde a visita não virou pedido' : 'Clique para ver quais visitas converteram', pct:conversao },
+    { id:'ruptura', cor:ruptura ? 'red' : 'mint', icon:'!', label:'Ruptura', valor:ruptura, sub:`${rupturaPct}% das visitas`, insight:ruptura ? 'Há PDV com falta: ação com distribuidor' : 'Sem ruptura registrada no filtro', pct:rupturaPct },
+    { id:'produto', cor:presenca < 70 ? 'orange' : 'purple', icon:'M', label:'Com produto', valor:total ? presenca+'%' : '—', sub:`${comProduto} visita(s) com presença`, insight:presenca < 70 ? 'Presença abaixo do ideal para cobertura' : 'Boa base para acelerar venda', pct:presenca },
+    { id:'ticket', cor:'mint', icon:'R$', label:'Ticket médio', valor:ticketMedio > 0 ? dinheiro(ticketMedio) : '—', valorStyle:'font-size:20px;', sub:`${pedidosComValor} pedido(s) com valor`, insight:'Mostra qualidade financeira dos pedidos, não só quantidade', pct:ticketMedio ? Math.min(100,ticketMedio/1000*100) : 0 },
+    { id:'pedidos', cor:'purple', icon:'N', label:'Pedidos', valor:pedidos, sub:'confirmados ou entregues', insight:`Faltam ${Math.max(0,total-pedidos)} visita(s) converterem`, pct:conversao },
+    { id:'pacotes', cor:'mint', icon:'Q', label:'Pacotes vendidos', valor:totalPacotes.toLocaleString('pt-BR'), sub:'soma de todos os produtos', insight:`Média ${pedidos ? (totalPacotes/pedidos).toFixed(1).replace('.',',') : '0'} pacotes por pedido`, pct:totalPacotes ? Math.min(100,totalPacotes/100*100) : 0 },
+    { id:'entregues', cor:entregues ? 'orange' : 'red', icon:'E', label:'Entregues', valor:entregues, sub:'pedidos confirmados no PDV', insight:pedidos ? `${pedidos-entregues} pedido(s) ainda sem entrega marcada` : 'Sem pedidos para acompanhar entrega', pct:pedidos ? pct(entregues,pedidos) : 0 },
+    { id:'valor', cor:'orange', icon:'R$', label:'Valor total pedidos', valor:valorTotal > 0 ? dinheiro(valorTotal) : '—', valorStyle:'font-size:22px;', sub:'soma de pedidos com valor', insight:`Base financeira: ${pedidosComValor} pedido(s) precificados`, pct:valorTotal ? Math.min(100,valorTotal/10000*100) : 0 }
+  ];
+
+  document.getElementById('gKpiGrid').innerHTML = cards.map(renderKpiCard).join('');
+}
+
+function abrirKpiDrilldown(id) {
+  const item = window.kpiDrilldowns?.[id];
+  if (!item) return;
+  document.getElementById('modalTitulo').textContent = item.titulo;
+  const lista = item.lista || [];
+  document.getElementById('modalBody').innerHTML = `
+    <div class="rel-section">
+      <div class="rel-title">Como ler</div>
+      <div class="rel-obs">${item.desc}</div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">${lista.length} registro(s)</div>
+      <div class="drill-list">
+        ${lista.length ? lista.map(v => {
+          const p = v.dados?.pdv||{};
+          return `<button class="drill-row" type="button" onclick="abrirDetalheGestor('${v.id}')">
+            <strong>${p.nomeFantasia || 'PDV sem nome'}</strong>
+            <span>${descricaoVisita(v)}</span>
+          </button>`;
+        }).join('') : '<div class="empty">Nenhum registro para este indicador no filtro atual.</div>'}
+      </div>
+    </div>
+  `;
+  document.getElementById('modalActions').innerHTML = `
+    <button class="btn-detalhes" type="button" onclick="mudarAbaG('visitas');fecharModal()">Abrir lista de visitas</button>
+  `;
+  document.getElementById('modalDetalhe').classList.add('open');
+}
+
 
 function renderPainel() {
   const total = visitasGestor.length;
@@ -2949,27 +3123,28 @@ function renderPainel() {
   // Valor total e ticket médio
   let valorTotal = 0; let pedidosComValor = 0;
   let totalPacotes = 0;
+  const visitasComValor = [];
   visitasGestor.forEach(v => {
     const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
     let sub = 0;
     ['GR','GM','CM','CC'].forEach(s => { sub += (qty[s]||0)*(preco[s]||0); totalPacotes += qty[s]||0; });
-    if (sub > 0) { valorTotal += sub; pedidosComValor++; }
+    if (sub > 0) { valorTotal += sub; pedidosComValor++; visitasComValor.push(v); }
   });
   const ticketMedio = pedidosComValor > 0 ? valorTotal/pedidosComValor : 0;
   const entregues = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
+  const visitasPedido = visitasGestor.filter(v => ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v)));
+  const visitasRuptura = visitasGestor.filter(v => v.dados?.presenca?.ruptura);
+  const visitasComProduto = visitasGestor.filter(v => v.dados?.presenca?.temProduto === 'Sim');
+  const visitasEntregues = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido entregue');
+  const pdvsLista = visitasPorPdv(visitasGestor);
 
   // KPIs
-  document.getElementById('gTotal').textContent = total;
-  document.getElementById('gPDVs').textContent = pdvsUnicos.size;
-  document.getElementById('gConversao').textContent = total ? Math.round(pedidos/total*100)+'%' : '—';
-  document.getElementById('gRuptura').textContent = ruptura;
-  document.getElementById('gProduto').textContent = total ? Math.round(comProduto/total*100)+'%' : '—';
-  document.getElementById('gTicket').textContent = ticketMedio > 0 ? `R$ ${ticketMedio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}` : '—';
-  document.getElementById('gValorTotal').textContent = valorTotal > 0 ? `R$ ${valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
-  const elPedidos = document.getElementById('gPedidos'); if(elPedidos) elPedidos.textContent = pedidos;
-  const elPacotes = document.getElementById('gPacotes'); if(elPacotes) elPacotes.textContent = totalPacotes.toLocaleString('pt-BR');
-  const elEntregues = document.getElementById('gEntregues'); if(elEntregues) elEntregues.textContent = entregues;
+  renderPainelInteligente({
+    total, pdvsUnicos, pedidos, ruptura, comProduto, valorTotal, ticketMedio,
+    totalPacotes, entregues, pedidosComValor, visitasPedido, visitasComValor,
+    visitasRuptura, visitasComProduto, visitasEntregues, pdvsLista
+  });
 
   // --- MAPA DE VISITAS POR ESTADO ---
   renderMapaBrasil();
