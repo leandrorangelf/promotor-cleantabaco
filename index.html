@@ -582,6 +582,34 @@ button:active { transform: translateY(1px); }
   #gPainel .filtros > .filtro-row { display: contents; }
   #gPainel .filter-actions { grid-column: 1 / -1; min-width: 0; grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
+.login-form { display: grid; gap: 12px; }
+.login-field label, .admin-form label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .7px; }
+.login-field input, .admin-form input, .admin-form select { width: 100%; padding: 13px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: #fff; font-family: inherit; }
+.login-field input:focus, .admin-form input:focus, .admin-form select:focus { outline: none; border-color: var(--purple-mid); box-shadow: 0 0 0 3px var(--purple-light); }
+.login-error { display: none; color: var(--red); font-size: 13px; font-weight: 700; }
+.login-help { color: var(--text-muted); font-size: 12px; line-height: 1.45; }
+.admin-layout { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 16px; align-items: start; }
+.admin-form { display: grid; gap: 12px; }
+.admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-list { display: grid; gap: 8px; }
+.admin-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; }
+.admin-name { font-weight: 800; }
+.admin-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.admin-chip { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; background: var(--purple-light); color: var(--purple); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.admin-chip.off { background: var(--red-light); color: var(--red); }
+.director-hero { background: var(--navy); color: #fff; border-radius: 22px; padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.director-hero h2 { font-size: clamp(24px, 3vw, 36px); line-height: 1.08; letter-spacing: 0; margin-bottom: 8px; }
+.director-hero p { color: #B7C2D8; max-width: 760px; }
+.director-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+.director-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.director-label { font-size: 10px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+.director-value { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
+.director-sub { margin-top: 6px; color: var(--text-muted); font-size: 12px; }
+.director-panels { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; }
+@media (max-width: 899px) {
+  .admin-layout, .director-panels { grid-template-columns: 1fr; }
+  .director-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
@@ -589,18 +617,15 @@ button:active { transform: translateY(1px); }
 <!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-logo">Cleantabaco</div>
-  <div class="login-sub">Promotor · Visita PDV</div>
+  <div class="login-sub">Acesso operacional e diretoria</div>
   <div class="login-card">
-    <h2>Quem é você?</h2>
-    <div class="promotor-grid">
-      <button class="promotor-btn gestor" onclick="iniciarLogin('Leandro','gestor')">👑 Leandro</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Francisco','promotor')">Francisco</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Anderson','promotor')">Anderson</button>
-      <button class="promotor-btn" onclick="iniciarLogin('André','promotor')">André</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Cristiano','promotor')">Cristiano</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Jarbas','promotor')">Jarbas</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Kayan','promotor')">Kayan</button>
-      <button class="promotor-btn" onclick="iniciarLogin('Wil','promotor')">Wil</button>
+    <h2>Entrar no app</h2>
+    <div class="login-form">
+      <div class="login-field"><label>Usuario</label><input type="text" id="loginUsuario" autocomplete="username" placeholder="ex: francisco" onkeydown="if(event.key==='Enter')confirmarSenha()"></div>
+      <div class="login-field"><label>Senha</label><input type="password" id="loginSenha" autocomplete="current-password" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')confirmarSenha()"></div>
+      <div class="login-error" id="loginErro">Usuario ou senha invalidos.</div>
+      <button class="btn-confirmar" onclick="confirmarSenha()">Entrar</button>
+      <div class="login-help">Gestores podem cadastrar novos profissionais na aba Promotores.</div>
     </div>
   </div>
 </div>
@@ -1017,11 +1042,13 @@ button:active { transform: translateY(1px); }
   </div>
   <div class="nav">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
+    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance')">Performance</button>
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
     <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
+    <button class="nav-btn only-gestor" data-gestor-page="promotores" onclick="mudarAbaG('promotores')">Promotores</button>
   </div>
 
   <div class="page active" id="gPainel">
@@ -1165,6 +1192,27 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
 
+  <div class="page" id="gDiretoria">
+    <div class="page-intro"><h1>Diretoria</h1><p>Resumo executivo de vendas, cobertura, equipe e riscos comerciais.</p></div>
+    <div class="gestor-wrap">
+      <div class="director-hero">
+        <h2 id="dirTitulo">Painel executivo</h2>
+        <p id="dirResumo">Carregando indicadores do periodo selecionado.</p>
+      </div>
+      <div class="director-grid" id="dirKpis"></div>
+      <div class="director-panels">
+        <div class="director-card">
+          <div class="card-title">Prioridades comerciais</div>
+          <div id="dirPrioridades"><div class="empty">Sem dados</div></div>
+        </div>
+        <div class="director-card">
+          <div class="card-title">Ranking da equipe</div>
+          <div id="dirEquipe"><div class="empty">Sem dados</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="page" id="gPerformance">
     <div class="page-intro"><h1>Performance dos promotores</h1><p>Ranking de execução em campo: visitas, conversão, parceiros e valor gerado por cada promotor.</p></div>
     <div class="gestor-wrap">
@@ -1191,6 +1239,32 @@ button:active { transform: translateY(1px); }
     <div class="page-intro"><h1>Sugestões de venda</h1><p>Quantidades em pacotes, calculadas a partir do histórico registrado de cada PDV.</p></div>
     <div class="gestor-wrap">
       <div class="suggestion-grid" id="gSugestoesLista"></div>
+    </div>
+  </div>
+
+  <div class="page" id="gPromotores">
+    <div class="page-intro"><h1>Promotores</h1><p>Cadastre usuarios, senhas e perfil de acesso da equipe.</p></div>
+    <div class="gestor-wrap">
+      <div class="admin-layout">
+        <div class="card">
+          <div class="card-title">Novo acesso</div>
+          <div class="admin-form">
+            <input type="hidden" id="admId">
+            <div><label>Nome</label><input type="text" id="admNome" placeholder="Nome do profissional"></div>
+            <div><label>Usuario</label><input type="text" id="admUsuario" placeholder="ex: joao"></div>
+            <div><label>Senha</label><input type="text" id="admSenha" placeholder="Senha de acesso"></div>
+            <div><label>Perfil</label><select id="admTipo"><option value="promotor">Promotor</option><option value="gestor">Gestor</option><option value="diretoria">Diretoria</option></select></div>
+            <div class="admin-actions">
+              <button class="btn-filtrar" type="button" onclick="salvarPromotorAdmin()">Salvar acesso</button>
+              <button class="btn-limpar-filtros" type="button" onclick="limparFormPromotor()">Limpar</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Usuarios cadastrados</div>
+          <div id="admListaPromotores" class="admin-list"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1230,6 +1304,18 @@ const SENHAS = {
   'Wil': 'Wi5@dL8n'
 };
 
+const LOGINS_FALLBACK = {
+  leandro: { nome: 'Leandro', usuario: 'leandro', senha: 'Lx9#mK2p', tipo: 'gestor' },
+  diretoria: { nome: 'Diretoria', usuario: 'diretoria', senha: 'Dir@2026', tipo: 'diretoria' },
+  francisco: { nome: 'Francisco', usuario: 'francisco', senha: 'Fj4@nR7w', tipo: 'promotor' },
+  anderson: { nome: 'Anderson', usuario: 'anderson', senha: 'Ak8!qT3v', tipo: 'promotor' },
+  andre: { nome: 'Andre', usuario: 'andre', senha: 'Ad6#hW5z', tipo: 'promotor' },
+  cristiano: { nome: 'Cristiano', usuario: 'cristiano', senha: 'Cr2@bN9x', tipo: 'promotor' },
+  jarbas: { nome: 'Jarbas', usuario: 'jarbas', senha: 'Jb7!sM4k', tipo: 'promotor' },
+  kayan: { nome: 'Kayan', usuario: 'kayan', senha: 'Ky3#tP6q', tipo: 'promotor' },
+  wil: { nome: 'Wil', usuario: 'wil', senha: 'Wi5@dL8n', tipo: 'promotor' }
+};
+
 let usuarioAtual = null;
 let tipoAtual = null;
 let visitasPromotor = [];
@@ -1247,6 +1333,7 @@ let visitasPromotorCarregadoEm = 0;
 let clientesCarregadoEm = 0;
 let visitasPromotorPromise = null;
 let clientesPromise = null;
+let promotoresAdmin = [];
 const CACHE_MS = 60000;
 
 const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
@@ -1275,16 +1362,48 @@ function iniciarLogin(nome, tipo) {
   setTimeout(() => document.getElementById('senhaInput').focus(), 100);
 }
 
-function confirmarSenha() {
-  const senha = document.getElementById('senhaInput').value;
-  if (senha !== SENHAS[loginPendente.nome]) {
-    document.getElementById('senhaErro').style.display = 'block';
-    document.getElementById('senhaInput').value = '';
-    document.getElementById('senhaInput').focus();
+async function confirmarSenha() {
+  if (loginPendente) {
+    const senhaModal = document.getElementById('senhaInput').value;
+    if (senhaModal !== SENHAS[loginPendente.nome]) {
+      document.getElementById('senhaErro').style.display = 'block';
+      document.getElementById('senhaInput').value = '';
+      document.getElementById('senhaInput').focus();
+      return;
+    }
+    document.getElementById('senhaOverlay').classList.remove('open');
+    fazerLogin(loginPendente.nome, loginPendente.tipo);
     return;
   }
-  document.getElementById('senhaOverlay').classList.remove('open');
-  fazerLogin(loginPendente.nome, loginPendente.tipo);
+
+  const usuario = normalizarTexto(document.getElementById('loginUsuario').value).replace(/[^a-z0-9._-]/g,'');
+  const senha = document.getElementById('loginSenha').value;
+  const erro = document.getElementById('loginErro');
+  erro.style.display = 'none';
+  if (!usuario || !senha) {
+    erro.textContent = 'Informe usuario e senha.';
+    erro.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/api/login`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ usuario, senha })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.usuario) throw new Error(data.erro || 'Login invalido');
+    fazerLogin(data.usuario.nome, data.usuario.tipo, data.usuario.usuario);
+  } catch(e) {
+    const local = LOGINS_FALLBACK[usuario];
+    if (local && local.senha === senha) {
+      fazerLogin(local.nome, local.tipo, local.usuario);
+      return;
+    }
+    erro.textContent = 'Usuario ou senha invalidos.';
+    erro.style.display = 'block';
+  }
 }
 
 function fecharSenha() {
@@ -1292,20 +1411,33 @@ function fecharSenha() {
   loginPendente = null;
 }
 
-function fazerLogin(nome, tipo) {
+function fazerLogin(nome, tipo, usuario='') {
   usuarioAtual = nome;
   tipoAtual = tipo;
-  localStorage.setItem('ct_user', JSON.stringify({ nome, tipo }));
+  localStorage.setItem('ct_user', JSON.stringify({ nome, tipo, usuario }));
   document.getElementById('loginScreen').style.display = 'none';
 
-  if (tipo === 'gestor') {
+  if (tipo === 'gestor' || tipo === 'diretoria') {
     document.getElementById('appGestor').style.display = 'block';
     document.getElementById('headerNomeG').textContent = nome;
+    document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
     const hoje = new Date();
     const trintaDias = new Date();
     trintaDias.setDate(hoje.getDate() - 30);
     document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
     document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
+    if (tipo === 'diretoria') {
+      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('#appGestor .nav-btn[data-gestor-page="diretoria"]')?.classList.add('active');
+      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
+      document.getElementById('gDiretoria').classList.add('active');
+    } else {
+      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('#appGestor .nav-btn[data-gestor-page="painel"]')?.classList.add('active');
+      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
+      document.getElementById('gPainel').classList.add('active');
+    }
+    if (tipo === 'gestor') carregarPromotoresAdmin();
     carregarGestor();
   } else {
     document.getElementById('appPromotor').style.display = 'block';
@@ -1337,6 +1469,7 @@ function logout() {
   document.getElementById('appPromotor').style.display = 'none';
   document.getElementById('appGestor').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginSenha').value = '';
   limparFormulario();
 }
 
@@ -1362,10 +1495,12 @@ function mudarAbaG(aba) {
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
+  if (aba === 'diretoria') renderDiretoria();
   if (aba === 'visitas') renderListaGestor();
   if (aba === 'performance') renderPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
+  if (aba === 'promotores') carregarPromotoresAdmin();
 }
 
 // SECOES DO FORMULÁRIO
@@ -2389,6 +2524,7 @@ async function carregarGestor() {
     visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
 
     renderPainel();
+    renderDiretoria();
     renderListaGestor();
   } catch(e) {
     toast('Erro ao carregar dados');
@@ -2531,6 +2667,190 @@ function renderMapaBrasil() {
           </tr>`;
         }).join('')}
       </table>` : '<div class="empty">Sem visitas com UF informada</div>';
+  }
+}
+
+function resumoExecutivo(lista) {
+  const total = lista.length;
+  const pedidos = lista.filter(v => ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))).length;
+  const entregues = lista.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
+  const ruptura = lista.filter(v => v.dados?.presenca?.ruptura).length;
+  const comProduto = lista.filter(v => v.dados?.presenca?.temProduto === 'Sim').length;
+  const pdvs = new Set(lista.map(v => v.dados?.pdv?.cnpj || v.dados?.pdv?.nomeFantasia).filter(Boolean));
+  let valor = 0;
+  let pacotes = 0;
+  lista.forEach(v => {
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    const preco = v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s => {
+      pacotes += qty[s]||0;
+      valor += (qty[s]||0)*(preco[s]||0);
+    });
+  });
+  return {
+    total, pedidos, entregues, ruptura, comProduto, pdvs: pdvs.size, valor, pacotes,
+    conversao: total ? Math.round(pedidos/total*100) : 0,
+    presenca: total ? Math.round(comProduto/total*100) : 0,
+    rupturaPct: total ? Math.round(ruptura/total*100) : 0
+  };
+}
+
+function renderDiretoria() {
+  const r = resumoExecutivo(visitasGestor);
+  const periodo = [document.getElementById('gFiltroDe')?.value, document.getElementById('gFiltroAte')?.value].filter(Boolean).join(' a ');
+  document.getElementById('dirTitulo').textContent = r.valor > 0
+    ? `R$ ${r.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} em pedidos`
+    : 'Painel executivo';
+  document.getElementById('dirResumo').textContent = `${r.total} visitas analisadas${periodo ? ' no periodo ' + periodo : ''}. Conversao de ${r.conversao}%, presenca em ${r.presenca}% dos PDVs e ${r.ruptura} registros de ruptura.`;
+  document.getElementById('dirKpis').innerHTML = [
+    ['Visitas', r.total, 'execucao em campo'],
+    ['Conversao', r.conversao + '%', `${r.pedidos} pedidos`],
+    ['Valor total', r.valor > 0 ? 'R$ ' + r.valor.toLocaleString('pt-BR',{maximumFractionDigits:0}) : 'R$ 0', 'pedidos com preco'],
+    ['PDVs unicos', r.pdvs, 'cobertura real'],
+    ['Pacotes', r.pacotes.toLocaleString('pt-BR'), 'volume vendido'],
+    ['Entregues', r.entregues, 'pedido no PDV'],
+    ['Presenca', r.presenca + '%', 'marca encontrada'],
+    ['Ruptura', r.rupturaPct + '%', `${r.ruptura} ocorrencias`]
+  ].map(([label,value,sub]) => `
+    <div class="director-card">
+      <div class="director-label">${label}</div>
+      <div class="director-value">${value}</div>
+      <div class="director-sub">${sub}</div>
+    </div>
+  `).join('');
+
+  const prioridades = [];
+  if (r.conversao < 35 && r.total) prioridades.push(['Conversao abaixo do alvo', 'Rever abordagem, preco e mix nos PDVs sem pedido.']);
+  if (r.rupturaPct >= 15) prioridades.push(['Ruptura relevante', 'Priorizar reposicao e acompanhamento com distribuidor.']);
+  if (r.presenca < 70 && r.total) prioridades.push(['Presenca de marca baixa', 'Direcionar visitas para recuperacao de espaco e exposicao.']);
+  if (!prioridades.length && r.total) prioridades.push(['Operacao saudavel', 'Manter cadencia e acompanhar oportunidades por segmento.']);
+  document.getElementById('dirPrioridades').innerHTML = prioridades.length ? prioridades.map(([t,d]) => `
+    <div class="admin-row">
+      <div><div class="admin-name">${t}</div><div class="admin-meta">${d}</div></div>
+      <span class="admin-chip">acao</span>
+    </div>
+  `).join('') : '<div class="empty">Sem dados no periodo</div>';
+
+  const prom = {};
+  visitasGestor.forEach(v => {
+    const n = v.promotor || 'Sem promotor';
+    if (!prom[n]) prom[n] = { visitas:0, pedidos:0, valor:0 };
+    prom[n].visitas++;
+    if (['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))) prom[n].pedidos++;
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    const preco = v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s => { prom[n].valor += (qty[s]||0)*(preco[s]||0); });
+  });
+  const ranking = Object.entries(prom).sort((a,b)=>b[1].valor-a[1].valor || b[1].pedidos-a[1].pedidos).slice(0,6);
+  document.getElementById('dirEquipe').innerHTML = ranking.length ? ranking.map(([nome,d],i) => `
+    <div class="ranking-item">
+      <div class="rank-avatar">${i+1}</div>
+      <div class="rank-nome">${nome}<div class="admin-meta">${d.visitas} visitas · ${d.pedidos} pedidos</div></div>
+      <div class="rank-count">${d.valor > 0 ? 'R$ ' + d.valor.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '-'}</div>
+    </div>
+  `).join('') : '<div class="empty">Sem dados</div>';
+}
+
+async function carregarPromotoresAdmin() {
+  if (tipoAtual !== 'gestor') return;
+  const lista = document.getElementById('admListaPromotores');
+  if (lista) lista.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  try {
+    const res = await fetch(`${API}/api/promotores`, { headers: headers() });
+    const data = await res.json();
+    promotoresAdmin = data.promotores || [];
+    renderPromotoresAdmin();
+    preencherFiltroPromotores();
+  } catch(e) {
+    if (lista) lista.innerHTML = '<div class="empty">Erro ao carregar usuarios</div>';
+  }
+}
+
+function preencherFiltroPromotores() {
+  const sel = document.getElementById('gFiltroPromotor');
+  if (!sel) return;
+  const atual = sel.value;
+  const nomes = promotoresAdmin.filter(p => p.ativo && p.tipo === 'promotor').map(p => p.nome).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if (!nomes.length) return;
+  sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n => `<option>${n}</option>`).join('');
+  sel.value = atual;
+}
+
+function renderPromotoresAdmin() {
+  const lista = document.getElementById('admListaPromotores');
+  if (!lista) return;
+  lista.innerHTML = promotoresAdmin.length ? promotoresAdmin.map(p => `
+    <div class="admin-row">
+      <div>
+        <div class="admin-name">${p.nome}</div>
+        <div class="admin-meta">@${p.usuario} · ${p.tipo}</div>
+      </div>
+      <div class="admin-actions">
+        <span class="admin-chip ${p.ativo ? '' : 'off'}">${p.ativo ? 'ativo' : 'inativo'}</span>
+        <button class="btn-detalhes" type="button" onclick="editarPromotorAdmin(${p.id})">Editar</button>
+        ${p.ativo ? `<button class="btn-excluir" type="button" onclick="desativarPromotorAdmin(${p.id})">Desativar</button>` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty">Nenhum usuario cadastrado</div>';
+}
+
+function limparFormPromotor() {
+  ['admId','admNome','admUsuario','admSenha'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('admTipo').value = 'promotor';
+}
+
+function editarPromotorAdmin(id) {
+  const p = promotoresAdmin.find(x => String(x.id) === String(id));
+  if (!p) return;
+  document.getElementById('admId').value = p.id;
+  document.getElementById('admNome').value = p.nome;
+  document.getElementById('admUsuario').value = p.usuario;
+  document.getElementById('admSenha').value = '';
+  document.getElementById('admTipo').value = p.tipo;
+  toast('Editando ' + p.nome + '. Preencha senha apenas se quiser trocar.');
+}
+
+async function salvarPromotorAdmin() {
+  const id = document.getElementById('admId').value;
+  const body = {
+    id,
+    nome: document.getElementById('admNome').value.trim(),
+    usuario: document.getElementById('admUsuario').value.trim(),
+    senha: document.getElementById('admSenha').value,
+    tipo: document.getElementById('admTipo').value,
+    ativo: true
+  };
+  if (!body.nome || !body.usuario || (!id && !body.senha)) {
+    toast('Informe nome, usuario e senha');
+    return;
+  }
+  const res = await fetch(`${API}/api/promotores`, {
+    method: id ? 'PUT' : 'POST',
+    headers: headers(),
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    toast(data.erro || 'Erro ao salvar usuario');
+    return;
+  }
+  toast('Usuario salvo');
+  limparFormPromotor();
+  carregarPromotoresAdmin();
+}
+
+async function desativarPromotorAdmin(id) {
+  if (!confirm('Desativar este acesso?')) return;
+  const res = await fetch(`${API}/api/promotores`, {
+    method: 'DELETE',
+    headers: headers(),
+    body: JSON.stringify({ id })
+  });
+  if (res.ok) {
+    toast('Acesso desativado');
+    carregarPromotoresAdmin();
+  } else {
+    toast('Erro ao desativar');
   }
 }
 
@@ -3059,7 +3379,7 @@ function abrirDetalheGestor(id) {
   const v = visitasGestor.find(x => x.id === id);
   if (!v) return;
   visitaDetalheAtual = v;
-  renderModal(v, true);
+  renderModal(v, tipoAtual === 'gestor');
 }
 
 function renderModal(v, isGestor) {
