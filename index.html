@@ -606,30 +606,35 @@ button:active { transform: translateY(1px); }
 .director-value { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
 .director-sub { margin-top: 6px; color: var(--text-muted); font-size: 12px; }
 .director-panels { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; }
-.exec-summary { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-bottom: 14px; align-items: start; }
-.exec-panel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
-.exec-title { font-size: 13px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
-.exec-text { color: var(--text-muted); font-size: 14px; line-height: 1.55; }
-.exec-actions { display: grid; gap: 8px; }
-.exec-action { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EDF0F6; }
-.exec-action:last-child { border-bottom: 0; }
-.exec-action strong { font-size: 13px; }
-.exec-action span { font-size: 12px; color: var(--text-muted); }
-.resumo-card { cursor: pointer; min-height: 150px; display: flex; flex-direction: column; gap: 8px; }
-.resumo-card:hover { transform: translateY(-2px); border-color: #BFC8DA !important; box-shadow: 0 18px 42px rgba(27,39,72,.12); }
+.exec-summary { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr); gap: 14px; margin-bottom: 14px; align-items: stretch; }
+.exec-panel { background: #fff; border: 1px solid #CBD5E8; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
+.exec-panel.primary { background: linear-gradient(135deg, #101A31 0%, #19243C 62%, #26375D 100%); border-color: rgba(255,255,255,.08); color: #fff; }
+.exec-title { font-size: 12px; font-weight: 950; color: var(--text); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .7px; }
+.exec-panel.primary .exec-title { color: #AFC0E8; }
+.exec-text { color: #33415F; font-size: 15px; line-height: 1.62; font-weight: 650; max-width: 920px; }
+.exec-panel.primary .exec-text { color: #F4F7FF; font-size: 16px; }
+.exec-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.exec-action { display: block; min-height: 86px; padding: 12px; border: 1px solid #DDE3EF; border-radius: 14px; background: #F8FAFE; }
+.exec-action strong { display:block; font-size: 13px; color: #101A31; font-weight: 950; margin-bottom: 5px; }
+.exec-action span { font-size: 12px; color: #465574; line-height: 1.35; }
+.resumo-card { cursor: pointer; min-height: 164px; display: flex; flex-direction: column; gap: 9px; text-align: left; }
+.resumo-card:hover { transform: translateY(-3px); border-color: #AEBAD3 !important; box-shadow: 0 22px 48px rgba(27,39,72,.16); }
 .resumo-card:focus-visible { outline: 3px solid rgba(91,53,213,.25); outline-offset: 3px; }
-.resumo-topline { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.resumo-icon { width: 34px; height: 34px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; background: var(--purple-light); color: var(--purple); flex-shrink: 0; }
+.resumo-topline { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.resumo-label { color: #415172; font-size: 10px; font-weight: 950; }
+.resumo-valor { color: #071126 !important; font-size: 34px; font-weight: 950; letter-spacing: -1px; }
+.resumo-sub { color: #465574; font-size: 12px; font-weight: 650; }
+.resumo-icon { border-radius: 999px; padding: 6px 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 950; text-transform: uppercase; letter-spacing: .4px; background: var(--purple-light); color: var(--purple); flex-shrink: 0; }
 .resumo-card.mint .resumo-icon { background: var(--mint-light); color: var(--mint); }
 .resumo-card.orange .resumo-icon { background: var(--orange-light); color: var(--amber); }
 .resumo-card.red .resumo-icon { background: var(--red-light); color: var(--red); }
-.resumo-insight { color: var(--text); font-size: 12px; line-height: 1.35; min-height: 32px; }
+.resumo-insight { color: #18243D; font-size: 12px; line-height: 1.35; min-height: 34px; font-weight: 750; }
 .resumo-meter { height: 6px; background: #EDF0F6; border-radius: 99px; overflow: hidden; margin-top: auto; }
 .resumo-meter span { display: block; height: 100%; width: var(--pct,0%); background: var(--purple); border-radius: inherit; }
 .resumo-card.mint .resumo-meter span { background: var(--mint); }
 .resumo-card.orange .resumo-meter span { background: var(--amber); }
 .resumo-card.red .resumo-meter span { background: var(--red); }
-.resumo-link { font-size: 11px; color: var(--purple); font-weight: 900; text-transform: uppercase; letter-spacing: .4px; }
+.resumo-link { font-size: 11px; color: #3B22A8; font-weight: 950; text-transform: uppercase; letter-spacing: .4px; }
 .drill-list { display: grid; gap: 8px; }
 .drill-row { width: 100%; text-align: left; border: 1px solid var(--border); background: #fff; border-radius: var(--radius-sm); padding: 12px; cursor: pointer; font-family: inherit; }
 .drill-row:hover { border-color: var(--purple-mid); background: #FAF9FF; }
@@ -637,6 +642,7 @@ button:active { transform: translateY(1px); }
 .drill-row span { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.4; }
 @media (max-width: 899px) {
   .admin-layout, .director-panels, .exec-summary { grid-template-columns: 1fr; }
+  .exec-actions { grid-template-columns: 1fr; }
   .director-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
@@ -1120,7 +1126,7 @@ button:active { transform: translateY(1px); }
       </div>
 
       <div class="exec-summary">
-        <div class="exec-panel">
+        <div class="exec-panel primary">
           <div class="exec-title">Leitura do periodo</div>
           <div class="exec-text" id="gResumoInteligente">Carregando leitura dos indicadores...</div>
         </div>
@@ -3011,10 +3017,10 @@ function renderKpiCard(k) {
         <div>
           <div class="resumo-label">${k.label}</div>
           <div class="resumo-valor" style="${k.valorStyle||''}">${k.valor}</div>
+          <div class="resumo-sub">${k.sub}</div>
         </div>
-        <div class="resumo-icon">${k.icon}</div>
+        <div class="resumo-icon">Detalhar</div>
       </div>
-      <div class="resumo-sub">${k.sub}</div>
       <div class="resumo-insight">${k.insight}</div>
       <div class="resumo-meter" style="--pct:${Math.max(0,Math.min(100,k.pct||0))}%"><span></span></div>
       <div class="resumo-link">Ver composição</div>
@@ -3066,16 +3072,16 @@ function renderPainelInteligente(m) {
   };
 
   const cards = [
-    { id:'visitas', cor:'purple', icon:'V', label:'Total visitas', valor:total, sub:'execução em campo', insight:`${pdvsUnicos.size} PDVs tocados · média ${cobertura} visita/PDV`, pct:100 },
-    { id:'pdvs', cor:'mint', icon:'P', label:'PDVs únicos', valor:pdvsUnicos.size, sub:'estabelecimentos distintos', insight:`Base real de cobertura no período filtrado`, pct:pdvsUnicos.size ? Math.min(100,pdvsUnicos.size/80*100) : 0 },
-    { id:'conversao', cor:conversao < 10 ? 'red' : 'orange', icon:'%', label:'Taxa conversão', valor:total ? conversao+'%' : '—', sub:`${pedidos} pedido(s) em ${total} visita(s)`, insight:conversao < 10 ? 'Baixa: precisa olhar onde a visita não virou pedido' : 'Clique para ver quais visitas converteram', pct:conversao },
-    { id:'ruptura', cor:ruptura ? 'red' : 'mint', icon:'!', label:'Ruptura', valor:ruptura, sub:`${rupturaPct}% das visitas`, insight:ruptura ? 'Há PDV com falta: ação com distribuidor' : 'Sem ruptura registrada no filtro', pct:rupturaPct },
-    { id:'produto', cor:presenca < 70 ? 'orange' : 'purple', icon:'M', label:'Com produto', valor:total ? presenca+'%' : '—', sub:`${comProduto} visita(s) com presença`, insight:presenca < 70 ? 'Presença abaixo do ideal para cobertura' : 'Boa base para acelerar venda', pct:presenca },
-    { id:'ticket', cor:'mint', icon:'R$', label:'Ticket médio', valor:ticketMedio > 0 ? dinheiro(ticketMedio) : '—', valorStyle:'font-size:20px;', sub:`${pedidosComValor} pedido(s) com valor`, insight:'Mostra qualidade financeira dos pedidos, não só quantidade', pct:ticketMedio ? Math.min(100,ticketMedio/1000*100) : 0 },
-    { id:'pedidos', cor:'purple', icon:'N', label:'Pedidos', valor:pedidos, sub:'confirmados ou entregues', insight:`Faltam ${Math.max(0,total-pedidos)} visita(s) converterem`, pct:conversao },
-    { id:'pacotes', cor:'mint', icon:'Q', label:'Pacotes vendidos', valor:totalPacotes.toLocaleString('pt-BR'), sub:'soma de todos os produtos', insight:`Média ${pedidos ? (totalPacotes/pedidos).toFixed(1).replace('.',',') : '0'} pacotes por pedido`, pct:totalPacotes ? Math.min(100,totalPacotes/100*100) : 0 },
-    { id:'entregues', cor:entregues ? 'orange' : 'red', icon:'E', label:'Entregues', valor:entregues, sub:'pedidos confirmados no PDV', insight:pedidos ? `${pedidos-entregues} pedido(s) ainda sem entrega marcada` : 'Sem pedidos para acompanhar entrega', pct:pedidos ? pct(entregues,pedidos) : 0 },
-    { id:'valor', cor:'orange', icon:'R$', label:'Valor total pedidos', valor:valorTotal > 0 ? dinheiro(valorTotal) : '—', valorStyle:'font-size:22px;', sub:'soma de pedidos com valor', insight:`Base financeira: ${pedidosComValor} pedido(s) precificados`, pct:valorTotal ? Math.min(100,valorTotal/10000*100) : 0 }
+    { id:'visitas', cor:'purple', label:'Total visitas', valor:total, sub:'execução em campo', insight:`${pdvsUnicos.size} PDVs tocados · média ${cobertura} visita/PDV`, pct:100 },
+    { id:'pdvs', cor:'mint', label:'PDVs únicos', valor:pdvsUnicos.size, sub:'estabelecimentos distintos', insight:`Base real de cobertura no período filtrado`, pct:pdvsUnicos.size ? Math.min(100,pdvsUnicos.size/80*100) : 0 },
+    { id:'conversao', cor:conversao < 10 ? 'red' : 'orange', label:'Taxa conversão', valor:total ? conversao+'%' : '—', sub:`${pedidos} pedido(s) em ${total} visita(s)`, insight:conversao < 10 ? 'Baixa: precisa olhar onde a visita não virou pedido' : 'Clique para ver quais visitas converteram', pct:conversao },
+    { id:'ruptura', cor:ruptura ? 'red' : 'mint', label:'Ruptura', valor:ruptura, sub:`${rupturaPct}% das visitas`, insight:ruptura ? 'Há PDV com falta: ação com distribuidor' : 'Sem ruptura registrada no filtro', pct:rupturaPct },
+    { id:'produto', cor:presenca < 70 ? 'orange' : 'purple', label:'Com produto', valor:total ? presenca+'%' : '—', sub:`${comProduto} visita(s) com presença`, insight:presenca < 70 ? 'Presença abaixo do ideal para cobertura' : 'Boa base para acelerar venda', pct:presenca },
+    { id:'ticket', cor:'mint', label:'Ticket médio', valor:ticketMedio > 0 ? dinheiro(ticketMedio) : '—', valorStyle:'font-size:22px;', sub:`${pedidosComValor} pedido(s) com valor`, insight:'Mostra qualidade financeira dos pedidos, não só quantidade', pct:ticketMedio ? Math.min(100,ticketMedio/1000*100) : 0 },
+    { id:'pedidos', cor:'purple', label:'Pedidos', valor:pedidos, sub:'confirmados ou entregues', insight:`Faltam ${Math.max(0,total-pedidos)} visita(s) converterem`, pct:conversao },
+    { id:'pacotes', cor:'mint', label:'Pacotes vendidos', valor:totalPacotes.toLocaleString('pt-BR'), sub:'soma de todos os produtos', insight:`Média ${pedidos ? (totalPacotes/pedidos).toFixed(1).replace('.',',') : '0'} pacotes por pedido`, pct:totalPacotes ? Math.min(100,totalPacotes/100*100) : 0 },
+    { id:'entregues', cor:entregues ? 'orange' : 'red', label:'Entregues', valor:entregues, sub:'pedidos confirmados no PDV', insight:pedidos ? `${pedidos-entregues} pedido(s) ainda sem entrega marcada` : 'Sem pedidos para acompanhar entrega', pct:pedidos ? pct(entregues,pedidos) : 0 },
+    { id:'valor', cor:'orange', label:'Valor total pedidos', valor:valorTotal > 0 ? dinheiro(valorTotal) : '—', valorStyle:'font-size:24px;', sub:'soma de pedidos com valor', insight:`Base financeira: ${pedidosComValor} pedido(s) precificados`, pct:valorTotal ? Math.min(100,valorTotal/10000*100) : 0 }
   ];
 
   document.getElementById('gKpiGrid').innerHTML = cards.map(renderKpiCard).join('');
