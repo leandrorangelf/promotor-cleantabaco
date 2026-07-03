@@ -693,6 +693,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn active" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
     <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes')">Carteira</button>
     <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico')">Histórico</button>
+    <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📘 Manual</a>
   </div>
 
   <!-- NOVA VISITA -->
@@ -1084,6 +1085,8 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
     <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
     <button class="nav-btn only-gestor" data-gestor-page="promotores" onclick="mudarAbaG('promotores')">Promotores</button>
+    <div class="nav-group-label">APOIO</div>
+    <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;">📘 Manual</a>
   </div>
 
   <div class="page active" id="gPainel">
@@ -2161,6 +2164,10 @@ async function salvarVisita() {
 
     let res;
     if (editandoId) {
+      const visitaOriginal = visitasPromotor.find(v => String(v.id) === String(editandoId));
+      if (visitaOriginal?.dados?.localizacao) {
+        dados.localizacao = visitaOriginal.dados.localizacao;
+      }
       res = await fetch(`${API}/api/editar`, {
         method: 'PUT',
         headers: headers(),
