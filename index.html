@@ -1384,6 +1384,59 @@ function headers() { // sem token
   return { 'Content-Type': 'application/json' };
 }
 
+function capturarLocalizacaoAtual() {
+  const capturadoEm = new Date().toISOString();
+  if (!navigator.geolocation) {
+    return Promise.resolve({
+      ok: false,
+      erro: 'Geolocalizacao indisponivel neste aparelho',
+      capturadoEm
+    });
+  }
+
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({
+        ok: true,
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        precisao: pos.coords.accuracy,
+        altitude: pos.coords.altitude,
+        velocidade: pos.coords.speed,
+        direcao: pos.coords.heading,
+        capturadoEm: new Date(pos.timestamp || Date.now()).toISOString()
+      }),
+      err => resolve({
+        ok: false,
+        erro: err.message || 'Nao foi possivel capturar o GPS',
+        codigo: err.code,
+        capturadoEm
+      }),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  });
+}
+
+function htmlLocalizacaoVisita(localizacao) {
+  if (!localizacao) {
+    return '<div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">Nao capturado</span></div>';
+  }
+  if (!localizacao.ok || localizacao.latitude == null || localizacao.longitude == null) {
+    return `<div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">${localizacao.erro || 'Nao capturado'}</span></div>`;
+  }
+
+  const lat = Number(localizacao.latitude);
+  const lng = Number(localizacao.longitude);
+  const precisao = Number(localizacao.precisao);
+  const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+  const precisaoTxt = Number.isFinite(precisao) ? `Precisao: ${Math.round(precisao)} m` : 'Precisao nao informada';
+  return `
+    <div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">${lat.toFixed(6)}, ${lng.toFixed(6)}</span></div>
+    <div class="rel-row"><span class="rel-key">Precisao</span><span class="rel-val">${precisaoTxt}</span></div>
+    <div class="rel-row"><span class="rel-key">Mapa</span><span class="rel-val"><a href="${mapsUrl}" target="_blank" rel="noopener">Abrir no mapa</a></span></div>
+  `;
+}
+
 // LOGIN
 let loginPendente = null;
 
@@ -2097,6 +2150,12 @@ async function salvarVisita() {
   };
 
   try {
+    if (!editandoId) {
+      btn.textContent = 'Capturando GPS...';
+      dados.localizacao = await capturarLocalizacaoAtual();
+      btn.textContent = 'Salvando...';
+    }
+
     let res;
     if (editandoId) {
       res = await fetch(`${API}/api/editar`, {
@@ -3604,6 +3663,7 @@ function renderModal(v, isGestor) {
       <div class="rel-title">Geral</div>
       <div class="rel-row"><span class="rel-key">Data</span><span class="rel-val">${dataStr}</span></div>
       <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${v.promotor}</span></div>
+      ${htmlLocalizacaoVisita(d.localizacao)}
     </div>
     <div class="rel-section">
       <div class="rel-title">PDV</div>
