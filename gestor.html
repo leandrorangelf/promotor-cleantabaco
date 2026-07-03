@@ -561,7 +561,7 @@ function toast(msg, dur=2500) {
 
 function htmlLocalizacaoGestor(localizacao) {
   if (!localizacao) {
-    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(45,55,72,0.4);font-size:13px;"><span style="color:var(--muted);">GPS</span><span style="font-weight:600;">Nao capturado</span></div>';
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(45,55,72,0.4);font-size:13px;"><span style="color:var(--muted);">GPS</span><span style="font-weight:600;">Registro anterior ao teste de GPS</span></div>';
   }
   if (!localizacao.ok || localizacao.latitude == null || localizacao.longitude == null) {
     return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(45,55,72,0.4);font-size:13px;"><span style="color:var(--muted);">GPS</span><span style="font-weight:600;">${localizacao.erro || 'Nao capturado'}</span></div>`;

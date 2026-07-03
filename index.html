@@ -1389,6 +1389,7 @@ function capturarLocalizacaoAtual() {
   if (!navigator.geolocation) {
     return Promise.resolve({
       ok: false,
+      tentado: true,
       erro: 'Geolocalizacao indisponivel neste aparelho',
       capturadoEm
     });
@@ -1398,6 +1399,7 @@ function capturarLocalizacaoAtual() {
     navigator.geolocation.getCurrentPosition(
       pos => resolve({
         ok: true,
+        tentado: true,
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
         precisao: pos.coords.accuracy,
@@ -1408,6 +1410,7 @@ function capturarLocalizacaoAtual() {
       }),
       err => resolve({
         ok: false,
+        tentado: true,
         erro: err.message || 'Nao foi possivel capturar o GPS',
         codigo: err.code,
         capturadoEm
@@ -1419,7 +1422,7 @@ function capturarLocalizacaoAtual() {
 
 function htmlLocalizacaoVisita(localizacao) {
   if (!localizacao) {
-    return '<div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">Nao capturado</span></div>';
+    return '<div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">Registro anterior ao teste de GPS</span></div>';
   }
   if (!localizacao.ok || localizacao.latitude == null || localizacao.longitude == null) {
     return `<div class="rel-row"><span class="rel-key">GPS</span><span class="rel-val">${localizacao.erro || 'Nao capturado'}</span></div>`;
@@ -2172,7 +2175,13 @@ async function salvarVisita() {
     }
     const data = await res.json();
     if (data.ok) {
-      toast(editandoId ? '✓ Visita atualizada!' : '✓ Visita salva!');
+      if (editandoId) {
+        toast('Visita atualizada');
+      } else if (dados.localizacao?.ok) {
+        toast('Visita salva com GPS');
+      } else {
+        toast('Visita salva sem GPS: ' + (dados.localizacao?.erro || 'nao capturado'), 4200);
+      }
       editandoId = null;
       limparFormulario();
       await carregarVisitasPromotor(true);
