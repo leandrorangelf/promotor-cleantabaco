@@ -1327,6 +1327,7 @@ button:active { transform: translateY(1px); }
 
 <div class="toast" id="toast"></div>
 
+<script src="bonus.js"></script>
 <script>
 const API = '';
 
@@ -2967,6 +2968,21 @@ async function desativarPromotorAdmin(id) {
 // ====== PÁGINA PERFORMANCE DOS PROMOTORES ======
 function renderPerformance() {
   const prom = {};
+  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasGestor) : {};
+  const dinheiroBonus = valor => 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const bonusVazio = () => ({
+    totalBonus: 0,
+    metas: {
+      cliente4Skus: { atingida: false, atual: 0, alvo: 1 },
+      dezPedidos: { atingida: false, atual: 0, alvo: 10 },
+      cemVisitasSemana: { atingida: false, atual: 0, alvo: 100 }
+    },
+    semanas: []
+  });
+  const metaChip = (texto, meta) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:${meta.atingida?'var(--mint-light)':'var(--orange-light)'};color:${meta.atingida?'var(--mint)':'var(--amber)'};">
+      ${meta.atingida?'✓':'•'} ${texto}
+    </span>`;
   visitasGestor.forEach(v => {
     const n = v.promotor;
     if (!n) return;
@@ -2995,6 +3011,7 @@ function renderPerformance() {
   cards.innerHTML = ordenado.map(([nome,d],i) => {
     const conv = d.visitas ? Math.round(d.pedidos/d.visitas*100) : 0;
     const ok = conv >= 50;
+    const bonus = bonusPorPromotor[nome] || bonusVazio();
     return `<div class="card" style="margin:0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <div style="width:38px;height:38px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--purple);flex-shrink:0;">${nome.charAt(0)}</div>
@@ -3005,6 +3022,15 @@ function renderPerformance() {
       </div>
       <div style="height:6px;background:#EDEAF7;border-radius:4px;overflow:hidden;margin-bottom:12px;">
         <div style="height:100%;width:${Math.round(d.visitas/maxV*100)}%;background:var(--purple);"></div>
+      </div>
+      <div style="margin-bottom:12px;padding:10px;border:1px solid ${bonus.totalBonus>=1500?'var(--mint)':'#F1EFE8'};border-radius:10px;background:${bonus.totalBonus>=1500?'var(--mint-light)':'#FAFBFE'};">
+        <div style="color:var(--text-muted);font-size:10px;font-weight:800;">BÔNUS ESTIMADO</div>
+        <div style="font-weight:900;font-size:20px;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)} <span style="font-size:11px;color:var(--text-muted);font-weight:700;">/ R$ 1.500,00</span></div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
+          ${metaChip('Cliente 4 SKUs', bonus.metas.cliente4Skus)}
+          ${metaChip('10 pedidos', bonus.metas.dezPedidos)}
+          ${metaChip('100/semana', bonus.metas.cemVisitasSemana)}
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
         <div><div style="color:var(--text-muted);font-size:10px;">PEDIDOS</div><div style="font-weight:800;font-size:16px;">${d.pedidos}</div></div>
@@ -3020,9 +3046,11 @@ function renderPerformance() {
   }).join('');
 
   tabela.innerHTML = `<div style="overflow-x:auto;">
-    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px;">
       <tr style="border-bottom:2px solid var(--border);">
         <th style="text-align:left;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Promotor</th>
+        <th style="text-align:right;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Bônus</th>
+        <th style="text-align:left;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Metas</th>
         <th style="text-align:center;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Visitas</th>
         <th style="text-align:center;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Pedidos</th>
         <th style="text-align:center;padding:8px;font-size:11px;color:var(--text-muted);font-weight:700;">Conv.</th>
@@ -3033,8 +3061,11 @@ function renderPerformance() {
       ${ordenado.map(([nome,d]) => {
         const conv = d.visitas ? Math.round(d.pedidos/d.visitas*100) : 0;
         const ok = conv >= 50;
+        const bonus = bonusPorPromotor[nome] || bonusVazio();
         return `<tr style="border-bottom:1px solid #F1EFE8;">
           <td style="padding:9px 8px;font-weight:700;">${nome}</td>
+          <td style="text-align:right;padding:9px 8px;font-weight:900;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)}</td>
+          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChip('4 SKUs', bonus.metas.cliente4Skus)}${metaChip('10 pedidos', bonus.metas.dezPedidos)}${metaChip('100/sem', bonus.metas.cemVisitasSemana)}</div></td>
           <td style="text-align:center;padding:9px 8px;font-weight:700;">${d.visitas}</td>
           <td style="text-align:center;padding:9px 8px;">${d.pedidos}</td>
           <td style="text-align:center;padding:9px 8px;"><span style="background:${ok?'var(--mint-light)':'var(--orange-light)'};color:${ok?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">${d.visitas?conv+'%':'—'}</span></td>

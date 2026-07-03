@@ -10,7 +10,14 @@ export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
     const { id, promotor, dados, fotos } = req.body;
-    await sql`update visitas set dados = ${JSON.stringify(dados)}, fotos = ${fotos} where id = ${id} and promotor = ${promotor}`;
+    const atual = await sql`select dados from visitas where id = ${id} and promotor = ${promotor} limit 1`;
+    const dadosAtuais = atual[0]?.dados;
+    const dadosNormalizados = typeof dadosAtuais === 'string' ? JSON.parse(dadosAtuais) : dadosAtuais;
+    const dadosParaSalvar = {
+      ...(dados || {}),
+      localizacao: dados?.localizacao || dadosNormalizados?.localizacao
+    };
+    await sql`update visitas set dados = ${JSON.stringify(dadosParaSalvar)}, fotos = ${fotos} where id = ${id} and promotor = ${promotor}`;
     return res.status(200).json({ ok: true });
   } catch (e) {
     return res.status(500).json({ erro: e.message });
