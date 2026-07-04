@@ -3,28 +3,17 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.calcularBonificacaoPromotores = api.calcularBonificacaoPromotores;
 })(typeof window !== 'undefined' ? window : globalThis, function() {
-  const SKUS_BONUS = ['GR', 'GM', 'CM', 'CC'];
   const VALOR_META = 500;
+  const VALOR_CLIENTE_NOVO = 15;
+  const META_BASE_PDVS = 200;
+  const META_PERCENTUAL_TABELA = 50;
 
   function normalizarTexto(valor) {
     return String(valor || '')
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
       .trim();
-  }
-
-  function statusDaVisitaBonus(visita) {
-    const comercial = visita?.dados?.comercial || {};
-    if (comercial.statusPedido) return comercial.statusPedido;
-    if (comercial.pedidoEntregue) return 'Pedido entregue';
-    if (comercial.pedidoFeito === 'Sim') return 'Pedido confirmado';
-    return 'Sem negociacao';
-  }
-
-  function pedidoConfirmado(visita) {
-    const status = statusDaVisitaBonus(visita);
-    return status === 'Pedido confirmado' || status === 'Pedido entregue';
   }
 
   function quantidadesPedido(visita) {
@@ -32,100 +21,111 @@
     return comercial.pedidoPac || comercial.pedidoQty || {};
   }
 
-  function vendeuQuatroSkus(visita) {
+  function positivadaComSku(visita) {
     const qty = quantidadesPedido(visita);
-    return SKUS_BONUS.every(sku => Number(qty[sku] || 0) > 0);
+    return Object.values(qty).some(v => Number(v || 0) > 0);
   }
 
-  function chavePdv(visita) {
+  function chavePdvVisita(visita) {
     const pdv = visita?.dados?.pdv || {};
     return normalizarTexto(pdv.cnpj || pdv.nomeFantasia);
   }
 
-  function inicioSemana(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
-    return d.toISOString().slice(0, 10);
+  function chavePdvCliente(cliente) {
+    return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
+  }
+
+  function dentroDoPeriodo(data, de, ate) {
+    if (!de && !ate) return true;
+    const t = new Date(data).getTime();
+    if (de && t < new Date(de).getTime()) return false;
+    if (ate && t > new Date(ate).getTime()) return false;
+    return true;
   }
 
   function criarResumo(nome) {
     return {
       promotor: nome,
-      visitas: 0,
-      pedidos: 0,
-      clientesNovos4Skus: 0,
       totalBonus: 0,
-      semanas: [],
       metas: {
-        cliente4Skus: { atingida: false, valor: 0, atual: 0, alvo: 1 },
-        dezPedidos: { atingida: false, valor: 0, atual: 0, alvo: 10 },
-        cemVisitasSemana: { atingida: false, valor: 0, atual: 0, alvo: 100 }
+        clienteNovoPositivado: { atingida: false, valor: 0, atual: 0, alvo: 1 },
+        tabelaVisivelBase: { atingida: false, valor: 0, atual: 0, alvo: META_PERCENTUAL_TABELA },
+        baseDuzentosPdvs: { atingida: false, valor: 0, atual: 0, alvo: META_BASE_PDVS }
       }
     };
   }
 
-  function calcularBonificacaoPromotores(visitas) {
-    const porPromotor = {};
-    const vistosPorPromotor = {};
-    const semanasPorPromotor = {};
+  function calcularBonificacaoPromotores(visitas, clientes, periodo) {
+    const de = periodo?.de || null;
+    const ate = periodo?.ate || null;
+    const listaVisitas = visitas || [];
+    const listaClientes = clientes || [];
 
-    [...(visitas || [])]
-      .sort((a, b) => new Date(a.criado_em || 0) - new Date(b.criado_em || 0))
-      .forEach(visita => {
-        const nome = visita?.promotor || 'Sem promotor';
-        if (!porPromotor[nome]) porPromotor[nome] = criarResumo(nome);
-        if (!vistosPorPromotor[nome]) vistosPorPromotor[nome] = new Set();
-        if (!semanasPorPromotor[nome]) semanasPorPromotor[nome] = {};
-
-        const resumo = porPromotor[nome];
-        resumo.visitas++;
-        if (pedidoConfirmado(visita)) resumo.pedidos++;
-
-        const semana = inicioSemana(visita.criado_em || Date.now());
-        semanasPorPromotor[nome][semana] = (semanasPorPromotor[nome][semana] || 0) + 1;
-
-        const pdv = chavePdv(visita);
-        if (pdv && !vistosPorPromotor[nome].has(pdv)) {
-          vistosPorPromotor[nome].add(pdv);
-          if (vendeuQuatroSkus(visita)) resumo.clientesNovos4Skus++;
-        }
-      });
-
-    Object.entries(porPromotor).forEach(([nome, resumo]) => {
-      resumo.semanas = Object.entries(semanasPorPromotor[nome] || {})
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([inicio, visitasSemana]) => ({ inicio, visitas: visitasSemana }));
-
-      resumo.metas.cliente4Skus.atingida = resumo.clientesNovos4Skus >= 1;
-      resumo.metas.cliente4Skus.atual = resumo.clientesNovos4Skus;
-      resumo.metas.cliente4Skus.valor = resumo.metas.cliente4Skus.atingida ? VALOR_META : 0;
-
-      resumo.metas.dezPedidos.atingida = resumo.pedidos >= 10;
-      resumo.metas.dezPedidos.atual = resumo.pedidos;
-      resumo.metas.dezPedidos.valor = resumo.metas.dezPedidos.atingida ? VALOR_META : 0;
-
-      const semanas = resumo.semanas;
-      const semanasOk = semanas.length > 0 && semanas.every(s => s.visitas >= 100);
-      resumo.metas.cemVisitasSemana.atingida = semanasOk;
-      resumo.metas.cemVisitasSemana.atual = semanas.length ? Math.min(...semanas.map(s => s.visitas)) : 0;
-      resumo.metas.cemVisitasSemana.valor = semanasOk ? VALOR_META : 0;
-
-      resumo.totalBonus =
-        resumo.metas.cliente4Skus.valor +
-        resumo.metas.dezPedidos.valor +
-        resumo.metas.cemVisitasSemana.valor;
+    const visitasPorPromotor = {};
+    listaVisitas.forEach(v => {
+      const nome = v?.promotor || 'Sem promotor';
+      if (!visitasPorPromotor[nome]) visitasPorPromotor[nome] = [];
+      visitasPorPromotor[nome].push(v);
     });
 
-    return porPromotor;
+    const clientesPorPromotor = {};
+    listaClientes.forEach(c => {
+      const nome = c?.promotor || 'Sem promotor';
+      if (!clientesPorPromotor[nome]) clientesPorPromotor[nome] = [];
+      clientesPorPromotor[nome].push(c);
+    });
+
+    const nomes = new Set([...Object.keys(visitasPorPromotor), ...Object.keys(clientesPorPromotor)]);
+    const resultado = {};
+
+    nomes.forEach(nome => {
+      const visitasDoPromotor = visitasPorPromotor[nome] || [];
+      const clientesDoPromotor = clientesPorPromotor[nome] || [];
+      const resumo = criarResumo(nome);
+
+      const visitasNoPeriodo = visitasDoPromotor.filter(v => dentroDoPeriodo(v.criado_em, de, ate));
+
+      // Meta 1: R$15 por cliente novo (cadastrado no periodo) positivado (>=1 SKU vendido no periodo), teto R$500
+      const clientesNovos = clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate));
+      const chavesPositivadas = new Set(
+        visitasNoPeriodo.filter(positivadaComSku).map(chavePdvVisita).filter(Boolean)
+      );
+      const clientesNovosPositivados = clientesNovos.filter(c => chavesPositivadas.has(chavePdvCliente(c))).length;
+      resumo.metas.clienteNovoPositivado.atual = clientesNovosPositivados;
+      resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * VALOR_CLIENTE_NOVO, VALOR_META);
+      resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
+
+      // Meta 2: R$500 quando 50% da base de clientes tem tabela de precos visivel (registrada com foto na visita)
+      const chavesTabelaVisivel = new Set(
+        visitasNoPeriodo.filter(v => v?.dados?.presenca?.tabelaVisivel).map(chavePdvVisita).filter(Boolean)
+      );
+      const totalBase = clientesDoPromotor.length;
+      const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
+      const percentualTabela = totalBase ? Math.round((comTabelaVisivel / totalBase) * 100) : 0;
+      resumo.metas.tabelaVisivelBase.atual = percentualTabela;
+      resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= META_PERCENTUAL_TABELA;
+      resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;
+
+      // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo
+      const chavesVisitadas = new Set(visitasNoPeriodo.map(chavePdvVisita).filter(Boolean));
+      const cadastradosEVisitados = clientesDoPromotor.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
+      resumo.metas.baseDuzentosPdvs.atual = cadastradosEVisitados;
+      resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= META_BASE_PDVS;
+      resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
+
+      resumo.totalBonus =
+        resumo.metas.clienteNovoPositivado.valor +
+        resumo.metas.tabelaVisivelBase.valor +
+        resumo.metas.baseDuzentosPdvs.valor;
+
+      resultado[nome] = resumo;
+    });
+
+    return resultado;
   }
 
   return {
     calcularBonificacaoPromotores,
-    statusDaVisitaBonus,
-    vendeuQuatroSkus,
-    inicioSemana
+    positivadaComSku
   };
 });

@@ -1,15 +1,14 @@
 const assert = require('assert');
 const { calcularBonificacaoPromotores } = require('../bonus.js');
 
-function visita({ promotor = 'Wil', data, pdv, status = 'Sem negociacao', qty = {} }) {
+function visita({ promotor, data, pdv, qty = {}, tabelaVisivel = false }) {
   return {
     promotor,
     criado_em: data,
     dados: {
       pdv: { nomeFantasia: pdv },
+      presenca: { tabelaVisivel },
       comercial: {
-        statusPedido: status,
-        pedidoFeito: status === 'Pedido confirmado' || status === 'Pedido entregue' ? 'Sim' : 'Nao',
         pedidoPac: {
           GR: qty.GR || 0,
           GM: qty.GM || 0,
@@ -21,52 +20,91 @@ function visita({ promotor = 'Wil', data, pdv, status = 'Sem negociacao', qty = 
   };
 }
 
-const visitas = [];
-visitas.push(visita({
-  data: '2026-07-06T10:00:00Z',
-  pdv: 'Cliente Novo 4 SKU',
-  status: 'Pedido confirmado',
-  qty: { GR: 1, GM: 1, CM: 1, CC: 1 }
-}));
-
-for (let i = 0; i < 9; i++) {
-  visitas.push(visita({
-    data: `2026-07-${String(6 + (i % 5)).padStart(2, '0')}T11:00:00Z`,
-    pdv: `Pedido ${i}`,
-    status: i % 2 ? 'Pedido entregue' : 'Pedido confirmado',
-    qty: { GR: 1 }
-  }));
+function cliente({ promotor, nome_fantasia, criado_em }) {
+  return { promotor, nome_fantasia, cnpj: '', criado_em };
 }
 
-for (let i = 0; i < 90; i++) {
-  visitas.push(visita({
-    data: `2026-07-${String(6 + (i % 5)).padStart(2, '0')}T12:00:00Z`,
-    pdv: `Visita Semana 1 ${i}`
-  }));
+const periodo = { de: '2026-07-01T00:00:00Z', ate: '2026-07-31T23:59:59Z' };
+
+// Meta 1 (Wil): 20 clientes novos no periodo, todos positivados com 1 SKU (20 * 15 = 300, abaixo do teto de 500)
+const clientesWil = [];
+const visitasWil = [];
+for (let i = 0; i < 20; i++) {
+  const nome = `Cliente Novo ${i}`;
+  clientesWil.push(cliente({ promotor: 'Wil', nome_fantasia: nome, criado_em: '2026-07-05T10:00:00Z' }));
+  visitasWil.push(visita({ promotor: 'Wil', data: '2026-07-06T10:00:00Z', pdv: nome, qty: { GR: 1 } }));
 }
 
-for (let i = 0; i < 100; i++) {
-  visitas.push(visita({
-    data: `2026-07-${String(13 + (i % 5)).padStart(2, '0')}T12:00:00Z`,
-    pdv: `Visita Semana 2 ${i}`
-  }));
+// Meta 1 (Bea): 40 clientes novos positivados - teto de R$500 nao pode ser ultrapassado
+const clientesBea = [];
+const visitasBea = [];
+for (let i = 0; i < 40; i++) {
+  const nome = `Cliente Teto ${i}`;
+  clientesBea.push(cliente({ promotor: 'Bea', nome_fantasia: nome, criado_em: '2026-07-05T10:00:00Z' }));
+  visitasBea.push(visita({ promotor: 'Bea', data: '2026-07-06T10:00:00Z', pdv: nome, qty: { GR: 1 } }));
 }
 
-const resultado = calcularBonificacaoPromotores(visitas);
+// Meta 2 (Ana): base de 10 clientes, 5 com tabela visivel no periodo (50% - bate a meta)
+const clientesAna = [];
+const visitasAna = [];
+for (let i = 0; i < 10; i++) {
+  const nome = `PDV Tabela ${i}`;
+  clientesAna.push(cliente({ promotor: 'Ana', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasAna.push(visita({ promotor: 'Ana', data: '2026-07-10T10:00:00Z', pdv: nome, tabelaVisivel: i < 5 }));
+}
 
-assert.strictEqual(resultado.Wil.metas.cliente4Skus.atingida, true);
-assert.strictEqual(resultado.Wil.metas.dezPedidos.atingida, true);
-assert.strictEqual(resultado.Wil.metas.cemVisitasSemana.atingida, true);
-assert.strictEqual(resultado.Wil.totalBonus, 1500);
-assert.strictEqual(resultado.Wil.pedidos, 10);
-assert.deepStrictEqual(resultado.Wil.semanas.map(s => s.visitas), [100, 100]);
+// Meta 2 (Rui): base de 10 clientes, 4 com tabela visivel (40% - nao bate a meta)
+const clientesRui = [];
+const visitasRui = [];
+for (let i = 0; i < 10; i++) {
+  const nome = `PDV Tabela Rui ${i}`;
+  clientesRui.push(cliente({ promotor: 'Rui', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasRui.push(visita({ promotor: 'Rui', data: '2026-07-10T10:00:00Z', pdv: nome, tabelaVisivel: i < 4 }));
+}
 
-const falhaSemana = calcularBonificacaoPromotores([
-  visita({ data: '2026-07-06T10:00:00Z', pdv: 'A' }),
-  visita({ data: '2026-07-13T10:00:00Z', pdv: 'B' })
-]);
+// Meta 3 (Ivo): 200 PDVs cadastrados e visitados no periodo
+const clientesIvo = [];
+const visitasIvo = [];
+for (let i = 0; i < 200; i++) {
+  const nome = `PDV Base ${i}`;
+  clientesIvo.push(cliente({ promotor: 'Ivo', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasIvo.push(visita({ promotor: 'Ivo', data: '2026-07-15T10:00:00Z', pdv: nome }));
+}
 
-assert.strictEqual(falhaSemana.Wil.metas.cemVisitasSemana.atingida, false);
-assert.strictEqual(falhaSemana.Wil.totalBonus, 0);
+const resultado = calcularBonificacaoPromotores(
+  [...visitasWil, ...visitasBea, ...visitasAna, ...visitasRui, ...visitasIvo],
+  [...clientesWil, ...clientesBea, ...clientesAna, ...clientesRui, ...clientesIvo],
+  periodo
+);
+
+assert.strictEqual(resultado.Wil.metas.clienteNovoPositivado.atual, 20);
+assert.strictEqual(resultado.Wil.metas.clienteNovoPositivado.valor, 300);
+assert.strictEqual(resultado.Wil.metas.clienteNovoPositivado.atingida, true);
+assert.strictEqual(resultado.Wil.totalBonus, 300);
+
+assert.strictEqual(resultado.Bea.metas.clienteNovoPositivado.atual, 40);
+assert.strictEqual(resultado.Bea.metas.clienteNovoPositivado.valor, 500);
+
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atual, 50);
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atingida, true);
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.valor, 500);
+
+assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.atual, 40);
+assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.atingida, false);
+assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.valor, 0);
+
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atual, 200);
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atingida, true);
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.valor, 500);
+assert.strictEqual(resultado.Ivo.totalBonus, 500);
+
+// Fora do periodo filtrado nao conta para cliente novo
+const resultadoForaPeriodo = calcularBonificacaoPromotores(
+  [visita({ promotor: 'Tom', data: '2026-06-06T10:00:00Z', pdv: 'X', qty: { GR: 1 } })],
+  [cliente({ promotor: 'Tom', nome_fantasia: 'X', criado_em: '2026-06-05T10:00:00Z' })],
+  periodo
+);
+assert.strictEqual(resultadoForaPeriodo.Tom.metas.clienteNovoPositivado.valor, 0);
+assert.strictEqual(resultadoForaPeriodo.Tom.totalBonus, 0);
 
 console.log('bonus.test.js passou');

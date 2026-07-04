@@ -58,20 +58,30 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     let { promotor, q } = req.query;
     if (sessao.tipo === 'promotor') promotor = sessao.nome;
-    if (!promotor) return res.status(400).json({ erro: 'Promotor obrigatório' });
+    if (!promotor && sessao.tipo === 'promotor') return res.status(400).json({ erro: 'Promotor obrigatório' });
     let rows;
     if (q && q.trim()) {
       const busca = `%${q.trim()}%`;
-      rows = await sql`
-        SELECT * FROM clientes
-        WHERE promotor = ${promotor}
-          AND (nome_fantasia ILIKE ${busca} OR cnpj LIKE ${busca})
-        ORDER BY nome_fantasia LIMIT 30
-      `;
-    } else {
+      rows = promotor
+        ? await sql`
+            SELECT * FROM clientes
+            WHERE promotor = ${promotor}
+              AND (nome_fantasia ILIKE ${busca} OR cnpj LIKE ${busca})
+            ORDER BY nome_fantasia LIMIT 30
+          `
+        : await sql`
+            SELECT * FROM clientes
+            WHERE nome_fantasia ILIKE ${busca} OR cnpj LIKE ${busca}
+            ORDER BY nome_fantasia LIMIT 30
+          `;
+    } else if (promotor) {
       rows = await sql`
         SELECT * FROM clientes WHERE promotor = ${promotor}
         ORDER BY nome_fantasia LIMIT 100
+      `;
+    } else {
+      rows = await sql`
+        SELECT * FROM clientes ORDER BY promotor, nome_fantasia LIMIT 5000
       `;
     }
     return res.status(200).json({ clientes: rows });

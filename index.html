@@ -810,6 +810,7 @@ button:active { transform: translateY(1px); }
         <div class="check-item" onclick="toggleCheck(this,'ruptura')"><input type="checkbox" id="ruptura"><div class="check-label">⚠️ Ruptura na gôndola (produto em falta)</div></div>
         <div class="check-item" onclick="toggleCheck(this,'materialPDV')"><input type="checkbox" id="materialPDV"><div class="check-label">✅ Material de PDV / display exposto</div></div>
         <div class="check-item" onclick="toggleCheck(this,'precificador')"><input type="checkbox" id="precificador"><div class="check-label">✅ Precificador com nosso produto visível</div></div>
+        <div class="check-item" onclick="toggleCheck(this,'tabelaVisivel')"><input type="checkbox" id="tabelaVisivel"><div class="check-label">📋 Tabela de preços visível no PDV (anexar foto)</div></div>
       </div>
       <div class="form-nav">
         <button class="btn-prev" onclick="irSecao(0)">← Voltar</button>
@@ -1337,6 +1338,7 @@ let tipoAtual = null;
 let authToken = '';
 let visitasPromotor = [];
 let visitasGestor = [];
+let clientesGestor = [];
 let secaoAtual = 0;
 let skusSelecionados = [];
 let concSelecionados = [];
@@ -2063,6 +2065,11 @@ async function baixarFotoAtual() {
 async function salvarVisita() {
   const nome = document.getElementById('nomeFantasia').value.trim();
   if (!nome) { toast('⚠️ Informe o nome do estabelecimento'); irSecao(0); return; }
+  if (document.getElementById('tabelaVisivel').checked && fotos.length === 0) {
+    toast('⚠️ Anexe uma foto para confirmar a tabela de preços visível');
+    irSecao(1);
+    return;
+  }
 
   const btn = document.getElementById('btnSalvar');
   btn.disabled = true;
@@ -2088,6 +2095,7 @@ async function salvarVisita() {
       ruptura: document.getElementById('ruptura').checked,
       materialPDV: document.getElementById('materialPDV').checked,
       precificador: document.getElementById('precificador').checked,
+      tabelaVisivel: document.getElementById('tabelaVisivel').checked,
     },
     comercial: {
       precoTabela: getRadio('precoTabela'),
@@ -2385,6 +2393,7 @@ function aplicarBaseUltimaVisita(v) {
   setCheckValor('ruptura', d.presenca?.ruptura);
   setCheckValor('materialPDV', d.presenca?.materialPDV);
   setCheckValor('precificador', d.presenca?.precificador);
+  setCheckValor('tabelaVisivel', d.presenca?.tabelaVisivel);
 
   concSelecionados = [...(d.mercado?.concorrentes || [])];
   concDetalhes = {...(d.mercado?.concDetalhes || {})};
@@ -2557,7 +2566,7 @@ async function editarVisita(id) {
   }
 
   // Checks
-  ['ruptura','materialPDV','precificador'].forEach(campo => {
+  ['ruptura','materialPDV','precificador','tabelaVisivel'].forEach(campo => {
     const val = d.presenca?.[campo] || false;
     const item = document.getElementById(campo)?.closest('.check-item');
     if (item) { item.classList.toggle('checked', val); document.getElementById(campo).checked = val; }
@@ -2609,6 +2618,10 @@ async function carregarGestor() {
     const res = await fetch(url, { headers: headers() });
     const data = await res.json();
     visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
+
+    const resClientes = await fetch(`${API}/api/clientes${promotor ? '?promotor=' + encodeURIComponent(promotor) : ''}`, { headers: headers() });
+    const dataClientes = await resClientes.json();
+    clientesGestor = dataClientes.clientes || [];
 
     renderPainel();
     renderDiretoria();
@@ -2944,16 +2957,19 @@ async function desativarPromotorAdmin(id) {
 // ====== PÁGINA PERFORMANCE DOS PROMOTORES ======
 function renderPerformance() {
   const prom = {};
-  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasGestor) : {};
+  const periodoBonus = {
+    de: document.getElementById('gFiltroDe')?.value ? document.getElementById('gFiltroDe').value + 'T00:00:00Z' : null,
+    ate: document.getElementById('gFiltroAte')?.value ? document.getElementById('gFiltroAte').value + 'T23:59:59Z' : null
+  };
+  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasGestor, clientesGestor, periodoBonus) : {};
   const dinheiroBonus = valor => 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const bonusVazio = () => ({
     totalBonus: 0,
     metas: {
-      cliente4Skus: { atingida: false, atual: 0, alvo: 1 },
-      dezPedidos: { atingida: false, atual: 0, alvo: 10 },
-      cemVisitasSemana: { atingida: false, atual: 0, alvo: 100 }
-    },
-    semanas: []
+      clienteNovoPositivado: { atingida: false, atual: 0, alvo: 1 },
+      tabelaVisivelBase: { atingida: false, atual: 0, alvo: 50 },
+      baseDuzentosPdvs: { atingida: false, atual: 0, alvo: 200 }
+    }
   });
   const metaChip = (texto, meta) => `
     <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:${meta.atingida?'var(--mint-light)':'var(--orange-light)'};color:${meta.atingida?'var(--mint)':'var(--amber)'};">
@@ -3003,9 +3019,9 @@ function renderPerformance() {
         <div style="color:var(--text-muted);font-size:10px;font-weight:800;">BÔNUS ESTIMADO</div>
         <div style="font-weight:900;font-size:20px;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)} <span style="font-size:11px;color:var(--text-muted);font-weight:700;">/ R$ 1.500,00</span></div>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
-          ${metaChip('Cliente 4 SKUs', bonus.metas.cliente4Skus)}
-          ${metaChip('10 pedidos', bonus.metas.dezPedidos)}
-          ${metaChip('100/semana', bonus.metas.cemVisitasSemana)}
+          ${metaChip('Cliente novo +15/un', bonus.metas.clienteNovoPositivado)}
+          ${metaChip('50% base c/ tabela', bonus.metas.tabelaVisivelBase)}
+          ${metaChip('200 PDVs no mês', bonus.metas.baseDuzentosPdvs)}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
@@ -3041,7 +3057,7 @@ function renderPerformance() {
         return `<tr style="border-bottom:1px solid #F1EFE8;">
           <td style="padding:9px 8px;font-weight:700;">${nome}</td>
           <td style="text-align:right;padding:9px 8px;font-weight:900;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)}</td>
-          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChip('4 SKUs', bonus.metas.cliente4Skus)}${metaChip('10 pedidos', bonus.metas.dezPedidos)}${metaChip('100/sem', bonus.metas.cemVisitasSemana)}</div></td>
+          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChip('Cliente novo', bonus.metas.clienteNovoPositivado)}${metaChip('50% tabela', bonus.metas.tabelaVisivelBase)}${metaChip('200 PDVs', bonus.metas.baseDuzentosPdvs)}</div></td>
           <td style="text-align:center;padding:9px 8px;font-weight:700;">${d.visitas}</td>
           <td style="text-align:center;padding:9px 8px;">${d.pedidos}</td>
           <td style="text-align:center;padding:9px 8px;"><span style="background:${ok?'var(--mint-light)':'var(--orange-light)'};color:${ok?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">${d.visitas?conv+'%':'—'}</span></td>
