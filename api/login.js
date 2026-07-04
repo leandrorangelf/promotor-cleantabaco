@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { createHash } from 'node:crypto';
+import { criarToken } from './_auth.js';
 
 const LEGADOS = [
   { nome: 'Leandro', usuario: 'leandro', senha: 'Lx9#mK2p', tipo: 'gestor' },
@@ -76,7 +77,9 @@ export default async function handler(req, res) {
     `;
 
     if (!rows.length) return res.status(401).json({ erro: 'Usuario ou senha invalidos' });
-    return res.status(200).json({ usuario: rows[0] });
+    const contaLogada = rows[0];
+    const token = criarToken({ usuario: contaLogada.usuario, nome: contaLogada.nome, tipo: contaLogada.tipo });
+    return res.status(200).json({ usuario: contaLogada, token });
   } catch (e) {
     return res.status(500).json({ erro: e.message });
   }

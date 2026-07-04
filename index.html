@@ -1332,31 +1332,9 @@ button:active { transform: translateY(1px); }
 const API = '';
 
 
-const SENHAS = {
-  'Leandro': 'Lx9#mK2p',
-  'Francisco': 'Fj4@nR7w',
-  'Anderson': 'Ak8!qT3v',
-  'André': 'Ad6#hW5z',
-  'Cristiano': 'Cr2@bN9x',
-  'Jarbas': 'Jb7!sM4k',
-  'Kayan': 'Ky3#tP6q',
-  'Wil': 'Wi5@dL8n'
-};
-
-const LOGINS_FALLBACK = {
-  leandro: { nome: 'Leandro', usuario: 'leandro', senha: 'Lx9#mK2p', tipo: 'gestor' },
-  diretoria: { nome: 'Diretoria', usuario: 'diretoria', senha: 'Dir@2026', tipo: 'diretoria' },
-  francisco: { nome: 'Francisco', usuario: 'francisco', senha: 'Fj4@nR7w', tipo: 'promotor' },
-  anderson: { nome: 'Anderson', usuario: 'anderson', senha: 'Ak8!qT3v', tipo: 'promotor' },
-  andre: { nome: 'Andre', usuario: 'andre', senha: 'Ad6#hW5z', tipo: 'promotor' },
-  cristiano: { nome: 'Cristiano', usuario: 'cristiano', senha: 'Cr2@bN9x', tipo: 'promotor' },
-  jarbas: { nome: 'Jarbas', usuario: 'jarbas', senha: 'Jb7!sM4k', tipo: 'promotor' },
-  kayan: { nome: 'Kayan', usuario: 'kayan', senha: 'Ky3#tP6q', tipo: 'promotor' },
-  wil: { nome: 'Wil', usuario: 'wil', senha: 'Wi5@dL8n', tipo: 'promotor' }
-};
-
 let usuarioAtual = null;
 let tipoAtual = null;
+let authToken = '';
 let visitasPromotor = [];
 let visitasGestor = [];
 let secaoAtual = 0;
@@ -1384,8 +1362,10 @@ function toast(msg, dur=2800) {
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function headers() { // sem token
-  return { 'Content-Type': 'application/json' };
+function headers() {
+  const h = { 'Content-Type': 'application/json' };
+  if (authToken) h['Authorization'] = 'Bearer ' + authToken;
+  return h;
 }
 
 function capturarLocalizacaoAtual() {
@@ -1458,19 +1438,6 @@ function iniciarLogin(nome, tipo) {
 }
 
 async function confirmarSenha() {
-  if (loginPendente) {
-    const senhaModal = document.getElementById('senhaInput').value;
-    if (senhaModal !== SENHAS[loginPendente.nome]) {
-      document.getElementById('senhaErro').style.display = 'block';
-      document.getElementById('senhaInput').value = '';
-      document.getElementById('senhaInput').focus();
-      return;
-    }
-    document.getElementById('senhaOverlay').classList.remove('open');
-    fazerLogin(loginPendente.nome, loginPendente.tipo);
-    return;
-  }
-
   const usuario = normalizarTexto(document.getElementById('loginUsuario').value).replace(/[^a-z0-9._-]/g,'');
   const senha = document.getElementById('loginSenha').value;
   const erro = document.getElementById('loginErro');
@@ -1489,13 +1456,8 @@ async function confirmarSenha() {
     });
     const data = await res.json();
     if (!res.ok || !data.usuario) throw new Error(data.erro || 'Login invalido');
-    fazerLogin(data.usuario.nome, data.usuario.tipo, data.usuario.usuario);
+    fazerLogin(data.usuario.nome, data.usuario.tipo, data.usuario.usuario, data.token);
   } catch(e) {
-    const local = LOGINS_FALLBACK[usuario];
-    if (local && local.senha === senha) {
-      fazerLogin(local.nome, local.tipo, local.usuario);
-      return;
-    }
     erro.textContent = 'Usuario ou senha invalidos.';
     erro.style.display = 'block';
   }
@@ -1506,10 +1468,11 @@ function fecharSenha() {
   loginPendente = null;
 }
 
-function fazerLogin(nome, tipo, usuario='') {
+function fazerLogin(nome, tipo, usuario='', token='') {
   usuarioAtual = nome;
   tipoAtual = tipo;
-  localStorage.setItem('ct_user', JSON.stringify({ nome, tipo, usuario }));
+  authToken = token;
+  localStorage.setItem('ct_user', JSON.stringify({ nome, tipo, usuario, token }));
   document.getElementById('loginScreen').style.display = 'none';
 
   if (tipo === 'gestor' || tipo === 'diretoria') {
@@ -1557,7 +1520,7 @@ function fazerLogin(nome, tipo, usuario='') {
 
 function logout() {
   localStorage.removeItem('ct_user');
-  usuarioAtual = null; tipoAtual = null;
+  usuarioAtual = null; tipoAtual = null; authToken = '';
   visitasPromotorCarregadoEm = 0; clientesCarregadoEm = 0;
   visitasPromotorPromise = null; clientesPromise = null;
   visitasPromotor = []; todosClientes = [];
@@ -1966,7 +1929,7 @@ function exportarCSV() {
       qty.GR||0, qty.GM||0, qty.CM||0, qty.CC||0,
       Math.floor((qty.GR||0)/48), Math.floor((qty.GM||0)/48), Math.floor((qty.CM||0)/50), Math.floor((qty.CC||0)/50),
       fmt(preco.GR||0), fmt(preco.GM||0), fmt(preco.CM||0), fmt(preco.CC||0), fmt(total.toFixed(2)),
-      cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia), (v.fotos||[]).length,
+      cel(c.receptividade), (m.concorrentes||[]).join('|'), cel(m.concDominante), cel(m.motivoResistencia), v.fotos_count||0,
       cel(d.observacoes)
     ].map(v => `"${String(v ?? '').replace(/"/g,'""').replace(/\r?\n/g,' ')}"`).join(SEP);
   });
@@ -2319,7 +2282,7 @@ async function carregarClientes(force=false, silencioso=false) {
   clientesPromise = (async () => {
   try {
     await carregarVisitasPromotor(force);
-    const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual));
+    const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual), { headers: headers() });
     const d = await r.json();
     todosClientes = d.clientes || [];
     clientesCarregadoEm = Date.now();
@@ -2515,11 +2478,24 @@ function abrirDetalhePromotor(id) {
   if (!v) return;
   visitaDetalheAtual = v;
   renderModal(v, false);
+  carregarFotosModal(id);
 }
 
-function editarVisita(id) {
+async function editarVisita(id) {
   const v = visitasPromotor.find(x => x.id === id);
   if (!v) return;
+
+  let fotosCarregadas;
+  try {
+    const res = await fetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
+    fotosCarregadas = data.fotos || [];
+  } catch (e) {
+    toast('❌ Não foi possível carregar as fotos desta visita. Tente novamente.');
+    return;
+  }
+
   const d = v.dados || {};
   editandoId = id;
 
@@ -2589,7 +2565,7 @@ function editarVisita(id) {
 
   // Fotos (ao editar, descarta rascunho e usa as fotos da visita)
   try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
-  fotos = [...(v.fotos||[])];
+  fotos = [...fotosCarregadas];
   renderFotos();
 
   document.getElementById('btnSalvar').textContent = '✓ Atualizar Visita';
@@ -3667,6 +3643,25 @@ function abrirDetalheGestor(id) {
   if (!v) return;
   visitaDetalheAtual = v;
   renderModal(v, tipoAtual === 'gestor');
+  carregarFotosModal(id);
+}
+
+async function carregarFotosModal(id) {
+  const wrap = document.getElementById('modalFotosSecao');
+  try {
+    const res = await fetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
+    if (visitaDetalheAtual?.id !== id) return;
+    const fotosArr = data.fotos || [];
+    fotosModalAtual = [...fotosArr];
+    if (wrap) wrap.innerHTML = fotosArr.length
+      ? `<div class="rel-fotos">${fotosArr.map((f,i)=>`<button class="rel-foto-btn" type="button" onclick="abrirFoto(${i})" aria-label="Ampliar foto ${i+1}"><img src="${f}" alt="Foto ${i+1} da visita"></button>`).join('')}</div>`
+      : '<div style="font-size:13px;color:var(--text-muted);">Sem fotos</div>';
+  } catch (e) {
+    if (visitaDetalheAtual?.id !== id) return;
+    if (wrap) wrap.innerHTML = '<div style="font-size:13px;color:var(--red);">Erro ao carregar fotos</div>';
+  }
 }
 
 function renderModal(v, isGestor) {
@@ -3701,9 +3696,8 @@ function renderModal(v, isGestor) {
     </table>
   ` : '<div style="font-size:13px;color:var(--text-muted);">Sem pedido</div>';
 
-  const fotosArr = v.fotos||[];
-  fotosModalAtual = [...fotosArr];
-  const fotosHTML = fotosArr.length ? `<div class="rel-fotos">${fotosArr.map((f,i)=>`<button class="rel-foto-btn" type="button" onclick="abrirFoto(${i})" aria-label="Ampliar foto ${i+1}"><img src="${f}" alt="Foto ${i+1} da visita"></button>`).join('')}</div>` : '<div style="font-size:13px;color:var(--text-muted);">Sem fotos</div>';
+  fotosModalAtual = [];
+  const fotosHTML = '<div style="font-size:13px;color:var(--text-muted);">Carregando fotos...</div>';
 
   document.getElementById('modalBody').innerHTML = `
     <div class="rel-section">
@@ -3759,7 +3753,7 @@ function renderModal(v, isGestor) {
         </div>
       ` : '<div style="font-size:13px;color:var(--text-muted);margin-top:6px;">Nenhum concorrente</div>'}
     </div>
-    <div class="rel-section"><div class="rel-title">Fotos</div>${fotosHTML}</div>
+    <div class="rel-section"><div class="rel-title">Fotos</div><div id="modalFotosSecao">${fotosHTML}</div></div>
     ${d.observacoes ? `<div class="rel-section"><div class="rel-title">Observações</div><div class="rel-obs">${d.observacoes}</div></div>` : ''}
   `;
 
@@ -3808,7 +3802,7 @@ window.onload = function() {
   const saved = localStorage.getItem('ct_user');
   if (saved) {
     const u = JSON.parse(saved);
-    fazerLogin(u.nome, u.tipo);
+    if (u.token) fazerLogin(u.nome, u.tipo, u.usuario, u.token);
   }
 };
 </script>

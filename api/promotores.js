@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { createHash } from 'node:crypto';
+import { autenticar } from './_auth.js';
 
 const LEGADOS = [
   { nome: 'Leandro', usuario: 'leandro', senha: 'Lx9#mK2p', tipo: 'gestor' },
@@ -54,8 +55,13 @@ async function garantirTabela(sql) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const sessao = autenticar(req);
+  if (!sessao || (sessao.tipo !== 'gestor' && sessao.tipo !== 'diretoria')) {
+    return res.status(403).json({ erro: 'Acesso restrito a gestores' });
+  }
 
   try {
     const sql = neon(process.env.DATABASE_URL);

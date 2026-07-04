@@ -227,11 +227,15 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <div class="login-logo">Clean<span>tabaco</span></div>
     <div class="login-sub">Painel de Gestão · Acesso restrito</div>
     <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUsuario" placeholder="usuario" onkeydown="if(event.key==='Enter')entrar()">
+    </div>
+    <div class="login-field">
       <label>Senha</label>
       <input type="password" id="loginSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter')entrar()">
     </div>
     <button class="login-btn" onclick="entrar()">Entrar</button>
-    <div class="login-err" id="loginErr">Senha incorreta</div>
+    <div class="login-err" id="loginErr">Usuário ou senha inválidos</div>
   </div>
 </div>
 
@@ -267,10 +271,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar">L</div>
+        <div class="sidebar-avatar" id="sidebarAvatar">·</div>
         <div>
-          <div class="sidebar-name">Leandro</div>
-          <div class="sidebar-role">Gestor</div>
+          <div class="sidebar-name" id="sidebarNome">—</div>
+          <div class="sidebar-role" id="sidebarRole">Gestor</div>
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">Sair</button>
@@ -494,7 +498,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
               <div class="chart-title">📋 Registro de Visitas</div>
               <div class="chart-sub">Clique em uma visita para ver detalhes completos</div>
             </div>
-            <input type="text" id="buscaVisitas" oninput="renderTabVisitas()" placeholder="Buscar PDV, cidade, promotor..." style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:inherit;width:220px;">
+            <input type="text" id="buscaVisitas" oninput="onBuscaVisitasInput()" placeholder="Buscar PDV, cidade, promotor..." style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:inherit;width:220px;">
           </div>
           <div style="overflow-x:auto;">
             <table class="data-table">
@@ -541,7 +545,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
 <script>
 const API = '';
-const SENHA = 'Lx9#mK2p';
 const PACOTES = {GR:48,GM:48,CM:50,CC:50};
 const SKU_NOMES = {GR:'Gudang Red',GM:'Gudang Menta',CM:'Cretec Menta',CC:'Cretec Cereja'};
 const FAB = {'Djarum Black Cravo':'JTI','Djarum Black Menta':'JTI','Djarum Black Ice':'JTI','Camel Kretek':'JTI','Camel Cápsula Menta':'JTI','LA Menthol':'JTI','Lucky Strike Menta':'BAT','Lucky Strike Cápsula':'BAT','Marlboro Menta/Cáps.':'PMB'};
@@ -551,6 +554,9 @@ let visitas = [];
 let abaAtual = 'overview';
 let visitasPag = 0;
 const POR_PAG = 30;
+let authToken = '';
+let abasRenderizadas = new Set();
+let buscaVisitasTimer = null;
 
 function toast(msg, dur=2500) {
   const t = document.getElementById('toast');
@@ -585,9 +591,33 @@ function htmlLocalizacaoGestor(localizacao) {
   `;
 }
 
-function entrar() {
-  const s = document.getElementById('loginSenha').value;
-  if (s !== SENHA) { document.getElementById('loginErr').style.display = 'block'; return; }
+async function entrar() {
+  const usuario = document.getElementById('loginUsuario').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
+  if (!usuario || !senha) { err.textContent = 'Informe usuário e senha'; err.style.display = 'block'; return; }
+  try {
+    const res = await fetch(`${API}/api/login`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ usuario, senha })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.usuario) throw new Error(data.erro || 'Login inválido');
+    if (data.usuario.tipo !== 'gestor' && data.usuario.tipo !== 'diretoria') throw new Error('Acesso restrito a gestores');
+    iniciarSessao(data.token, data.usuario.nome);
+  } catch(e) {
+    err.textContent = e.message || 'Usuário ou senha inválidos';
+    err.style.display = 'block';
+  }
+}
+
+function iniciarSessao(token, nome) {
+  authToken = token;
+  localStorage.setItem('ct_gestor_session', JSON.stringify({ token, nome }));
+  document.getElementById('sidebarNome').textContent = nome;
+  document.getElementById('sidebarAvatar').textContent = nome.charAt(0).toUpperCase();
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'flex';
   // datas padrão
@@ -599,10 +629,21 @@ function entrar() {
 }
 
 function logout() {
+  authToken = '';
+  localStorage.removeItem('ct_gestor_session');
   document.getElementById('appScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginSenha').value = '';
 }
+
+(function restaurarSessao() {
+  const raw = localStorage.getItem('ct_gestor_session');
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    if (s?.token) iniciarSessao(s.token, s.nome);
+  } catch(e) {}
+})();
 
 async function carregar() {
   const promotor = document.getElementById('fPromotor').value;
@@ -613,10 +654,13 @@ async function carregar() {
   if (de) url += `de=${de}T00:00:00Z&`;
   if (ate) url += `ate=${ate}T23:59:59Z&`;
   try {
-    const res = await fetch(url, {headers:{'Content-Type':'application/json'}});
+    const res = await fetch(url, {headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken}});
+    if (res.status === 401) { toast('Sessão expirada, faça login novamente'); logout(); return; }
     const data = await res.json();
     visitas = data.visitas || [];
-    renderTudo();
+    abasRenderizadas = new Set();
+    visitasPag = 0;
+    renderAba(abaAtual);
   } catch(e) { toast('Erro ao carregar dados'); }
 }
 
@@ -631,15 +675,21 @@ function mudarAba(aba) {
   const idx = ['overview','mercado','inteligencia','equipe','visitas'].indexOf(aba);
   document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
   document.querySelectorAll('.bottom-nav-item')[idx]?.classList.add('active');
-  if (aba === 'visitas') renderTabVisitas();
+  renderAba(aba);
 }
 
-function renderTudo() {
-  renderOverview();
-  renderMercado();
-  renderInteligencia();
-  renderEquipe();
-  renderTabVisitas();
+const RENDERERS_ABA = {
+  overview: renderOverview,
+  mercado: renderMercado,
+  inteligencia: renderInteligencia,
+  equipe: renderEquipe,
+  visitas: renderTabVisitas
+};
+
+function renderAba(aba) {
+  if (abasRenderizadas.has(aba)) return;
+  RENDERERS_ABA[aba]?.();
+  abasRenderizadas.add(aba);
 }
 
 // ========= OVERVIEW =========
@@ -1006,6 +1056,11 @@ function renderEquipe() {
 }
 
 // ========= VISITAS =========
+function onBuscaVisitasInput() {
+  clearTimeout(buscaVisitasTimer);
+  buscaVisitasTimer = setTimeout(() => { visitasPag = 0; renderTabVisitas(); }, 250);
+}
+
 function renderTabVisitas() {
   const busca=(document.getElementById('buscaVisitas')?.value||'').toLowerCase();
   const filtradas=visitas.filter(v=>{

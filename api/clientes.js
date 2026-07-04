@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { autenticar } from './_auth.js';
 
 async function garantirTabela(sql) {
   await sql`
@@ -45,14 +46,18 @@ async function garantirTabela(sql) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const sessao = autenticar(req);
+  if (!sessao) return res.status(401).json({ erro: 'Sessao invalida ou expirada' });
 
   const sql = neon(process.env.DATABASE_URL);
   await garantirTabela(sql);
 
   if (req.method === 'GET') {
-    const { promotor, q } = req.query;
+    let { promotor, q } = req.query;
+    if (sessao.tipo === 'promotor') promotor = sessao.nome;
     if (!promotor) return res.status(400).json({ erro: 'Promotor obrigatório' });
     let rows;
     if (q && q.trim()) {
@@ -73,7 +78,8 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { promotor, nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor } = req.body;
+    const { nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor } = req.body;
+    const promotor = sessao.tipo === 'promotor' ? sessao.nome : req.body.promotor;
     if (!promotor || !nome_fantasia) return res.status(400).json({ erro: 'Promotor e nome são obrigatórios' });
 
     const [{ count }] = await sql`SELECT COUNT(*)::int as count FROM clientes WHERE promotor = ${promotor}`;
