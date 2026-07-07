@@ -2,11 +2,10 @@ import { neon } from '@neondatabase/serverless';
 import { autenticar } from './_auth.js';
 
 const METAS_PADRAO = [
-  ['pdvs_cadastrados', 'global', 'global', 200],
-  ['pdvs_visitados_mes', 'global', 'global', 200],
+  ['base_clientes', 'global', 'global', 200],
   ['tabela_percentual', 'global', 'global', 50],
-  ['pedidos_mes', 'global', 'global', 10],
-  ['cliente_novo_positivado', 'global', 'global', 1]
+  ['bonus_pdv_venda_valor', 'global', 'global', 15],
+  ['bonus_pdv_venda_teto', 'global', 'global', 500]
 ];
 
 async function garantirTabela(sql) {

@@ -5,11 +5,10 @@
   root.resolverMetasPromotor = api.resolverMetasPromotor;
 })(typeof window !== 'undefined' ? window : globalThis, function() {
   const metasPadrao = {
-    pdvs_cadastrados: 200,
-    pdvs_visitados_mes: 200,
+    base_clientes: 200,
     tabela_percentual: 50,
-    pedidos_mes: 10,
-    cliente_novo_positivado: 1
+    bonus_pdv_venda_valor: 15,
+    bonus_pdv_venda_teto: 500
   };
 
   function normalizarTexto(valor) {
@@ -46,11 +45,10 @@
       { tipo: 'global', valor: 'global' }
     ];
     return {
-      pdvs_cadastrados: melhorMeta(metas, 'pdvs_cadastrados', escopos),
-      pdvs_visitados_mes: melhorMeta(metas, 'pdvs_visitados_mes', escopos),
+      base_clientes: melhorMeta(metas, 'base_clientes', escopos),
       tabela_percentual: melhorMeta(metas, 'tabela_percentual', escopos),
-      pedidos_mes: melhorMeta(metas, 'pedidos_mes', escopos),
-      cliente_novo_positivado: melhorMeta(metas, 'cliente_novo_positivado', escopos)
+      bonus_pdv_venda_valor: melhorMeta(metas, 'bonus_pdv_venda_valor', escopos),
+      bonus_pdv_venda_teto: melhorMeta(metas, 'bonus_pdv_venda_teto', escopos)
     };
   }
 
@@ -68,23 +66,36 @@
     const visitasMes = visitasDoPromotor.filter(v => noMesAtual(v.criado_em, hoje));
     const chavesVisitadasMes = new Set(visitasMes.map(chavePdv).filter(Boolean));
     const chavesTabela = new Set(visitasMes.filter(v => v?.dados?.presenca?.tabelaVisivel).map(chavePdv).filter(Boolean));
-    const pedidosMes = visitasMes.filter(v => ['Pedido confirmado', 'Pedido entregue'].includes(v?.dados?.comercial?.statusPedido) || v?.dados?.comercial?.pedidoFeito === 'Sim').length;
+    const visitasComVenda = visitasMes.filter(v => {
+      const qty = v?.dados?.comercial?.pedidoPac || v?.dados?.comercial?.pedidoQty || {};
+      return Object.values(qty).some(q => Number(q || 0) > 0);
+    });
+    const chavesVendaMes = new Set(visitasComVenda.map(chavePdv).filter(Boolean));
     const tabelaPct = clientesDoPromotor.length ? Math.round((clientesDoPromotor.filter(c => chavesTabela.has(chavePdv(c))).length / clientesDoPromotor.length) * 100) : 0;
-    const clientesNovosMes = clientesDoPromotor.filter(c => noMesAtual(c.criado_em, hoje)).length;
+    const valorBonusAtual = Math.min(chavesVendaMes.size * metasResolvidas.bonus_pdv_venda_valor, metasResolvidas.bonus_pdv_venda_teto);
+    const pdvsParaTeto = Math.ceil(metasResolvidas.bonus_pdv_venda_teto / metasResolvidas.bonus_pdv_venda_valor);
+    const baseBatida = clientesDoPromotor.length >= metasResolvidas.base_clientes;
 
     const cards = {
-      pdvs_cadastrados: card('PDVs cadastrados', clientesDoPromotor.length, metasResolvidas.pdvs_cadastrados),
-      pdvs_visitados_mes: card('PDVs visitados no mes', chavesVisitadasMes.size, metasResolvidas.pdvs_visitados_mes),
+      bonus_pdv_venda: {
+        ...card('PDVs abertos com venda', chavesVendaMes.size, pdvsParaTeto),
+        valorAtual: valorBonusAtual,
+        valorAlvo: metasResolvidas.bonus_pdv_venda_teto,
+        moeda: true
+      },
       tabela_percentual: card('Base com tabela visivel', tabelaPct, metasResolvidas.tabela_percentual, '%'),
-      pedidos_mes: card('Pedidos no mes', pedidosMes, metasResolvidas.pedidos_mes),
-      cliente_novo_positivado: card('Clientes novos no mes', clientesNovosMes, metasResolvidas.cliente_novo_positivado)
+      base_ou_cobertura: baseBatida
+        ? card('Cobertura mensal da base', chavesVisitadasMes.size, metasResolvidas.base_clientes)
+        : card('Base cadastrada', clientesDoPromotor.length, metasResolvidas.base_clientes)
     };
 
     const proximosPassos = Object.values(cards)
       .filter(c => !c.atingida)
       .sort((a,b) => b.faltam - a.faltam)
       .slice(0, 3)
-      .map(c => c.sufixo === '%' ? `Aumentar ${c.label.toLowerCase()} em ${c.faltam} pontos` : `Faltam ${c.faltam} para ${c.label.toLowerCase()}`);
+      .map(c => c.moeda
+        ? `Abrir mais ${c.faltam} PDVs com venda para chegar ao teto desse bonus`
+        : c.sufixo === '%' ? `Aumentar ${c.label.toLowerCase()} em ${c.faltam} pontos` : `Faltam ${c.faltam} para ${c.label.toLowerCase()}`);
 
     return { promotor, uf, metas: metasResolvidas, cards, proximosPassos };
   }

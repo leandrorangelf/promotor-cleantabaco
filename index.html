@@ -1348,7 +1348,7 @@ button:active { transform: translateY(1px); }
       <div class="card">
         <div class="card-title">Editor de metas</div>
         <div class="admin-form">
-          <div><label>Meta</label><select id="metaTipo"><option value="pdvs_cadastrados">PDVs cadastrados</option><option value="pdvs_visitados_mes">PDVs visitados no mês</option><option value="tabela_percentual">Tabela visível (%)</option><option value="pedidos_mes">Pedidos no mês</option><option value="cliente_novo_positivado">Cliente novo positivado</option></select></div>
+          <div><label>Meta</label><select id="metaTipo"><option value="base_clientes">Base/cobertura de clientes</option><option value="tabela_percentual">Tabela visível (%)</option><option value="bonus_pdv_venda_valor">Valor por PDV aberto com venda</option><option value="bonus_pdv_venda_teto">Teto do bônus de PDV com venda</option></select></div>
           <div><label>Escopo</label><select id="metaEscopoTipo"><option value="global">Global</option><option value="uf">Estado/UF</option><option value="coordenador">Coordenador</option><option value="promotor">Promotor</option></select></div>
           <div><label>Valor do escopo</label><input type="text" id="metaEscopoValor" placeholder="global, SP, usuario ou nome"></div>
           <div><label>Valor da meta</label><input type="number" id="metaValor" min="0" step="1"></div>
@@ -2895,11 +2895,10 @@ async function carregarMetas() {
 
 function nomeMeta(tipo) {
   return {
-    pdvs_cadastrados: 'PDVs cadastrados',
-    pdvs_visitados_mes: 'PDVs visitados no mês',
+    base_clientes: 'Base/cobertura de clientes',
     tabela_percentual: 'Tabela visível (%)',
-    pedidos_mes: 'Pedidos no mês',
-    cliente_novo_positivado: 'Cliente novo positivado'
+    bonus_pdv_venda_valor: 'Valor por PDV aberto com venda',
+    bonus_pdv_venda_teto: 'Teto do bônus de PDV com venda'
   }[tipo] || tipo;
 }
 
@@ -2942,6 +2941,7 @@ function renderPainelPromotor() {
     <div class="kpi-card ${c.atingida ? 'green' : 'orange'}">
       <div class="kpi-label">${c.label}</div>
       <div class="kpi-value">${c.atual}${c.sufixo || ''} <span style="font-size:13px;color:var(--text-muted);">/ ${c.alvo}${c.sufixo || ''}</span></div>
+      ${c.moeda ? `<div class="kpi-sub">Bônus: R$ ${Number(c.valorAtual || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})} / R$ ${Number(c.valorAlvo || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
       <div class="kpi-sub">${c.atingida ? 'Meta batida' : (c.sufixo === '%' ? 'Faltam ' + c.faltam + ' pontos' : 'Faltam ' + c.faltam)}</div>
       <div style="height:6px;background:#EEF1F7;border-radius:999px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${c.pct}%;background:${c.atingida?'var(--mint)':'var(--amber)'};"></div></div>
     </div>
