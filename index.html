@@ -1292,8 +1292,28 @@ button:active { transform: translateY(1px); }
   </div>
 
   <div class="page" id="gMapa">
-    <div class="page-intro"><h1>Mapa</h1><p>Trajeto do promotor no período selecionado (filtro de Visão geral).</p></div>
+    <div class="page-intro"><h1>Mapa</h1><p>Trajeto do promotor no período selecionado.</p></div>
     <div class="gestor-wrap">
+      <div class="filtros">
+        <div class="filtro-row">
+          <div class="filtro-group">
+            <label>Promotor</label>
+            <select id="mapaFiltroPromotor">
+              <option value="">Todos</option>
+              <option>Francisco</option><option>Anderson</option><option>André</option>
+              <option>Cristiano</option><option>Jarbas</option><option>Kayan</option><option>Wil</option>
+            </select>
+          </div>
+          <div class="filtro-group"><label>De</label><input type="date" id="mapaFiltroDe"></div>
+        </div>
+        <div class="filtro-row">
+          <div class="filtro-group"><label>Até</label><input type="date" id="mapaFiltroAte"></div>
+          <div class="filter-actions">
+            <button class="btn-filtrar" type="button" onclick="aplicarFiltrosMapa()">Aplicar no mapa</button>
+            <button class="btn-limpar-filtros" type="button" onclick="limparFiltrosMapa()">Limpar</button>
+          </div>
+        </div>
+      </div>
       <div id="mapaStatus" class="mapa-status"></div>
       <div id="mapaLeafletEl" class="mapa-box"></div>
       <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período/promotor selecionado.</div>
@@ -1626,7 +1646,7 @@ function mudarAbaG(aba) {
   if (aba === 'performance') renderPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
-  if (aba === 'mapa') renderMapa();
+  if (aba === 'mapa') { sincronizarFiltrosMapa(); renderMapa(); }
   if (aba === 'promotores') carregarPromotoresAdmin();
 }
 
@@ -2834,6 +2854,42 @@ function limparFiltrosGestor() {
 
 let mapaLeaflet = null;
 let mapaCamadaPontos = null;
+
+function sincronizarFiltrosMapa() {
+  const pares = [
+    ['gFiltroPromotor', 'mapaFiltroPromotor'],
+    ['gFiltroDe', 'mapaFiltroDe'],
+    ['gFiltroAte', 'mapaFiltroAte']
+  ];
+  pares.forEach(([origem, destino]) => {
+    const o = document.getElementById(origem);
+    const d = document.getElementById(destino);
+    if (o && d && d.value !== o.value) d.value = o.value;
+  });
+}
+
+async function aplicarFiltrosMapa() {
+  const pares = [
+    ['mapaFiltroPromotor', 'gFiltroPromotor'],
+    ['mapaFiltroDe', 'gFiltroDe'],
+    ['mapaFiltroAte', 'gFiltroAte']
+  ];
+  pares.forEach(([origem, destino]) => {
+    const o = document.getElementById(origem);
+    const d = document.getElementById(destino);
+    if (o && d) d.value = o.value;
+  });
+  await carregarGestor();
+  renderMapa();
+}
+
+async function limparFiltrosMapa() {
+  ['mapaFiltroPromotor','mapaFiltroDe','mapaFiltroAte'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  await aplicarFiltrosMapa();
+}
 
 function renderMapa() {
   const pontos = visitasGestor
