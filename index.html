@@ -1370,17 +1370,24 @@ function headers() {
   return h;
 }
 
-function capturarLocalizacaoAtual() {
-  const capturadoEm = new Date().toISOString();
-  if (!navigator.geolocation) {
-    return Promise.resolve({
-      ok: false,
-      tentado: true,
-      erro: 'Geolocalizacao indisponivel neste aparelho',
-      capturadoEm
-    });
-  }
+function montarErroLocalizacao(err, capturadoEm, tentativa) {
+  let mensagem = err?.message || 'Nao foi possivel capturar o GPS';
+  if (err?.code === 1) mensagem = 'Permissao de GPS negada neste aparelho';
+  if (err?.code === 2) mensagem = 'GPS indisponivel no momento. Tente em uma area aberta.';
+  if (err?.code === 3) mensagem = 'GPS demorou para responder. Tente novamente em uma area aberta.';
+  return {
+    ok: false,
+    tentado: true,
+    erro: mensagem,
+    detalhe: err?.message || '',
+    codigo: err?.code,
+    tentativa,
+    capturadoEm
+  };
+}
 
+function obterPosicaoAtual(opcoes, tentativa) {
+  const capturadoEm = new Date().toISOString();
   return new Promise(resolve => {
     navigator.geolocation.getCurrentPosition(
       pos => resolve({
@@ -1392,18 +1399,41 @@ function capturarLocalizacaoAtual() {
         altitude: pos.coords.altitude,
         velocidade: pos.coords.speed,
         direcao: pos.coords.heading,
+        tentativa,
         capturadoEm: new Date(pos.timestamp || Date.now()).toISOString()
       }),
-      err => resolve({
-        ok: false,
-        tentado: true,
-        erro: err.message || 'Nao foi possivel capturar o GPS',
-        codigo: err.code,
-        capturadoEm
-      }),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      err => resolve(montarErroLocalizacao(err, capturadoEm, tentativa)),
+      opcoes
     );
   });
+}
+
+async function capturarLocalizacaoAtual() {
+  const capturadoEm = new Date().toISOString();
+  if (!navigator.geolocation) {
+    return Promise.resolve({
+      ok: false,
+      tentado: true,
+      erro: 'Geolocalizacao indisponivel neste aparelho',
+      capturadoEm
+    });
+  }
+
+  const primeira = await obterPosicaoAtual(
+    { enableHighAccuracy: true, timeout: 25000, maximumAge: 60000 },
+    1
+  );
+  if (primeira.ok || primeira.codigo !== 3) return primeira;
+
+  const segunda = await obterPosicaoAtual(
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 120000 },
+    2
+  );
+  if (segunda.ok) return segunda;
+  return {
+    ...segunda,
+    primeiraTentativa: primeira
+  };
 }
 
 function htmlLocalizacaoVisita(localizacao) {
@@ -2129,7 +2159,7 @@ async function salvarVisita() {
 
   try {
     if (!editandoId) {
-      btn.textContent = 'Capturando GPS...';
+      btn.textContent = 'Capturando GPS... aguarde';
       dados.localizacao = await capturarLocalizacaoAtual();
       btn.textContent = 'Salvando...';
     }
