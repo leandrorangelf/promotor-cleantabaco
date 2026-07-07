@@ -6,7 +6,6 @@ const LEGADOS = [
   { nome: 'Leandro', usuario: 'leandro', senha: 'Lx9#mK2p', tipo: 'gestor' },
   { nome: 'Diretoria', usuario: 'diretoria', senha: 'Dir@2026', tipo: 'diretoria' },
   { nome: 'Francisco', usuario: 'francisco', senha: 'Fj4@nR7w', tipo: 'promotor' },
-  { nome: 'Anderson', usuario: 'anderson', senha: 'Ak8!qT3v', tipo: 'promotor' },
   { nome: 'Andre', usuario: 'andre', senha: 'Ad6#hW5z', tipo: 'promotor' },
   { nome: 'Cristiano', usuario: 'cristiano', senha: 'Cr2@bN9x', tipo: 'promotor' },
   { nome: 'Jarbas', usuario: 'jarbas', senha: 'Jb7!sM4k', tipo: 'promotor' },

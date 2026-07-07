@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Merchandising no Ponto de Venda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #EDE7DB; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; color: #241C14; -webkit-font-smoothing: antialiased; }
+
+:root{
+  --espresso:#241C14; --espresso-2:#3A2E1F;
+  --cream:#FBF7EF; --cream-2:#F3EDDF;
+  --gold:#A9782F; --gold-soft:#D9B876; --gold-line: rgba(169,120,47,.35);
+  --ink:#241C14; --ink-soft:#6E6252;
+  --hair: rgba(36,28,20,.10);
+}
+
+.page {
+  width: 210mm; height: 297mm; position: relative; overflow: hidden; isolation: isolate;
+  page-break-after: always; background: var(--cream);
+  padding: 20mm 18mm 16mm;
+  display: flex; flex-direction: column;
+}
+.page:last-child { page-break-after: auto; }
+
+/* texture */
+.page::before {
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image: radial-gradient(rgba(36,28,20,.035) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.eyebrow {
+  display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
+  border:1px solid var(--gold-line); color: var(--gold); background: rgba(169,120,47,.08);
+  padding: 6px 16px 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+}
+.eyebrow .dot { width:5px; height:5px; border-radius:50%; background: var(--gold); }
+
+.rule { height:1px; background: linear-gradient(90deg, var(--gold-line), transparent); margin: 14px 0 20px; }
+.rule.center { background: linear-gradient(90deg, transparent, var(--gold-line) 50%, transparent); }
+
+h1.display { font-family:'Playfair Display', serif; font-weight:700; line-height: .98; letter-spacing:-.01em; color: var(--espresso); }
+h2.display { font-family:'Playfair Display', serif; font-weight:600; line-height: 1.05; color: var(--espresso); }
+.serif-num { font-family:'Playfair Display', serif; font-style: italic; }
+
+.foot {
+  margin-top:auto; display:flex; justify-content:space-between; align-items:center;
+  font-size:9px; letter-spacing:.14em; text-transform:uppercase; color: var(--ink-soft);
+  padding-top:14px; border-top: 1px solid var(--hair);
+}
+
+/* double-bezel card */
+.shell { padding: 5px; border-radius: 22px; background: rgba(36,28,20,.035); border: 1px solid rgba(36,28,20,.06); }
+.core { border-radius: 18px; padding: 18px 20px; background: var(--cream); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); border: 1px solid rgba(36,28,20,.05); height:100%; }
+.core h4 { font-size: 13.5px; font-weight: 800; color: var(--espresso); margin-bottom:5px; letter-spacing:.01em; }
+.core p { font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; }
+.core .k { color: var(--gold); font-family:'Playfair Display',serif; font-style:italic; font-size:15px; margin-right:6px; }
+
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+/* ===================== COVER ===================== */
+.cover { background: var(--espresso); color: #F4EEDF; justify-content: space-between; }
+.cover::before { opacity: .06; background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); }
+.cover .top-eyebrow { color: var(--gold-soft); border-color: rgba(217,184,118,.4); background: rgba(217,184,118,.08); }
+.cover h1 { font-size: 62px; color: #F7F1E1; margin-top: 30px; }
+.cover h1 .accent { color: var(--gold-soft); display:block; }
+.cover .sub { font-size: 15px; color: rgba(247,241,225,.6); font-style: italic; margin-top: 18px; max-width: 420px; }
+.cover .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top: 40px; }
+.cover .chips span { border:1px solid rgba(217,184,118,.28); color: rgba(247,241,225,.75); padding:7px 14px; border-radius:999px; font-size:10.5px; letter-spacing:.03em; }
+.cover .brandline { display:flex; align-items:center; gap:14px; }
+.cover .brandline .sq { width:34px; height:34px; border:1px solid rgba(217,184,118,.5); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--gold-soft); font-family:'Playfair Display',serif; font-style:italic; font-size:16px; }
+.cover .foot { border-top-color: rgba(247,241,225,.15); color: rgba(247,241,225,.45); }
+
+/* ===================== TOC ===================== */
+.toc-list { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.toc-item { display:flex; gap:14px; align-items:flex-start; padding: 14px 4px; border-bottom: 1px solid var(--hair); }
+.toc-item .n { font-family:'Playfair Display',serif; font-style:italic; font-size:22px; color: var(--gold); width:34px; flex:0 0 auto; }
+.toc-item b { font-size:13px; display:block; color:var(--espresso); }
+.toc-item span { font-size:11px; color:var(--ink-soft); }
+
+/* ===================== SECTION HEAD ===================== */
+.sec-head { display:flex; align-items:flex-end; gap:18px; margin-bottom: 16px; }
+.sec-head .big-n { font-family:'Playfair Display',serif; font-style:italic; font-size:74px; line-height:.8; color: var(--gold-soft); -webkit-text-stroke: 1px var(--gold); color: transparent; }
+.sec-head h2 { font-size: 30px; }
+.sec-head .tag2 { font-size:10px; letter-spacing:.18em; text-transform:uppercase; color: var(--gold); font-weight:700; margin-bottom:6px; display:block; }
+
+.lead { font-size: 13px; color: var(--ink-soft); line-height:1.6; max-width: 640px; margin-bottom: 16px; }
+
+.callout { border-left: 2px solid var(--gold); background: rgba(169,120,47,.06); padding: 13px 18px; border-radius: 4px 10px 10px 4px; font-size: 12px; line-height:1.55; color: var(--espresso-2); margin-bottom: 16px; }
+.callout b { color: var(--espresso); }
+.callout.alert { border-color:#8C2A2A; background: rgba(140,42,42,.06); }
+.callout.mint { border-color:#2A6E52; background: rgba(42,110,82,.06); }
+
+.steps .step { display:flex; gap:14px; padding: 11px 0; border-bottom:1px solid var(--hair); }
+.steps .step:last-child{ border:none; }
+.steps .n { font-family:'Playfair Display',serif; font-style:italic; font-size:18px; color: var(--gold); width:26px; flex:0 0 auto; }
+.steps b { font-size: 13px; display:block; }
+.steps span { font-size: 11.5px; color: var(--ink-soft); }
+
+.two-col { display:grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.two-col h4 { font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:800; margin-bottom:10px; }
+.two-col ul { list-style:none; }
+.two-col li { font-size: 12px; padding: 7px 0 7px 0; border-bottom:1px dashed var(--hair); color: var(--espresso-2); line-height:1.4; }
+.two-col li:last-child{border:none;}
+
+.channels { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-top:10px; }
+.channel { border:1px solid rgba(36,28,20,.1); border-radius:14px; padding:16px 8px; text-align:center; background: var(--cream-2); }
+.channel .ic { font-size:20px; margin-bottom:8px; display:block; }
+.channel b { font-size:11.5px; color: var(--espresso); }
+
+.quote-block { text-align:center; padding: 26px 10px; }
+.quote-block p { font-family:'Playfair Display',serif; font-style:italic; font-size:19px; color: var(--espresso); line-height:1.5; }
+
+.check-3 { display:grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.check-3 h4 { font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:800; margin-bottom:12px; }
+.check-3 li { list-style:none; font-size:11.5px; padding: 6px 0 6px 20px; position:relative; color: var(--espresso-2); line-height:1.4; }
+.check-3 li::before { content:''; position:absolute; left:0; top:9px; width:8px; height:8px; border:1.4px solid var(--gold); border-radius:2px; }
+
+.ghost { position:absolute; z-index:-1; right:-14px; bottom:8px; font-family:'Playfair Display', serif; font-style:italic; font-weight:700; font-size:300px; line-height:1; color: var(--espresso); opacity:.065; pointer-events:none; }
+
+/* ===================== CLOSING ===================== */
+.closing { background: var(--espresso); color:#F4EEDF; justify-content:center; align-items:center; text-align:center; }
+.closing h2 { font-size: 40px; color:#F7F1E1; }
+.closing .accent { color: var(--gold-soft); }
+.closing p.sub { font-size:13px; color: rgba(247,241,225,.6); font-style:italic; margin: 16px 0 30px; }
+.closing .tags { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:520px; }
+.closing .tags span { border:1px solid rgba(217,184,118,.3); color:rgba(247,241,225,.8); padding:8px 16px; border-radius:999px; font-size:11px; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<section class="page cover">
+  <div>
+    <div class="eyebrow top-eyebrow"><span class="dot"></span>Manual Oficial · Categoria Tabaco</div>
+    <h1 class="display">Merchandising<span class="accent">no Ponto de Venda</span></h1>
+    <p class="sub">Guia de excelência em execução para Promotores de Vendas — visibilidade, disponibilidade e verbalização que transformam presença em venda.</p>
+    <div class="chips">
+      <span>Visibilidade Primária</span><span>Visibilidade Secundária</span><span>Tabela de Preços</span>
+      <span>Disponibilidade</span><span>Verbalização</span><span>Estoque</span><span>Ações Regionais</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="brandline"><div class="sq">C</div>Cleantabaco</div>
+    <span>Uso interno · 2026</span>
+  </div>
+</section>
+
+<!-- TOC -->
+<section class="page">
+  <div class="eyebrow"><span class="dot"></span>Sumário</div>
+  <h2 class="display" style="font-size:34px;margin-top:14px;">Conteúdo do manual</h2>
+  <div class="rule"></div>
+  <div class="toc-list">
+    <div class="toc-item"><div class="n">01</div><div><b>Nosso Papel</b><span>Missão e atribuições do promotor</span></div></div>
+    <div class="toc-item"><div class="n">02</div><div><b>Canais de Atuação</b><span>Conveniências, padarias, supermercados e mais</span></div></div>
+    <div class="toc-item"><div class="n">03</div><div><b>Visibilidade Primária</b><span>Áreas quentes e pontos de destaque</span></div></div>
+    <div class="toc-item"><div class="n">04</div><div><b>Visibilidade Secundária</b><span>Pontos extras de exposição</span></div></div>
+    <div class="toc-item"><div class="n">05</div><div><b>Tabela de Preços</b><span>Afixação e visibilidade ao consumidor</span></div></div>
+    <div class="toc-item"><div class="n">06</div><div><b>Exposição do Produto</b><span>Produto visível = compra por impulso</span></div></div>
+    <div class="toc-item"><div class="n">07</div><div><b>Disponibilidade</b><span>Não deixar faltar produto na prateleira</span></div></div>
+    <div class="toc-item"><div class="n">08</div><div><b>Verbalização</b><span>Apresentar e criar demanda ativa</span></div></div>
+    <div class="toc-item"><div class="n">09</div><div><b>Gestão de Estoque</b><span>Controle e reposição contínua</span></div></div>
+    <div class="toc-item"><div class="n">10</div><div><b>Ações Regionais</b><span>Execução das diretrizes regionais</span></div></div>
+    <div class="toc-item"><div class="n">11</div><div><b>Checklist da Visita</b><span>Roteiro completo antes, durante e depois</span></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 02</span></div>
+</section>
+
+<!-- 01 NOSSO PAPEL -->
+<section class="page">
+  <div class="ghost">01</div>
+  <div class="sec-head"><div class="big-n">01</div><div><span class="tag2">Nosso Papel</span><h2 class="display">Atribuições do Promotor</h2></div></div>
+  <div class="grid2">
+    <div class="shell"><div class="core"><h4><span class="k">1</span>Visibilidade Primária</h4><p>Garantir presença do produto nas áreas quentes do PDV com material de merchandising adequado.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">2</span>Visibilidade Secundária</h4><p>Ampliar a exposição em pontos extras para maximizar o contato com o consumidor.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">3</span>Tabela de Preços</h4><p>Afixar e manter atualizada a tabela de preços em local visível, conforme normativa vigente.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">4</span>Exposição do Produto</h4><p>Manter produtos expostos e visíveis — a compra da categoria é fortemente impulsiva.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">5</span>Disponibilidade & Verbalização</h4><p>Garantir disponibilidade das marcas e verbalizar ativamente sobre os produtos ao lojista.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">6</span>Estoque & Ações Regionais</h4><p>Acompanhar estoque dos clientes e executar ações determinadas pela equipe regional.</p></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 03</span></div>
+</section>
+
+<!-- 02 CANAIS -->
+<section class="page">
+  <div class="ghost">02</div>
+  <div class="sec-head"><div class="big-n">02</div><div><span class="tag2">Canais de Atuação</span><h2 class="display">Onde estamos presentes</h2></div></div>
+  <p class="lead">Em todos esses canais o tabaco é categoria de destaque — nossa atuação em campo define diretamente o sell-out.</p>
+  <div class="channels">
+    <div class="channel"><span class="ic">🏪</span><b>Conveniências / S-Store</b></div>
+    <div class="channel"><span class="ic">🥐</span><b>Empórios</b></div>
+    <div class="channel"><span class="ic">🛒</span><b>Supermercados & Atacados</b></div>
+    <div class="channel"><span class="ic">🚬</span><b>Tabacarias</b></div>
+    <div class="channel"><span class="ic">🍞</span><b>Padarias</b></div>
+    <div class="channel"><span class="ic">🏢</span><b>Armazéns</b></div>
+    <div class="channel"><span class="ic">🍷</span><b>Adegas & Dist. Bebidas</b></div>
+    <div class="channel"><span class="ic">✳️</span><b>Outros Canais de Tabaco</b></div>
+  </div>
+  <div class="quote-block"><p>"Cada canal é uma oportunidade distinta de visibilidade e sell-out."</p></div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 04</span></div>
+</section>
+
+<!-- 03 VISIBILIDADE PRIMARIA -->
+<section class="page">
+  <div class="ghost">03</div>
+  <div class="sec-head"><div class="big-n">03</div><div><span class="tag2">Visibilidade Primária</span><h2 class="display">Áreas quentes do PDV</h2></div></div>
+  <p class="lead">Presença do produto e do material de merchandising nas áreas de maior tráfego e visibilidade natural do consumidor.</p>
+  <div class="callout"><b>Conceito-chave —</b> se o consumidor não vê, ele não compra. A visibilidade primária é o primeiro passo para a venda.</div>
+  <div class="grid2">
+    <div class="shell"><div class="core"><h4>Frente ao Caixa / Balcão</h4><p>Expositores, displays ou tabela de preços no campo de visão direto de quem paga.</p></div></div>
+    <div class="shell"><div class="core"><h4>Gôndola de Destaque</h4><p>Ocupe sempre a posição de maior visibilidade — altura dos olhos, frente do corredor.</p></div></div>
+    <div class="shell"><div class="core"><h4>Entrada / Circulação</h4><p>Pontos de entrada e corredores de fluxo intenso são ideais para materiais de destaque.</p></div></div>
+    <div class="shell"><div class="core"><h4>Display & Expositor Próprio</h4><p>Utilize os materiais fornecidos pela empresa: clip strip, wobbler, display de balcão e chão.</p></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 05</span></div>
+</section>
+
+<!-- 04 VISIBILIDADE SECUNDARIA -->
+<section class="page">
+  <div class="ghost">04</div>
+  <div class="sec-head"><div class="big-n">04</div><div><span class="tag2">Visibilidade Secundária</span><h2 class="display">Pontos extras de exposição</h2></div></div>
+  <p class="lead">Ampliam a cobertura visual e multiplicam as chances de compra por impulso.</p>
+  <div class="grid3">
+    <div class="shell"><div class="core"><h4><span class="k">1</span>Display de Balcão</h4><p>Próximo ao caixa — máxima visibilidade no momento da decisão.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">2</span>Clip Strip / Wobbler</h4><p>Na borda de gôndola ou junto a isqueiros e fósforos.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">3</span>Ilha / Display de Chão</h4><p>Em atacados: ilhas de destaque com alto volume.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">4</span>Banners & Cartazes</h4><p>Paredes, vitrines e áreas de espera.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">5</span>Check-out / Caixa</h4><p>100% do fluxo passa pelo caixa — nunca deixe sem material.</p></div></div>
+    <div class="shell"><div class="core"><h4><span class="k">6</span>Refrigerador Visível</h4><p>Etiquetas e adesivos para associação de ocasião.</p></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 06</span></div>
+</section>
+
+<!-- 05 TABELA DE PRECOS -->
+<section class="page">
+  <div class="ghost">05</div>
+  <div class="sec-head"><div class="big-n">05</div><div><span class="tag2">Tabela de Preços</span><h2 class="display">Obrigação legal e boas práticas</h2></div></div>
+  <div class="callout alert"><b>Obrigação legal —</b> a tabela de preços deve ficar visível ao consumidor, conforme Instrução Normativa 1.204/2011. A não afixação sujeita o estabelecimento a penalidades.</div>
+  <div class="two-col">
+    <div><h4>Onde afixar</h4><ul>
+      <li>Balcão do caixa — campo de visão do consumidor</li>
+      <li>Próximo ao expositor ou display de produto</li>
+      <li>Parede atrás do atendente (balcão fechado)</li>
+      <li>No refrigerador ou vitrine, quando exposto</li>
+      <li>Nunca em local oculto ou fora do alcance visual</li>
+    </ul></div>
+    <div><h4>Boas práticas</h4><ul>
+      <li>Substituir imediatamente ao atualizar preços</li>
+      <li>Verificar legibilidade — sem rasuras ou dobras</li>
+      <li>Fixar firmemente — não pode cair ou virar</li>
+      <li>Usar apenas tabelas fornecidas pela empresa</li>
+      <li>Registrar a afixação com foto no aplicativo</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 07</span></div>
+</section>
+
+<!-- 06 EXPOSICAO -->
+<section class="page">
+  <div class="ghost">06</div>
+  <div class="sec-head"><div class="big-n">06</div><div><span class="tag2">Exposição do Produto</span><h2 class="display">Compra por impulso</h2></div></div>
+  <div class="callout alert"><b>A compra de tabaco é fortemente por impulso.</b> Se o produto não está visível, o consumidor não lembra de comprar — ou compra da concorrência.</div>
+  <div class="grid3">
+    <div class="shell"><div class="core"><h4>Facing completo</h4><p>Frentes alinhadas, sem buracos. Reorganize sempre que necessário.</p></div></div>
+    <div class="shell"><div class="core"><h4>SKUs visíveis</h4><p>Nunca esconder um SKU atrás do outro.</p></div></div>
+    <div class="shell"><div class="core"><h4>Altura dos olhos</h4><p>Entre 1,20m e 1,60m — faixa de maior conversão.</p></div></div>
+    <div class="shell"><div class="core"><h4>Frente do balcão</h4><p>Produto acessível visualmente ao consumidor.</p></div></div>
+    <div class="shell"><div class="core"><h4>Clareza nas marcas</h4><p>Identificação clara facilita a escolha, reduz atrito.</p></div></div>
+    <div class="shell"><div class="core"><h4>Material POP ativo</h4><p>Wobblers e glorifiers direcionam o olhar às nossas marcas.</p></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 08</span></div>
+</section>
+
+<!-- 07 DISPONIBILIDADE -->
+<section class="page">
+  <div class="ghost">07</div>
+  <div class="sec-head"><div class="big-n">07</div><div><span class="tag2">Disponibilidade</span><h2 class="display">O equilíbrio é a chave</h2></div></div>
+  <div class="quote-block" style="padding-top:0;padding-bottom:6px;"><p>"Produto que falta vende zero. Produto que sobra vende menos do que poderia."</p></div>
+  <div class="rule center"></div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><b>Verifique o estoque na visita</b><span>Prateleira + depósito. Identifique rupturas e itens próximos do esgotamento.</span></div></div>
+    <div class="step"><div class="n">2</div><div><b>Reponha a prateleira</b><span>Traga produto do depósito e complete o facing.</span></div></div>
+    <div class="step"><div class="n">3</div><div><b>Alerte sobre ruptura iminente</b><span>Registre o pedido de reposição no sistema.</span></div></div>
+    <div class="step"><div class="n">4</div><div><b>Garanta o mix completo</b><span>Falta de SKU é perda de venda garantida.</span></div></div>
+    <div class="step"><div class="n">5</div><div><b>Monitore giro e validade</b><span>Produtos mais antigos à frente (PEPS).</span></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 09</span></div>
+</section>
+
+<!-- 08 VERBALIZACAO -->
+<section class="page">
+  <div class="ghost">08</div>
+  <div class="sec-head"><div class="big-n">08</div><div><span class="tag2">Verbalização</span><h2 class="display">Fale sobre os produtos</h2></div></div>
+  <p class="lead">O promotor deve apresentar, educar e criar demanda ativa com o lojista em cada visita.</p>
+  <div class="two-col">
+    <div><h4>O que verbalizar</h4><ul>
+      <li>Preço e posicionamento de cada marca</li>
+      <li>Lançamentos e novidades do portfólio</li>
+      <li>Marcas de maior giro e rentabilidade</li>
+      <li>Ações promocionais e incentivos vigentes</li>
+      <li>Resultados de sell-out</li>
+    </ul></div>
+    <div><h4>Como verbalizar</h4><ul>
+      <li><b>Seja objetivo</b> — 2 a 3 minutos de conversa focada</li>
+      <li><b>Use dados</b> — "essa marca cresceu X% na região"</li>
+      <li><b>Gere necessidade</b> — mostre o que falta na loja</li>
+      <li><b>Encerre com ação</b> — feche com pedido ou compromisso</li>
+    </ul></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 10</span></div>
+</section>
+
+<!-- 09 ESTOQUE -->
+<section class="page">
+  <div class="ghost">09</div>
+  <div class="sec-head"><div class="big-n">09</div><div><span class="tag2">Gestão de Estoque</span><h2 class="display">O ciclo dos clientes</h2></div></div>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><b>Verificar</b><span>Confira prateleira e depósito. Anote quantidades por SKU.</span></div></div>
+    <div class="step"><div class="n">2</div><div><b>Registrar</b><span>Lance os estoques no sistema. Foto obrigatória.</span></div></div>
+    <div class="step"><div class="n">3</div><div><b>Repor</b><span>Complete a gôndola com produto do depósito.</span></div></div>
+    <div class="step"><div class="n">4</div><div><b>Solicitar</b><span>Se estoque baixo: pedido ou alerta ao representante.</span></div></div>
+    <div class="step"><div class="n">5</div><div><b>Acompanhar</b><span>Na próxima visita, confirme recebimento e ruptura sanada.</span></div></div>
+  </div>
+  <div class="callout mint"><b>Importante —</b> todo o processo deve ser registrado no sistema. O histórico é fundamental para planejamento de pedidos e prevenção de rupturas.</div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 11</span></div>
+</section>
+
+<!-- 10 ACOES REGIONAIS -->
+<section class="page">
+  <div class="ghost">10</div>
+  <div class="sec-head"><div class="big-n">10</div><div><span class="tag2">Ações Regionais</span><h2 class="display">Execução com rigor</h2></div></div>
+  <p class="lead">As ações são determinadas pelos Regionais e devem ser executadas dentro dos prazos estabelecidos.</p>
+  <div class="grid3">
+    <div class="shell"><div class="core"><h4>Ações de Visibilidade</h4><p>Implantação de material de PDV nas datas definidas pelo regional.</p></div></div>
+    <div class="shell"><div class="core"><h4>Ações Promocionais</h4><p>Ofertas e combos com execução fiel do material.</p></div></div>
+    <div class="shell"><div class="core"><h4>Pesquisa de Preços</h4><p>Levantamento da concorrência — dado estratégico regional.</p></div></div>
+    <div class="shell"><div class="core"><h4>Ativações Sazonais</h4><p>Datas comemorativas e períodos de alta demanda.</p></div></div>
+    <div class="shell"><div class="core"><h4>Evidências Fotográficas</h4><p>Foto antes e depois, geolocalizada, no sistema.</p></div></div>
+    <div class="shell"><div class="core"><h4>Feedback ao Regional</h4><p>Reportar diariamente o andamento das ações.</p></div></div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 12</span></div>
+</section>
+
+<!-- 11 CHECKLIST -->
+<section class="page">
+  <div class="ghost">11</div>
+  <div class="sec-head"><div class="big-n">11</div><div><span class="tag2">Checklist da Visita</span><h2 class="display">Roteiro do promotor</h2></div></div>
+  <div class="check-3">
+    <div><h4>Antes</h4>
+      <li>Verificar rota e agenda do dia</li>
+      <li>Conferir materiais de PDV disponíveis</li>
+      <li>Revisar ações regionais vigentes</li>
+      <li>Checar histórico do cliente</li>
+    </div>
+    <div><h4>Durante</h4>
+      <li>Verificar estoque (prateleira + depósito)</li>
+      <li>Repor e organizar o facing completo</li>
+      <li>Afixar / conferir tabela de preços</li>
+      <li>Implantar visibilidade primária e secundária</li>
+      <li>Verbalizar produtos e novidades</li>
+      <li>Executar ações regionais determinadas</li>
+      <li>Registrar evidências fotográficas</li>
+    </div>
+    <div><h4>Depois</h4>
+      <li>Lançar visita no sistema / app</li>
+      <li>Registrar pedidos ou ocorrências</li>
+      <li>Reportar ao regional se necessário</li>
+      <li>Preparar a próxima visita</li>
+    </div>
+  </div>
+  <div class="foot"><span>Merchandising no Ponto de Venda</span><span>Página 13</span></div>
+</section>
+
+<!-- CLOSING -->
+<section class="page closing">
+  <div>
+    <h2 class="display">Excelência no <span class="accent">PDV</span></h2>
+    <p class="sub">é o que transforma visibilidade em venda.</p>
+    <div class="tags">
+      <span>Visibilidade Primária</span><span>Visibilidade Secundária</span><span>Tabela de Preços</span><span>Exposição</span>
+      <span>Disponibilidade</span><span>Verbalização</span><span>Estoque</span><span>Ações Regionais</span>
+    </div>
+  </div>
+  <div class="foot" style="border:none;position:absolute;bottom:20mm;left:18mm;right:18mm;margin:0;">
+    <span>Uso interno — exclusivo para promotores de vendas</span><span>Cleantabaco · 2026</span>
+  </div>
+</section>
+
+</body>
+</html>
