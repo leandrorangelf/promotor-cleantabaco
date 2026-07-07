@@ -567,6 +567,12 @@ button:active { transform: translateY(1px); }
 .visit-summary-item { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
 .visit-summary-item strong { display: block; font-size: 22px; color: var(--text); }
 .visit-summary-item span { color: var(--text-muted); font-size: 11px; }
+.kpi-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.kpi-card.green { border-color: var(--mint); background: var(--mint-light); }
+.kpi-card.orange { border-color: #F4C36A; background: var(--orange-light); }
+.kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.kpi-value { margin-top: 8px; font-size: 24px; line-height: 1.1; font-weight: 900; color: var(--text); }
+.kpi-sub { margin-top: 5px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
 .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 300px; }
 .export-btn { padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); font-size: 12px; font-weight: 800; cursor: pointer; }
 .export-btn.orders { background: var(--mint); border-color: var(--mint); color: #fff; }
@@ -698,14 +704,29 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
   <div class="nav">
-    <button class="nav-btn active" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
+    <button class="nav-btn active" data-p-page="painel" onclick="mudarAbaP('painel')">Painel</button>
+    <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
     <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes')">Carteira</button>
     <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico')">Histórico</button>
     <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📘 Manual</a>
   </div>
 
+  <div class="page active" id="pPainel">
+    <div class="page-intro">
+      <h1>Minha performance</h1>
+      <p>Acompanhe suas metas do mes e veja o que falta para bater.</p>
+    </div>
+    <div class="gestor-wrap">
+      <div class="resumo-grid" id="pPerformanceCards"></div>
+      <div class="card">
+        <div class="card-title">Próximos passos</div>
+        <div id="pPerformanceAcoes"><div class="empty">Carregando metas...</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- NOVA VISITA -->
-  <div class="page active" id="pNova">
+  <div class="page" id="pNova">
     <div class="progress-wrap">
       <div class="progress-steps">
         <div class="progress-step active" onclick="irSecao(0)"></div>
@@ -1094,6 +1115,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
     <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
     <button class="nav-btn" data-gestor-page="mapa" onclick="mudarAbaG('mapa')">🗺️ Mapa</button>
+    <button class="nav-btn only-gestor" data-gestor-page="metas" onclick="mudarAbaG('metas')">Metas</button>
     <button class="nav-btn only-gestor" data-gestor-page="validacaoIA" onclick="mudarAbaG('validacaoIA')">Validacao IA</button>
     <button class="nav-btn only-gestor" data-gestor-page="promotores" onclick="mudarAbaG('promotores')">Promotores</button>
     <div class="nav-group-label">APOIO</div>
@@ -1320,6 +1342,26 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
 
+  <div class="page" id="gMetas">
+    <div class="page-intro"><h1>Metas</h1><p>Configure metas globais ou por estado, coordenador e promotor.</p></div>
+    <div class="gestor-wrap">
+      <div class="card">
+        <div class="card-title">Editor de metas</div>
+        <div class="admin-form">
+          <div><label>Meta</label><select id="metaTipo"><option value="pdvs_cadastrados">PDVs cadastrados</option><option value="pdvs_visitados_mes">PDVs visitados no mês</option><option value="tabela_percentual">Tabela visível (%)</option><option value="pedidos_mes">Pedidos no mês</option><option value="cliente_novo_positivado">Cliente novo positivado</option></select></div>
+          <div><label>Escopo</label><select id="metaEscopoTipo"><option value="global">Global</option><option value="uf">Estado/UF</option><option value="coordenador">Coordenador</option><option value="promotor">Promotor</option></select></div>
+          <div><label>Valor do escopo</label><input type="text" id="metaEscopoValor" placeholder="global, SP, usuario ou nome"></div>
+          <div><label>Valor da meta</label><input type="number" id="metaValor" min="0" step="1"></div>
+          <div class="admin-actions"><button class="btn-filtrar" type="button" onclick="salvarMetaGestor()">Salvar meta</button></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title">Metas cadastradas</div>
+        <div id="gMetasLista"><div class="empty">Carregando metas...</div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="page" id="gValidacaoIA">
     <div class="page-intro"><h1>Validacao IA</h1><p>Teste experimental para reconhecer tabela, wobler ou material de marketing em uma foto.</p></div>
     <div class="gestor-wrap">
@@ -1385,6 +1427,7 @@ button:active { transform: translateY(1px); }
 <div class="toast" id="toast"></div>
 
 <script src="bonus.js"></script>
+<script src="performance.js"></script>
 <script>
 const API = '';
 
@@ -1395,6 +1438,7 @@ let authToken = '';
 let visitasPromotor = [];
 let visitasGestor = [];
 let clientesGestor = [];
+let metasSistema = [];
 let secaoAtual = 0;
 let skusSelecionados = [];
 let concSelecionados = [];
@@ -1585,7 +1629,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
       document.getElementById('gPainel').classList.add('active');
     }
     if (tipo === 'gestor') carregarPromotoresAdmin();
-    carregarGestor();
+    carregarMetas().then(() => carregarGestor());
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;
@@ -1603,7 +1647,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
         }
       }
     } catch(e) {}
-    carregarVisitasPromotor();
+    carregarMetas().then(() => Promise.all([carregarVisitasPromotor(), carregarClientes(false, true)])).then(() => renderPainelPromotor());
   }
 }
 
@@ -1626,6 +1670,9 @@ function mudarAbaP(aba) {
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appPromotor .nav-btn[data-p-page="${aba}"]`)?.classList.add('active');
+  if (aba === 'painel') {
+    Promise.all([carregarVisitasPromotor(), carregarClientes(false, true)]).then(() => renderPainelPromotor());
+  }
   if (aba === 'historico') {
     if (visitasPromotor.length) renderHistorico();
     carregarVisitasPromotor().then(() => renderHistorico());
@@ -1648,6 +1695,7 @@ function mudarAbaG(aba) {
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
   if (aba === 'mapa') { sincronizarFiltrosMapa(); renderMapa(); }
+  if (aba === 'metas') renderMetasGestor();
   if (aba === 'promotores') carregarPromotoresAdmin();
 }
 
@@ -2832,6 +2880,75 @@ function limparFiltrosGestor() {
   document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
   document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
   carregarGestor();
+}
+
+async function carregarMetas() {
+  try {
+    const res = await fetch(`${API}/api/metas`, { headers: headers() });
+    const data = await res.json();
+    metasSistema = data.metas || [];
+  } catch(e) {
+    metasSistema = [];
+  }
+  return metasSistema;
+}
+
+function nomeMeta(tipo) {
+  return {
+    pdvs_cadastrados: 'PDVs cadastrados',
+    pdvs_visitados_mes: 'PDVs visitados no mês',
+    tabela_percentual: 'Tabela visível (%)',
+    pedidos_mes: 'Pedidos no mês',
+    cliente_novo_positivado: 'Cliente novo positivado'
+  }[tipo] || tipo;
+}
+
+function renderMetasGestor() {
+  const el = document.getElementById('gMetasLista');
+  if (!el) return;
+  el.innerHTML = metasSistema.length ? `
+    <table class="segment-table"><thead><tr><th>Meta</th><th>Escopo</th><th>Valor</th></tr></thead><tbody>
+      ${metasSistema.map(m => `<tr><td>${nomeMeta(m.tipo_meta)}</td><td>${m.escopo_tipo}: ${m.escopo_valor}</td><td><strong>${m.valor}</strong></td></tr>`).join('')}
+    </tbody></table>
+  ` : '<div class="empty">Nenhuma meta carregada</div>';
+}
+
+async function salvarMetaGestor() {
+  const body = {
+    tipo_meta: document.getElementById('metaTipo').value,
+    escopo_tipo: document.getElementById('metaEscopoTipo').value,
+    escopo_valor: document.getElementById('metaEscopoValor').value.trim() || 'global',
+    valor: Number(document.getElementById('metaValor').value)
+  };
+  const res = await fetch(`${API}/api/metas`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) { toast(data.erro || 'Erro ao salvar meta'); return; }
+  toast('Meta salva');
+  await carregarMetas();
+  renderMetasGestor();
+}
+
+function renderPainelPromotor() {
+  const cardsEl = document.getElementById('pPerformanceCards');
+  const acoesEl = document.getElementById('pPerformanceAcoes');
+  if (!cardsEl || !acoesEl || typeof calcularPerformancePromotor !== 'function') return;
+  const perf = calcularPerformancePromotor({ promotor: usuarioAtual, visitas: visitasPromotor, clientes: todosClientes, metas: metasSistema });
+  const cards = Object.values(perf.cards);
+  cardsEl.innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.atingida ? 'green' : 'orange'}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.atual}${c.sufixo || ''} <span style="font-size:13px;color:var(--text-muted);">/ ${c.alvo}${c.sufixo || ''}</span></div>
+      <div class="kpi-sub">${c.atingida ? 'Meta batida' : (c.sufixo === '%' ? 'Faltam ' + c.faltam + ' pontos' : 'Faltam ' + c.faltam)}</div>
+      <div style="height:6px;background:#EEF1F7;border-radius:999px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${c.pct}%;background:${c.atingida?'var(--mint)':'var(--amber)'};"></div></div>
+    </div>
+  `).join('');
+  acoesEl.innerHTML = perf.proximosPassos.length
+    ? perf.proximosPassos.map(a => `<div class="visit-summary-item"><span>${a}</span></div>`).join('')
+    : '<div class="empty">Todas as metas principais estão batidas neste mês.</div>';
 }
 
 let mapaLeaflet = null;
