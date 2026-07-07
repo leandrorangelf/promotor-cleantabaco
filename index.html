@@ -2450,24 +2450,66 @@ async function buscarClienteRevisita() {
   box.innerHTML = '<div class="visita-info">Buscando na carteira...</div>';
   box.classList.add('open');
   if (!todosClientes.length) await carregarClientes(false, true);
-  const filtrados = todosClientes.filter(c =>
+  const filtradosCarteira = todosClientes.filter(c =>
     (c.nome_fantasia||'').toLowerCase().includes(termo) ||
     (c.cnpj||'').toLowerCase().includes(termo)
   ).slice(0, 5);
+  const filtradosHistorico = buscarClientesHistoricoRevisita(termo, filtradosCarteira).slice(0, Math.max(0, 5 - filtradosCarteira.length));
+  const filtrados = [...filtradosCarteira, ...filtradosHistorico];
   if (!filtrados.length) {
-    box.innerHTML = '<div class="visita-info">Nenhum cliente encontrado na carteira.</div>';
+    box.innerHTML = '<div class="visita-info">Nenhum cliente encontrado na carteira ou historico.</div>';
     return;
   }
   box.innerHTML = filtrados.map(c => {
     const local = [c.cidade, c.uf].filter(Boolean).join('/');
     const subtitulo = [c.codigo, c.cnpj, local].filter(Boolean).join(' · ');
+    const origem = c._visitaId ? '<span>Historico de visitas</span>' : '';
+    const acao = c._visitaId ? `iniciarRevisitaVisitaId('${c._visitaId}')` : `iniciarVisitaClienteId('${c.id}')`;
     return `
-      <button type="button" class="revisita-result" onclick="iniciarVisitaClienteId('${c.id}')">
+      <button type="button" class="revisita-result" onclick="${acao}">
         <strong>${c.nome_fantasia || 'PDV sem nome'}</strong>
         <span>${subtitulo || 'Cliente cadastrado'}</span>
+        ${origem}
       </button>
     `;
   }).join('');
+}
+
+function clienteDaVisita(v) {
+  const p = v?.dados?.pdv || {};
+  return {
+    id: 'visita-' + v.id,
+    _visitaId: v.id,
+    codigo: 'Historico',
+    nome_fantasia: p.nomeFantasia || '',
+    cnpj: p.cnpj || '',
+    tipo: p.tipo || '',
+    ie: p.ie || '',
+    endereco: p.endereco || '',
+    cidade: p.cidade || '',
+    uf: p.uf || '',
+    nome_comprador: p.nomeComprador || '',
+    telefone: p.telefone || '',
+    distribuidor: p.distribuidor || ''
+  };
+}
+
+function buscarClientesHistoricoRevisita(termo, clientesJaListados=[]) {
+  const chavesCarteira = new Set(clientesJaListados.map(c => (String(c.cnpj || '').replace(/\D/g,'') || normalizarTexto(c.nome_fantasia))).filter(Boolean));
+  const vistos = new Set();
+  return [...visitasPromotor]
+    .sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em))
+    .filter(v => {
+      const p = v?.dados?.pdv || {};
+      const nome = String(p.nomeFantasia || '');
+      const cnpj = String(p.cnpj || '');
+      const chave = cnpj.replace(/\D/g,'') || normalizarTexto(nome);
+      if (!chave || vistos.has(chave) || chavesCarteira.has(chave)) return false;
+      const bate = nome.toLowerCase().includes(termo) || cnpj.toLowerCase().includes(termo);
+      if (bate) vistos.add(chave);
+      return bate;
+    })
+    .map(clienteDaVisita);
 }
 
 function clienteMatchesVisita(cliente, visita) {
@@ -2577,6 +2619,16 @@ function iniciarVisitaClienteId(id) {
     return;
   }
   iniciarVisitaCliente(c);
+}
+
+function iniciarRevisitaVisitaId(id) {
+  const v = visitasPromotor.find(visita => String(visita.id) === String(id));
+  if (!v) {
+    toast('Visita anterior nao encontrada. Atualize o historico e tente de novo.');
+    carregarVisitasPromotor(true);
+    return;
+  }
+  iniciarVisitaCliente(clienteDaVisita(v));
 }
 
 function iniciarVisitaCliente(clienteJson) {
