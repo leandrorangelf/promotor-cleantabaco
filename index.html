@@ -1094,6 +1094,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
     <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
     <button class="nav-btn" data-gestor-page="mapa" onclick="mudarAbaG('mapa')">🗺️ Mapa</button>
+    <button class="nav-btn only-gestor" data-gestor-page="validacaoIA" onclick="mudarAbaG('validacaoIA')">Validacao IA</button>
     <button class="nav-btn only-gestor" data-gestor-page="promotores" onclick="mudarAbaG('promotores')">Promotores</button>
     <div class="nav-group-label">APOIO</div>
     <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;">📘 Manual</a>
@@ -1296,6 +1297,19 @@ button:active { transform: translateY(1px); }
       <div id="mapaStatus" class="mapa-status"></div>
       <div id="mapaLeafletEl" class="mapa-box"></div>
       <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período/promotor selecionado.</div>
+    </div>
+  </div>
+
+  <div class="page" id="gValidacaoIA">
+    <div class="page-intro"><h1>Validacao IA</h1><p>Teste experimental para reconhecer tabela, wobler ou material de marketing em uma foto.</p></div>
+    <div class="gestor-wrap">
+      <div class="card" id="iaValidacaoCard">
+        <div class="card-title">Validação de foto</div>
+        <div class="foto-text">Area experimental: teste uma foto sem alterar visitas reais.</div>
+        <input type="file" id="iaFotoInput" accept="image/*" style="margin-top:12px;">
+        <button class="btn-filtrar" type="button" onclick="analisarFotoIA()" style="margin-top:12px;">Analisar foto</button>
+        <div id="iaResultado" class="foto-text" style="margin-top:12px;">Nenhuma foto analisada.</div>
+      </div>
     </div>
   </div>
 
@@ -2076,6 +2090,43 @@ function renderFotos() {
 }
 
 function removerFoto(i) { fotos.splice(i,1); renderFotos(); }
+
+function lerArquivoComoDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Nao foi possivel ler a foto'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analisarFotoIA() {
+  const input = document.getElementById('iaFotoInput');
+  const resultado = document.getElementById('iaResultado');
+  const file = input?.files?.[0];
+  if (!file) {
+    if (resultado) resultado.textContent = 'Selecione uma foto para analisar.';
+    return;
+  }
+
+  try {
+    if (resultado) resultado.textContent = 'Analisando foto...';
+    const foto = await lerArquivoComoDataUrl(file);
+    const res = await fetch(`${API}/api/avaliar-foto`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao avaliar foto');
+    if (resultado) {
+      const status = data.aprovado ? 'Aprovado' : (data.score >= 50 ? 'Revisao manual' : 'Reprovado');
+      resultado.innerHTML = `<strong>${status}</strong><br>Score: ${data.score}<br>Modo: ${data.modo}<br>Materiais: ${(data.materiais_detectados || []).join(', ') || 'nenhum'}<br>${data.motivo || ''}`;
+    }
+  } catch (e) {
+    if (resultado) resultado.textContent = 'Nao foi possivel analisar a foto: ' + e.message;
+  }
+}
 
 function abrirFoto(i, origem='modal') {
   const lista = origem === 'edicao' ? fotos : fotosModalAtual;
