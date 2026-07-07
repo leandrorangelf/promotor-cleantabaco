@@ -15,11 +15,11 @@ export default async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
     const { id } = req.body;
     const souGestor = sessao.tipo === 'gestor' || sessao.tipo === 'diretoria';
-    if (souGestor) {
-      await sql`delete from visitas where id = ${id}`;
-    } else {
-      await sql`delete from visitas where id = ${id} and promotor = ${sessao.nome}`;
+    if (!souGestor) {
+      return res.status(403).json({ erro: 'Apenas gestores podem excluir visitas' });
     }
+
+    await sql`delete from visitas where id = ${id}`;
     return res.status(200).json({ ok: true });
   } catch (e) {
     return res.status(500).json({ erro: e.message });

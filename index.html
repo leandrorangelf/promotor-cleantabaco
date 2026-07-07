@@ -2412,8 +2412,6 @@ function renderHistorico() {
         </div>
         <div class="visita-actions">
           <button class="btn-detalhes" onclick="abrirDetalhePromotor('${v.id}')">Ver detalhes</button>
-          <button class="btn-editar" onclick="editarVisita('${v.id}')">✏️ Editar</button>
-          <button class="btn-excluir" onclick="excluirVisitaPromotor('${v.id}')">🗑</button>
         </div>
       </div>
     `;
@@ -2778,24 +2776,6 @@ async function editarVisita(id) {
   mudarAbaP('nova');
   irSecao(0);
   toast('Visita carregada para edição');
-}
-
-async function excluirVisitaPromotor(id) {
-  if (!confirm('Excluir esta visita? Ação irreversível.')) return;
-  try {
-    const res = await fetch(`${API}/api/deletar`, {
-      method: 'DELETE',
-      headers: headers(),
-      body: JSON.stringify({ id, promotor: usuarioAtual, gestor: false })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      toast('Visita excluída');
-      await carregarVisitasPromotor(true);
-      clientesCarregadoEm = 0;
-      renderHistorico();
-    }
-  } catch(e) { toast('Erro ao excluir'); }
 }
 
 // GESTOR
