@@ -1306,7 +1306,8 @@ button:active { transform: translateY(1px); }
       <div class="card" id="iaValidacaoCard">
         <div class="card-title">Validação de foto</div>
         <div class="foto-text">Area experimental: teste uma foto sem alterar visitas reais.</div>
-        <input type="file" id="iaFotoInput" accept="image/*" style="margin-top:12px;">
+        <input type="file" id="iaFotoInput" accept="image/*" onchange="prepararFotoIA(event)" style="margin-top:12px;">
+        <div id="iaFotoStatus" class="foto-text" style="margin-top:8px;">Nenhuma foto selecionada.</div>
         <button class="btn-filtrar" type="button" onclick="analisarFotoIA()" style="margin-top:12px;">Analisar foto</button>
         <div id="iaResultado" class="foto-text" style="margin-top:12px;">Nenhuma foto analisada.</div>
       </div>
@@ -1375,6 +1376,7 @@ let secaoAtual = 0;
 let skusSelecionados = [];
 let concSelecionados = [];
 let fotos = [];
+let iaFotoSelecionada = null;
 let editandoId = null;
 let visitaDetalheAtual = null;
 let fotosModalAtual = [];
@@ -2100,10 +2102,22 @@ function lerArquivoComoDataUrl(file) {
   });
 }
 
+function prepararFotoIA(event) {
+  const status = document.getElementById('iaFotoStatus');
+  const resultado = document.getElementById('iaResultado');
+  iaFotoSelecionada = event?.target?.files?.[0] || null;
+  if (iaFotoSelecionada) {
+    if (status) status.textContent = 'Foto selecionada: ' + iaFotoSelecionada.name;
+    if (resultado) resultado.textContent = 'Foto pronta para analise.';
+  } else {
+    if (status) status.textContent = 'Nenhuma foto selecionada.';
+  }
+}
+
 async function analisarFotoIA() {
   const input = document.getElementById('iaFotoInput');
   const resultado = document.getElementById('iaResultado');
-  const file = input?.files?.[0];
+  const file = iaFotoSelecionada || input?.files?.[0];
   if (!file) {
     if (resultado) resultado.textContent = 'Selecione uma foto para analisar.';
     return;
