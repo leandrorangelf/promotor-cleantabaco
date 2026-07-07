@@ -59,10 +59,28 @@ export default async function handler(req, res) {
     let { promotor, q } = req.query;
     if (sessao.tipo === 'promotor') promotor = sessao.nome;
     if (!promotor && sessao.tipo === 'promotor') return res.status(400).json({ erro: 'Promotor obrigatório' });
+    let promotores_permitidos = null;
+    if (sessao.tipo === 'coordenador') {
+      const rowsPromotores = await sql`
+        SELECT nome FROM promotores
+        WHERE ativo = TRUE AND tipo = 'promotor' AND coordenador_usuario = ${sessao.usuario}
+      `;
+      promotores_permitidos = rowsPromotores.map(p => p.nome);
+      if (promotor && !promotores_permitidos.includes(promotor)) {
+        return res.status(403).json({ erro: 'Sem permissao para ver clientes deste promotor' });
+      }
+    }
     let rows;
     if (q && q.trim()) {
       const busca = `%${q.trim()}%`;
-      rows = promotor
+      rows = promotores_permitidos && !promotor
+        ? (promotores_permitidos.length ? await sql`
+            SELECT * FROM clientes
+            WHERE promotor = ANY(${promotores_permitidos})
+              AND (nome_fantasia ILIKE ${busca} OR cnpj LIKE ${busca})
+            ORDER BY nome_fantasia LIMIT 30
+          ` : [])
+        : promotor
         ? await sql`
             SELECT * FROM clientes
             WHERE promotor = ${promotor}
@@ -74,6 +92,13 @@ export default async function handler(req, res) {
             WHERE nome_fantasia ILIKE ${busca} OR cnpj LIKE ${busca}
             ORDER BY nome_fantasia LIMIT 30
           `;
+    } else if (promotores_permitidos && !promotor) {
+      rows = promotores_permitidos.length
+        ? await sql`
+          SELECT * FROM clientes WHERE promotor = ANY(${promotores_permitidos})
+          ORDER BY promotor, nome_fantasia LIMIT 5000
+        `
+        : [];
     } else if (promotor) {
       rows = await sql`
         SELECT * FROM clientes WHERE promotor = ${promotor}
@@ -91,6 +116,14 @@ export default async function handler(req, res) {
     const { nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor } = req.body;
     const promotor = sessao.tipo === 'promotor' ? sessao.nome : req.body.promotor;
     if (!promotor || !nome_fantasia) return res.status(400).json({ erro: 'Promotor e nome são obrigatórios' });
+    if (sessao.tipo === 'coordenador') {
+      const permitido = await sql`
+        SELECT id FROM promotores
+        WHERE ativo = TRUE AND tipo = 'promotor' AND coordenador_usuario = ${sessao.usuario} AND nome = ${promotor}
+        LIMIT 1
+      `;
+      if (!permitido.length) return res.status(403).json({ erro: 'Sem permissao para atualizar cliente deste promotor' });
+    }
 
     const [{ count }] = await sql`SELECT COUNT(*)::int as count FROM clientes WHERE promotor = ${promotor}`;
     const codigo = 'PDV-' + String(count + 1).padStart(3, '0');

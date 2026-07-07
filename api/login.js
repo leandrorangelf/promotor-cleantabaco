@@ -26,12 +26,14 @@ async function garantirTabela(sql) {
       senha TEXT NOT NULL,
       senha_hash TEXT,
       tipo TEXT NOT NULL DEFAULT 'promotor',
+      coordenador_usuario TEXT DEFAULT '',
       ativo BOOLEAN NOT NULL DEFAULT TRUE,
       criado_em TIMESTAMPTZ DEFAULT NOW()
     )
   `;
 
   await sql`ALTER TABLE promotores ADD COLUMN IF NOT EXISTS senha_hash TEXT`;
+  await sql`ALTER TABLE promotores ADD COLUMN IF NOT EXISTS coordenador_usuario TEXT DEFAULT ''`;
 
   for (const p of LEGADOS) {
     await sql`
@@ -67,7 +69,7 @@ export default async function handler(req, res) {
     if (!user || !senha) return res.status(400).json({ erro: 'Usuario e senha obrigatorios' });
 
     const rows = await sql`
-      SELECT id, nome, usuario, tipo, ativo
+      SELECT id, nome, usuario, tipo, coordenador_usuario, ativo
       FROM promotores
       WHERE usuario = ${user}
         AND ativo = TRUE
@@ -77,7 +79,7 @@ export default async function handler(req, res) {
 
     if (!rows.length) return res.status(401).json({ erro: 'Usuario ou senha invalidos' });
     const contaLogada = rows[0];
-    const token = criarToken({ usuario: contaLogada.usuario, nome: contaLogada.nome, tipo: contaLogada.tipo });
+    const token = criarToken({ usuario: contaLogada.usuario, nome: contaLogada.nome, tipo: contaLogada.tipo, coordenador_usuario: contaLogada.coordenador_usuario });
     return res.status(200).json({ usuario: contaLogada, token });
   } catch (e) {
     return res.status(500).json({ erro: e.message });

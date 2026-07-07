@@ -35,12 +35,14 @@ async function garantirTabela(sql) {
       senha TEXT NOT NULL,
       senha_hash TEXT,
       tipo TEXT NOT NULL DEFAULT 'promotor',
+      coordenador_usuario TEXT DEFAULT '',
       ativo BOOLEAN NOT NULL DEFAULT TRUE,
       criado_em TIMESTAMPTZ DEFAULT NOW()
     )
   `;
 
   await sql`ALTER TABLE promotores ADD COLUMN IF NOT EXISTS senha_hash TEXT`;
+  await sql`ALTER TABLE promotores ADD COLUMN IF NOT EXISTS coordenador_usuario TEXT DEFAULT ''`;
 
   for (const p of LEGADOS) {
     await sql`
@@ -68,7 +70,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const rows = await sql`
-        SELECT id, nome, usuario, tipo, ativo, criado_em
+        SELECT id, nome, usuario, tipo, coordenador_usuario, ativo, criado_em
         FROM promotores
         ORDER BY ativo DESC, tipo, nome
       `;
@@ -76,43 +78,46 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { nome, usuario, senha, tipo = 'promotor' } = req.body || {};
+      const { nome, usuario, senha, tipo = 'promotor', coordenador_usuario = '' } = req.body || {};
       const user = normalizarUsuario(usuario || nome);
+      const coord = tipo === 'promotor' ? normalizarUsuario(coordenador_usuario) : '';
       if (!nome || !user || !senha) {
         return res.status(400).json({ erro: 'Nome, usuario e senha sao obrigatorios' });
       }
 
       const [novo] = await sql`
-        INSERT INTO promotores (nome, usuario, senha, senha_hash, tipo, ativo)
-        VALUES (${nome.trim()}, ${user}, ${''}, ${hashSenha(senha)}, ${tipo}, TRUE)
+        INSERT INTO promotores (nome, usuario, senha, senha_hash, tipo, coordenador_usuario, ativo)
+        VALUES (${nome.trim()}, ${user}, ${''}, ${hashSenha(senha)}, ${tipo}, ${coord}, TRUE)
         ON CONFLICT (usuario) DO UPDATE SET
           nome = EXCLUDED.nome,
           senha = EXCLUDED.senha,
           senha_hash = EXCLUDED.senha_hash,
           tipo = EXCLUDED.tipo,
+          coordenador_usuario = EXCLUDED.coordenador_usuario,
           ativo = TRUE
-        RETURNING id, nome, usuario, tipo, ativo, criado_em
+        RETURNING id, nome, usuario, tipo, coordenador_usuario, ativo, criado_em
       `;
       return res.status(201).json({ promotor: novo });
     }
 
     if (req.method === 'PUT') {
-      const { id, nome, usuario, senha, tipo = 'promotor', ativo = true } = req.body || {};
+      const { id, nome, usuario, senha, tipo = 'promotor', coordenador_usuario = '', ativo = true } = req.body || {};
       if (!id || !nome || !usuario) return res.status(400).json({ erro: 'Dados incompletos' });
       const user = normalizarUsuario(usuario);
+      const coord = tipo === 'promotor' ? normalizarUsuario(coordenador_usuario) : '';
 
       const [editado] = senha
         ? await sql`
             UPDATE promotores
-            SET nome = ${nome.trim()}, usuario = ${user}, senha = ${''}, senha_hash = ${hashSenha(senha)}, tipo = ${tipo}, ativo = ${!!ativo}
+            SET nome = ${nome.trim()}, usuario = ${user}, senha = ${''}, senha_hash = ${hashSenha(senha)}, tipo = ${tipo}, coordenador_usuario = ${coord}, ativo = ${!!ativo}
             WHERE id = ${id}
-            RETURNING id, nome, usuario, tipo, ativo, criado_em
+            RETURNING id, nome, usuario, tipo, coordenador_usuario, ativo, criado_em
           `
         : await sql`
             UPDATE promotores
-            SET nome = ${nome.trim()}, usuario = ${user}, tipo = ${tipo}, ativo = ${!!ativo}
+            SET nome = ${nome.trim()}, usuario = ${user}, tipo = ${tipo}, coordenador_usuario = ${coord}, ativo = ${!!ativo}
             WHERE id = ${id}
-            RETURNING id, nome, usuario, tipo, ativo, criado_em
+            RETURNING id, nome, usuario, tipo, coordenador_usuario, ativo, criado_em
           `;
       return res.status(200).json({ promotor: editado });
     }

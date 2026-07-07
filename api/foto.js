@@ -23,6 +23,14 @@ export default async function handler(req, res) {
     if (sessao.tipo === 'promotor' && visita.promotor !== sessao.nome) {
       return res.status(403).json({ erro: 'Sem permissao para ver fotos desta visita' });
     }
+    if (sessao.tipo === 'coordenador') {
+      const promotores_permitidos = await sql`
+        SELECT nome FROM promotores
+        WHERE ativo = TRUE AND tipo = 'promotor' AND coordenador_usuario = ${sessao.usuario}
+      `;
+      const permitido = promotores_permitidos.some(p => p.nome === visita.promotor);
+      if (!permitido) return res.status(403).json({ erro: 'Sem permissao para ver fotos desta visita' });
+    }
 
     return res.status(200).json({ fotos: visita.fotos || [] });
   } catch (e) {

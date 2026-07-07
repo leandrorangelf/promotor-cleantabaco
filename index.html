@@ -1347,7 +1347,8 @@ button:active { transform: translateY(1px); }
             <div><label>Nome</label><input type="text" id="admNome" placeholder="Nome do profissional"></div>
             <div><label>Usuario</label><input type="text" id="admUsuario" placeholder="ex: joao"></div>
             <div><label>Senha</label><input type="text" id="admSenha" placeholder="Senha de acesso"></div>
-            <div><label>Perfil</label><select id="admTipo"><option value="promotor">Promotor</option><option value="gestor">Gestor</option><option value="diretoria">Diretoria</option></select></div>
+            <div><label>Perfil</label><select id="admTipo" onchange="renderCoordenadoresAdmin()"><option value="promotor">Promotor</option><option value="coordenador">Coordenador</option><option value="gestor">Gestor</option><option value="diretoria">Diretoria</option></select></div>
+            <div><label>Coordenador responsável</label><select id="admCoordenador"><option value="">Sem coordenador</option></select></div>
             <div class="admin-actions">
               <button class="btn-filtrar" type="button" onclick="salvarPromotorAdmin()">Salvar acesso</button>
               <button class="btn-limpar-filtros" type="button" onclick="limparFormPromotor()">Limpar</button>
@@ -1563,7 +1564,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
   localStorage.setItem('ct_user', JSON.stringify({ nome, tipo, usuario, token }));
   document.getElementById('loginScreen').style.display = 'none';
 
-  if (tipo === 'gestor' || tipo === 'diretoria') {
+  if (tipo === 'gestor' || tipo === 'diretoria' || tipo === 'coordenador') {
     document.getElementById('appGestor').style.display = 'block';
     document.getElementById('headerNomeG').textContent = nome;
     document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
@@ -2795,6 +2796,7 @@ async function carregarGestor() {
     const res = await fetch(url, { headers: headers() });
     const data = await res.json();
     visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
+    popularFiltroPromotoresPermitidos();
 
     const resClientes = await fetch(`${API}/api/clientes${promotor ? '?promotor=' + encodeURIComponent(promotor) : ''}`, { headers: headers() });
     const dataClientes = await resClientes.json();
@@ -3135,6 +3137,7 @@ async function carregarPromotoresAdmin() {
     const data = await res.json();
     promotoresAdmin = data.promotores || [];
     renderPromotoresAdmin();
+    renderCoordenadoresAdmin();
     preencherFiltroPromotores();
   } catch(e) {
     if (lista) lista.innerHTML = '<div class="empty">Erro ao carregar usuarios</div>';
@@ -3151,6 +3154,18 @@ function preencherFiltroPromotores() {
   sel.value = atual;
 }
 
+function popularFiltroPromotoresPermitidos() {
+  if (!(tipoAtual === 'coordenador')) return;
+  const nomes = [...new Set(visitasGestor.map(v => v.promotor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  ['gFiltroPromotor','mapaFiltroPromotor'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const atual = nomes.includes(sel.value) ? sel.value : '';
+    sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n => `<option>${n}</option>`).join('');
+    sel.value = atual;
+  });
+}
+
 function renderPromotoresAdmin() {
   const lista = document.getElementById('admListaPromotores');
   if (!lista) return;
@@ -3159,6 +3174,7 @@ function renderPromotoresAdmin() {
       <div>
         <div class="admin-name">${p.nome}</div>
         <div class="admin-meta">@${p.usuario} · ${p.tipo}</div>
+        ${p.tipo === 'promotor' && p.coordenador_usuario ? `<div class="admin-meta">Coordenador: ${nomeCoordenadorAdmin(p.coordenador_usuario)}</div>` : ''}
       </div>
       <div class="admin-actions">
         <span class="admin-chip ${p.ativo ? '' : 'off'}">${p.ativo ? 'ativo' : 'inativo'}</span>
@@ -3169,9 +3185,26 @@ function renderPromotoresAdmin() {
   `).join('') : '<div class="empty">Nenhum usuario cadastrado</div>';
 }
 
+function nomeCoordenadorAdmin(usuario) {
+  const coord = promotoresAdmin.find(p => p.usuario === usuario);
+  return coord ? coord.nome : usuario;
+}
+
+function renderCoordenadoresAdmin() {
+  const sel = document.getElementById('admCoordenador');
+  const tipo = document.getElementById('admTipo')?.value || 'promotor';
+  if (!sel) return;
+  const atual = sel.value;
+  const coords = promotoresAdmin.filter(p => p.ativo && p.tipo === 'coordenador').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  sel.innerHTML = '<option value="">Sem coordenador</option>' + coords.map(c => `<option value="${c.usuario}">${c.nome}</option>`).join('');
+  sel.value = atual;
+  sel.disabled = tipo !== 'promotor';
+}
+
 function limparFormPromotor() {
-  ['admId','admNome','admUsuario','admSenha'].forEach(id => document.getElementById(id).value = '');
+  ['admId','admNome','admUsuario','admSenha','admCoordenador'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('admTipo').value = 'promotor';
+  renderCoordenadoresAdmin();
 }
 
 function editarPromotorAdmin(id) {
@@ -3182,6 +3215,8 @@ function editarPromotorAdmin(id) {
   document.getElementById('admUsuario').value = p.usuario;
   document.getElementById('admSenha').value = '';
   document.getElementById('admTipo').value = p.tipo;
+  renderCoordenadoresAdmin();
+  document.getElementById('admCoordenador').value = p.coordenador_usuario || '';
   toast('Editando ' + p.nome + '. Preencha senha apenas se quiser trocar.');
 }
 
@@ -3193,6 +3228,7 @@ async function salvarPromotorAdmin() {
     usuario: document.getElementById('admUsuario').value.trim(),
     senha: document.getElementById('admSenha').value,
     tipo: document.getElementById('admTipo').value,
+    coordenador_usuario: document.getElementById('admCoordenador').value,
     ativo: true
   };
   if (!body.nome || !body.usuario || (!id && !body.senha)) {

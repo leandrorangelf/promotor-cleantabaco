@@ -14,8 +14,8 @@ function assinaturasIguais(a, b) {
   return timingSafeEqual(bufA, bufB);
 }
 
-export function criarToken({ usuario, nome, tipo }) {
-  const payload = { usuario, nome, tipo, exp: Date.now() + EXPIRACAO_MS };
+export function criarToken({ usuario, nome, tipo, coordenador_usuario = '' }) {
+  const payload = { usuario, nome, tipo, coordenador_usuario, exp: Date.now() + EXPIRACAO_MS };
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   return `${payloadB64}.${assinar(payloadB64)}`;
 }
