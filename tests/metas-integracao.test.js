@@ -13,11 +13,13 @@ assert.ok(api.includes("sessao.tipo !== 'gestor'"), 'somente gestor deve editar 
 assert.ok(html.includes('data-gestor-page="metas"'), 'gestor deve ter aba Metas');
 assert.ok(html.includes('id="gMetas"'), 'deve existir pagina gMetas');
 assert.ok(html.includes('function carregarMetas'), 'deve carregar metas no frontend');
-assert.ok(html.includes('function salvarMetaGestor'), 'deve salvar meta pelo gestor');
 assert.ok(html.includes('data-p-page="painel"'), 'promotor deve ter tela inicial Painel');
 assert.ok(html.includes('id="pPainel"'), 'deve existir painel inicial do promotor');
 assert.ok(html.includes('function renderPainelPromotor'), 'deve renderizar performance do promotor');
 assert.ok(html.includes('calcularPerformancePromotor'), 'frontend deve usar calculo de performance');
+assert.ok(html.includes('id="metaPromotor"'), 'editor de metas deve permitir escolher promotor diretamente');
+assert.ok(html.includes('salvarMetasPromotorGestor'), 'editor deve salvar pacote de metas por promotor');
+assert.ok(html.includes("escopo_tipo: 'promotor'"), 'metas do editor simples devem ser gravadas por promotor');
 assert.ok(html.includes('bonus_pdv_venda'), 'painel deve mostrar gatilho de PDV aberto com venda');
 assert.ok(html.includes('base_clientes'), 'painel deve usar meta de base de clientes');
 assert.ok(!html.includes('pedidos_mes">Pedidos no mês'), 'editor nao deve manter meta errada de pedidos no mes');
