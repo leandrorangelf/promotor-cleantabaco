@@ -1,28 +1,15 @@
 (function(root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.calcularPerformancePromotor = api.calcularPerformancePromotor;
   root.resolverMetasPromotor = api.resolverMetasPromotor;
-})(typeof window !== 'undefined' ? window : globalThis, function() {
+})(typeof window !== 'undefined' ? window : globalThis, function(root) {
   const metasPadrao = {
     base_clientes: 200,
     tabela_percentual: 50,
     bonus_pdv_venda_valor: 15,
     bonus_pdv_venda_teto: 500
   };
-
-  function normalizarTexto(valor) {
-    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  }
-
-  function chavePdv(valor) {
-    return normalizarTexto(valor?.cnpj || valor?.nome_fantasia || valor?.dados?.pdv?.cnpj || valor?.dados?.pdv?.nomeFantasia);
-  }
-
-  function noMesAtual(data, hoje) {
-    const d = new Date(data);
-    return d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth();
-  }
 
   function melhorMeta(metas, tipo, escopos) {
     for (const escopo of escopos) {
@@ -58,34 +45,51 @@
     return { label, atual, alvo, faltam, pct, sufixo, atingida: faltam === 0 };
   }
 
+  function obterCalculadoraBonus() {
+    if (root?.calcularBonificacaoPromotores) return root.calcularBonificacaoPromotores;
+    if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+      return require('./bonus.js').calcularBonificacaoPromotores;
+    }
+    return null;
+  }
+
+  function periodoDoMes(hoje) {
+    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1, 0, 0, 0, 0);
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { de: inicio.toISOString(), ate: fim.toISOString() };
+  }
+
   function calcularPerformancePromotor({ promotor, visitas = [], clientes = [], metas = [], hoje = new Date(), coordenador_usuario = '' }) {
     const clientesDoPromotor = clientes.filter(c => c.promotor === promotor);
     const visitasDoPromotor = visitas.filter(v => v.promotor === promotor);
     const uf = clientesDoPromotor.find(c => c.uf)?.uf || visitasDoPromotor.find(v => v.dados?.pdv?.uf)?.dados?.pdv?.uf || '';
     const metasResolvidas = resolverMetasPromotor({ promotor, uf, coordenador_usuario, metas });
-    const visitasMes = visitasDoPromotor.filter(v => noMesAtual(v.criado_em, hoje));
-    const chavesVisitadasMes = new Set(visitasMes.map(chavePdv).filter(Boolean));
-    const chavesTabela = new Set(visitasMes.filter(v => v?.dados?.presenca?.tabelaVisivel).map(chavePdv).filter(Boolean));
-    const visitasComVenda = visitasMes.filter(v => {
-      const qty = v?.dados?.comercial?.pedidoPac || v?.dados?.comercial?.pedidoQty || {};
-      return Object.values(qty).some(q => Number(q || 0) > 0);
-    });
-    const chavesVendaMes = new Set(visitasComVenda.map(chavePdv).filter(Boolean));
-    const tabelaPct = clientesDoPromotor.length ? Math.round((clientesDoPromotor.filter(c => chavesTabela.has(chavePdv(c))).length / clientesDoPromotor.length) * 100) : 0;
-    const valorBonusAtual = Math.min(chavesVendaMes.size * metasResolvidas.bonus_pdv_venda_valor, metasResolvidas.bonus_pdv_venda_teto);
+    const calcularBonificacaoPromotores = obterCalculadoraBonus();
+    if (!calcularBonificacaoPromotores) throw new Error('calcularBonificacaoPromotores indisponivel');
+
+    const resultadoBonus = calcularBonificacaoPromotores(
+      visitasDoPromotor,
+      clientesDoPromotor,
+      periodoDoMes(hoje),
+      { [promotor]: metasResolvidas }
+    );
+    const metasBonus = resultadoBonus[promotor]?.metas || {};
+    const bonusPdvVenda = metasBonus.clienteNovoPositivado || { atual: 0, valor: 0 };
+    const tabelaVisivel = metasBonus.tabelaVisivelBase || { atual: 0, alvo: metasResolvidas.tabela_percentual };
+    const baseVisitada = metasBonus.baseDuzentosPdvs || { atual: 0, alvo: metasResolvidas.base_clientes };
     const pdvsParaTeto = Math.ceil(metasResolvidas.bonus_pdv_venda_teto / metasResolvidas.bonus_pdv_venda_valor);
     const baseBatida = clientesDoPromotor.length >= metasResolvidas.base_clientes;
 
     const cards = {
       bonus_pdv_venda: {
-        ...card('PDVs abertos com venda', chavesVendaMes.size, pdvsParaTeto),
-        valorAtual: valorBonusAtual,
+        ...card('PDVs abertos com venda', bonusPdvVenda.atual, pdvsParaTeto),
+        valorAtual: bonusPdvVenda.valor,
         valorAlvo: metasResolvidas.bonus_pdv_venda_teto,
         moeda: true
       },
-      tabela_percentual: card('Base com tabela visivel', tabelaPct, metasResolvidas.tabela_percentual, '%'),
+      tabela_percentual: card('Base com tabela visivel', tabelaVisivel.atual, tabelaVisivel.alvo, '%'),
       base_ou_cobertura: baseBatida
-        ? card('Cobertura mensal da base', chavesVisitadasMes.size, metasResolvidas.base_clientes)
+        ? card('Cobertura mensal da base', baseVisitada.atual, baseVisitada.alvo)
         : card('Base cadastrada', clientesDoPromotor.length, metasResolvidas.base_clientes)
     };
 

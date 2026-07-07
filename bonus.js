@@ -43,19 +43,21 @@
     return true;
   }
 
-  function criarResumo(nome) {
+  function criarResumo(nome, metas = {}) {
+    const alvoBase = Number(metas.base_clientes || META_BASE_PDVS);
+    const alvoTabela = Number(metas.tabela_percentual || META_PERCENTUAL_TABELA);
     return {
       promotor: nome,
       totalBonus: 0,
       metas: {
         clienteNovoPositivado: { atingida: false, valor: 0, atual: 0, alvo: 1 },
-        tabelaVisivelBase: { atingida: false, valor: 0, atual: 0, alvo: META_PERCENTUAL_TABELA },
-        baseDuzentosPdvs: { atingida: false, valor: 0, atual: 0, alvo: META_BASE_PDVS }
+        tabelaVisivelBase: { atingida: false, valor: 0, atual: 0, alvo: alvoTabela },
+        baseDuzentosPdvs: { atingida: false, valor: 0, atual: 0, alvo: alvoBase }
       }
     };
   }
 
-  function calcularBonificacaoPromotores(visitas, clientes, periodo) {
+  function calcularBonificacaoPromotores(visitas, clientes, periodo, metasPorPromotor = {}) {
     const de = periodo?.de || null;
     const ate = periodo?.ate || null;
     const listaVisitas = visitas || [];
@@ -81,7 +83,10 @@
     nomes.forEach(nome => {
       const visitasDoPromotor = visitasPorPromotor[nome] || [];
       const clientesDoPromotor = clientesPorPromotor[nome] || [];
-      const resumo = criarResumo(nome);
+      const metasConfig = metasPorPromotor[nome] || {};
+      const valorClienteNovo = Number(metasConfig.bonus_pdv_venda_valor || VALOR_CLIENTE_NOVO);
+      const tetoClienteNovo = Number(metasConfig.bonus_pdv_venda_teto || VALOR_META);
+      const resumo = criarResumo(nome, metasConfig);
 
       const visitasNoPeriodo = visitasDoPromotor.filter(v => dentroDoPeriodo(v.criado_em, de, ate));
 
@@ -92,7 +97,7 @@
       );
       const clientesNovosPositivados = clientesNovos.filter(c => chavesPositivadas.has(chavePdvCliente(c))).length;
       resumo.metas.clienteNovoPositivado.atual = clientesNovosPositivados;
-      resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * VALOR_CLIENTE_NOVO, VALOR_META);
+      resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * valorClienteNovo, tetoClienteNovo);
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
 
       // Meta 2: R$500 quando 50% da base de clientes tem tabela de precos visivel (registrada com foto na visita)
@@ -103,14 +108,14 @@
       const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
       const percentualTabela = totalBase ? Math.round((comTabelaVisivel / totalBase) * 100) : 0;
       resumo.metas.tabelaVisivelBase.atual = percentualTabela;
-      resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= META_PERCENTUAL_TABELA;
+      resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= resumo.metas.tabelaVisivelBase.alvo;
       resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;
 
       // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo
       const chavesVisitadas = new Set(visitasNoPeriodo.map(chavePdvVisita).filter(Boolean));
       const cadastradosEVisitados = clientesDoPromotor.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
       resumo.metas.baseDuzentosPdvs.atual = cadastradosEVisitados;
-      resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= META_BASE_PDVS;
+      resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= resumo.metas.baseDuzentosPdvs.alvo;
       resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
 
       resumo.totalBonus =

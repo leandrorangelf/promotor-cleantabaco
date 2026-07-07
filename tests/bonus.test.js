@@ -107,4 +107,19 @@ const resultadoForaPeriodo = calcularBonificacaoPromotores(
 assert.strictEqual(resultadoForaPeriodo.Tom.metas.clienteNovoPositivado.valor, 0);
 assert.strictEqual(resultadoForaPeriodo.Tom.totalBonus, 0);
 
+const resultadoConfigurado = calcularBonificacaoPromotores(
+  [
+    visita({ promotor: 'Geo', data: '2026-07-10T10:00:00Z', pdv: 'G1' }),
+    visita({ promotor: 'Geo', data: '2026-07-10T10:00:00Z', pdv: 'G2' })
+  ],
+  [
+    cliente({ promotor: 'Geo', nome_fantasia: 'G1', criado_em: '2026-01-01T10:00:00Z' }),
+    cliente({ promotor: 'Geo', nome_fantasia: 'G2', criado_em: '2026-01-01T10:00:00Z' })
+  ],
+  periodo,
+  { Geo: { base_clientes: 2, tabela_percentual: 50, bonus_pdv_venda_valor: 15, bonus_pdv_venda_teto: 500 } }
+);
+assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.alvo, 2);
+assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.atingida, true);
+
 console.log('bonus.test.js passou');
