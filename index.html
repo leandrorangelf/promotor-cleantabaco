@@ -926,12 +926,12 @@ button:active { transform: translateY(1px); }
               <div style="font-size:11px;color:var(--text-muted);" id="cxGR">0 cx</div>
             </div>
             <div class="pedido-qty">
-              <button class="qty-btn" onclick="alterarQty('qtyGR',-1)">−</button>
+              <button class="qty-btn" onclick="alterarQty('qtyGR',-0.5)">−</button>
               <div style="text-align:center;">
                 <span class="qty-val" id="qtyGR">0</span>
                 <div style="font-size:10px;color:var(--text-muted);">pac</div>
               </div>
-              <button class="qty-btn" onclick="alterarQty('qtyGR',1)">+</button>
+              <button class="qty-btn" onclick="alterarQty('qtyGR',0.5)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
@@ -948,12 +948,12 @@ button:active { transform: translateY(1px); }
               <div style="font-size:11px;color:var(--text-muted);" id="cxGM">0 cx</div>
             </div>
             <div class="pedido-qty">
-              <button class="qty-btn" onclick="alterarQty('qtyGM',-1)">−</button>
+              <button class="qty-btn" onclick="alterarQty('qtyGM',-0.5)">−</button>
               <div style="text-align:center;">
                 <span class="qty-val" id="qtyGM">0</span>
                 <div style="font-size:10px;color:var(--text-muted);">pac</div>
               </div>
-              <button class="qty-btn" onclick="alterarQty('qtyGM',1)">+</button>
+              <button class="qty-btn" onclick="alterarQty('qtyGM',0.5)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
@@ -970,12 +970,12 @@ button:active { transform: translateY(1px); }
               <div style="font-size:11px;color:var(--text-muted);" id="cxCM">0 cx</div>
             </div>
             <div class="pedido-qty">
-              <button class="qty-btn" onclick="alterarQty('qtyCM',-1)">−</button>
+              <button class="qty-btn" onclick="alterarQty('qtyCM',-0.5)">−</button>
               <div style="text-align:center;">
                 <span class="qty-val" id="qtyCM">0</span>
                 <div style="font-size:10px;color:var(--text-muted);">pac</div>
               </div>
-              <button class="qty-btn" onclick="alterarQty('qtyCM',1)">+</button>
+              <button class="qty-btn" onclick="alterarQty('qtyCM',0.5)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
@@ -992,12 +992,12 @@ button:active { transform: translateY(1px); }
               <div style="font-size:11px;color:var(--text-muted);" id="cxCC">0 cx</div>
             </div>
             <div class="pedido-qty">
-              <button class="qty-btn" onclick="alterarQty('qtyCC',-1)">−</button>
+              <button class="qty-btn" onclick="alterarQty('qtyCC',-0.5)">−</button>
               <div style="text-align:center;">
                 <span class="qty-val" id="qtyCC">0</span>
                 <div style="font-size:10px;color:var(--text-muted);">pac</div>
               </div>
-              <button class="qty-btn" onclick="alterarQty('qtyCC',1)">+</button>
+              <button class="qty-btn" onclick="alterarQty('qtyCC',0.5)">+</button>
             </div>
           </div>
           <div style="padding:0 0 10px;">
@@ -1905,9 +1905,16 @@ function togglePedidos(el) {
   if (!sim && (status.value === 'Pedido confirmado' || status.value === 'Pedido entregue')) status.value = 'Sem negociação';
 }
 
+function lerQtyPac(id) {
+  const el = document.getElementById(id);
+  const texto = (el?.textContent || '0').replace(',', '.');
+  return parseFloat(texto) || 0;
+}
+
 function alterarQty(id, delta) {
   const el = document.getElementById(id);
-  el.textContent = Math.max(0, parseInt(el.textContent) + delta);
+  const novo = Math.max(0, lerQtyPac(id) + delta);
+  el.textContent = novo.toString().replace('.', ',');
   calcularTotalPedido();
 }
 
@@ -1916,15 +1923,15 @@ const PACOTES = { GR:48, GM:48, CM:50, CC:50 };
 function calcularTotalPedido() {
   let total = 0;
   ['GR','GM','CM','CC'].forEach(s => {
-    const pac = parseInt(document.getElementById('qty'+s)?.textContent||'0');
+    const pac = lerQtyPac('qty'+s);
     const preco = parseFloat(document.getElementById('preco'+s)?.value||'0');
     const subtotal = pac * preco;
     total += subtotal;
     // Mostrar caixas equivalentes
     const cx = Math.floor(pac / PACOTES[s]);
-    const resto = pac % PACOTES[s];
+    const resto = (pac % PACOTES[s]).toString().replace('.', ',');
     const elCx = document.getElementById('cx'+s);
-    if (elCx) elCx.textContent = cx > 0 ? `${cx} cx${resto > 0 ? ' + '+resto+' pac' : ''}` : resto > 0 ? resto+' pac (< 1 cx)' : '0 cx';
+    if (elCx) elCx.textContent = cx > 0 ? `${cx} cx${pac % PACOTES[s] > 0 ? ' + '+resto+' pac' : ''}` : pac % PACOTES[s] > 0 ? resto+' pac (< 1 cx)' : '0 cx';
     // Mostrar subtotal
     const elTotal = document.getElementById('total'+s);
     if (elTotal) elTotal.textContent = pac > 0 && preco > 0 ? `= R$ ${subtotal.toFixed(2)}` : '';
@@ -2336,10 +2343,10 @@ async function salvarVisita() {
       pedidoEntregue: document.getElementById('statusPedido').value === 'Pedido entregue',
       acompanhamentoDe: acompanhamentoVisitaId,
       pedidoPac: {
-        GR: parseInt(document.getElementById('qtyGR').textContent),
-        GM: parseInt(document.getElementById('qtyGM').textContent),
-        CM: parseInt(document.getElementById('qtyCM').textContent),
-        CC: parseInt(document.getElementById('qtyCC').textContent),
+        GR: lerQtyPac('qtyGR'),
+        GM: lerQtyPac('qtyGM'),
+        CM: lerQtyPac('qtyCM'),
+        CC: lerQtyPac('qtyCC'),
       },
       pedidoPreco: {
         GR: parseFloat(document.getElementById('precoGR').value)||0,
