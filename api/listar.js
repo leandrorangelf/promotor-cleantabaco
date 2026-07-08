@@ -53,6 +53,44 @@ export default async function handler(req, res) {
       rows = await sql`select id, promotor, regiao, dados, criado_em, coalesce(jsonb_array_length(to_jsonb(fotos)),0) as fotos_count from visitas order by criado_em desc limit 500`;
     }
 
+    const ids = rows.map(v => Number(v.id)).filter(Boolean);
+    if (ids.length) {
+      try {
+        const validacoes = await sql`
+          SELECT visita_id, foto_index, status_ia, status_manual, score, motivo, possivel_reuso
+          FROM validacoes_fotos
+          WHERE visita_id = ANY(${ids})
+        `;
+        const porVisita = {};
+        validacoes.forEach(v => {
+          if (!porVisita[v.visita_id]) porVisita[v.visita_id] = [];
+          porVisita[v.visita_id].push({
+            foto_index: v.foto_index,
+            status_ia: v.status_ia,
+            status_manual: v.status_manual,
+            score: Number(v.score || 0),
+            motivo: v.motivo || '',
+            possivel_reuso: Boolean(v.possivel_reuso)
+          });
+        });
+        rows = rows.map(v => {
+          const dados = typeof v.dados === 'string' ? JSON.parse(v.dados) : (v.dados || {});
+          return {
+            ...v,
+            dados: {
+              ...dados,
+              presenca: {
+                ...(dados.presenca || {}),
+                tabelaValidacoesFotos: porVisita[v.id] || dados.presenca?.tabelaValidacoesFotos || []
+              }
+            }
+          };
+        });
+      } catch(e) {
+        // Tabela de validacoes ainda pode nao existir; a listagem nao deve quebrar por isso.
+      }
+    }
+
     return res.status(200).json({ visitas: rows });
   } catch (e) {
     return res.status(500).json({ erro: e.message });

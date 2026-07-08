@@ -35,6 +35,21 @@
     return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
   }
 
+  function validacaoTabelaAprovada(validacao) {
+    return validacao?.status_manual === 'aprovado' ||
+      validacao?.status_ia === 'aprovado' ||
+      validacao?.aprovado === true;
+  }
+
+  function tabelaConfirmadaNaVisita(visita) {
+    const presenca = visita?.dados?.presenca || {};
+    const validacoes = presenca.tabelaValidacoesFotos || presenca.validacoesTabela || [];
+    if (Array.isArray(validacoes) && validacoes.length) {
+      return validacoes.some(validacaoTabelaAprovada);
+    }
+    return Boolean(presenca.tabelaVisivel);
+  }
+
   function dentroDoPeriodo(data, de, ate) {
     if (!de && !ate) return true;
     const t = new Date(data).getTime();
@@ -102,7 +117,7 @@
 
       // Meta 2: R$500 quando 50% da base de clientes tem tabela de precos visivel (registrada com foto na visita)
       const chavesTabelaVisivel = new Set(
-        visitasNoPeriodo.filter(v => v?.dados?.presenca?.tabelaVisivel).map(chavePdvVisita).filter(Boolean)
+        visitasNoPeriodo.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );
       const totalBase = clientesDoPromotor.length;
       const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;

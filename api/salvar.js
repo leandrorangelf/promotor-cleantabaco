@@ -15,9 +15,10 @@ export default async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
     const { dados, fotos } = req.body;
     const promotor = sessao.tipo === 'promotor' ? sessao.nome : req.body.promotor;
-    await sql`
+    const [visita] = await sql`
       insert into visitas (promotor, regiao, dados, fotos)
       values (${promotor}, ${''}, ${JSON.stringify(dados)}, ${fotos})
+      RETURNING id
     `;
 
     // Upsert automático do cliente na carteira
@@ -50,7 +51,7 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, id: visita?.id });
   } catch (e) {
     return res.status(500).json({ erro: e.message });
   }

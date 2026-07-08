@@ -24,6 +24,21 @@ function cliente({ promotor, nome_fantasia, criado_em }) {
   return { promotor, nome_fantasia, cnpj: '', criado_em };
 }
 
+function visitaTabelaIA({ promotor, data, pdv, statusIa = '', statusManual = '' }) {
+  return {
+    promotor,
+    criado_em: data,
+    dados: {
+      pdv: { nomeFantasia: pdv },
+      presenca: {
+        tabelaVisivel: true,
+        tabelaValidacoesFotos: [{ status_ia: statusIa, status_manual: statusManual }]
+      },
+      comercial: { pedidoPac: { GR: 0, GM: 0, CM: 0, CC: 0 } }
+    }
+  };
+}
+
 const periodo = { de: '2026-07-01T00:00:00Z', ate: '2026-07-31T23:59:59Z' };
 
 // Meta 1 (Wil): 20 clientes novos no periodo, todos positivados com 1 SKU (20 * 15 = 300, abaixo do teto de 500)
@@ -121,5 +136,19 @@ const resultadoConfigurado = calcularBonificacaoPromotores(
 );
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.alvo, 2);
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.atingida, true);
+
+const resultadoIA = calcularBonificacaoPromotores(
+  [
+    visitaTabelaIA({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 1', statusIa: 'aprovado' }),
+    visitaTabelaIA({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 2', statusManual: 'aprovado' }),
+    visitaTabelaIA({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 3', statusIa: 'reprovado' }),
+    visitaTabelaIA({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 4', statusIa: 'revisao_manual' })
+  ],
+  ['Loja 1','Loja 2','Loja 3','Loja 4'].map(nome => cliente({ promotor: 'Iara', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' })),
+  periodo,
+  { Iara: { tabela_percentual: 50 } }
+);
+assert.strictEqual(resultadoIA.Iara.metas.tabelaVisivelBase.atual, 50);
+assert.strictEqual(resultadoIA.Iara.metas.tabelaVisivelBase.atingida, true);
 
 console.log('bonus.test.js passou');
