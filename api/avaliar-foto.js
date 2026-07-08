@@ -39,9 +39,16 @@ async function avaliarComGemini(foto) {
 
   const base64 = String(foto).replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
   const prompt = [
-    'Analise a foto enviada para validar material de marketing da Clean Tabaco ou El Poncio.',
-    'Procure tabela de precos, wobler, display, cartaz, adesivo, expositor ou material similar.',
-    'Modo de teste: nao reprove apenas por nao parecer um PDV real.',
+    'Voce esta analisando fotos enviadas por promotores da Clean Tabaco.',
+    'O objetivo principal e identificar se existe uma TABELA DE PRECOS oficial da Clean Tabaco ou El Poncio na foto.',
+    'Textos reais que podem aparecer na tabela ou no material: Cretec, Gudang, Gudang Garam, El Poncio, El Poncio Gudang Garam, uma evolucao Cretec.',
+    'O nome Cretec pode ter variacao visual no logo, incluindo um C invertido no ultimo C; considere isso como indicio valido.',
+    'Considere como tabela valida mesmo se estiver inclinada, parcialmente cortada, com reflexo, distante ou presa em parede, balcao, expositor ou display.',
+    'Nao exija que o ambiente seja um PDV real. A prioridade e reconhecer a tabela ou material de marketing.',
+    'Se houver qualquer indicio claro de tabela de precos da Clean Tabaco ou El Poncio, retorne aprovado true e inclua tabela_precos em materiais_detectados.',
+    'Use score alto quando houver texto de precos, colunas, lista de produtos, logo, marca Clean Tabaco ou El Poncio.',
+    'Use score intermediario quando parecer tabela ou material oficial, mas a imagem estiver ruim ou parcialmente visivel.',
+    'Tambem procure wobler, display, cartaz, adesivo, expositor ou material similar.',
     'Responda somente JSON valido com os campos:',
     'aprovado boolean, score number 0-100, materiais_detectados array de strings,',
     'pdv_detectado boolean, qualidade_foto string, motivo string.'
