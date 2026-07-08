@@ -63,3 +63,34 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Projeto: Promotor Cleantabaco
+
+Sistema de gestão de promotores de PDV (pontos de venda). Duas frentes: app do promotor (`index.html`) e painel do gestor (`gestor.html`). Backend são funções serverless da Vercel em `api/*.js`, sem framework.
+
+### Rodar / testar
+
+- Sem build. `index.html` e `gestor.html` são standalone (JS inline).
+- Deploy é via Vercel (não há `vercel.json`; usa `.vercel/repo.json`).
+- Testes: scripts Node simples (sem Jest/Mocha), cada um roda com `node tests/<arquivo>.test.js`. Não usam DOM real nem chamadas HTTP reais — a maioria lê `index.html`/`gestor.html`/`api/*.js` como texto e faz `assert.ok(html.includes(...))`. Para rodar tudo: `for f in tests/*.test.js; do node "$f"; done` (não há script `npm test`).
+- Ao adicionar/alterar uma feature no front, o teste correspondente provavelmente falha se você renomear um `id`, atributo `data-*` ou nome de função usado nesses `assert.ok`.
+
+### Arquitetura
+
+- `api/*.js`: um handler por arquivo (padrão Vercel: `export default async function handler(req, res)`), cada um cria sua própria tabela com `CREATE TABLE IF NOT EXISTS` no início do handler (não há migrations separadas).
+- `api/_auth.js`: autenticação própria via HMAC (não é JWT de biblioteca). Token = `payloadB64.assinaturaHMAC`, expira em 24h. `autenticar(req)` lê o header `Authorization: Bearer <token>`.
+- `bonus.js` e `performance.js` (raiz): lógica de negócio compartilhada entre frontend (carregados como `<script>` no HTML, expõem função no `window`) e backend (via `require`/`import`, padrão UMD). Regras de bonificação/metas vivem aqui — não duplicar essa lógica dentro de `api/*.js` ou dentro do HTML.
+- Banco: Neon Postgres serverless (`@neondatabase/serverless`), acessado com `neon(process.env.DATABASE_URL)` e template literals SQL tag.
+
+### Variáveis de ambiente
+
+- `DATABASE_URL` — obrigatória (Neon Postgres). Também é usada como fallback de `AUTH_SECRET` se este não estiver setado.
+- `AUTH_SECRET` — opcional, chave do HMAC dos tokens de sessão.
+- `GEMINI_API_KEY` — usada por `api/avaliar-foto.js` (validação de foto por IA).
+- `IA_VALIDACAO_REAL` — feature flag para ligar a validação real por IA (`api/avaliar-foto.js`).
+
+### Planejamento
+
+- `docs/superpowers/specs/` e `docs/superpowers/plans/` guardam specs e planos de features (gerados pela skill superpowers). Antes de planejar uma feature nova, olhar se já existe doc relacionado ali.
