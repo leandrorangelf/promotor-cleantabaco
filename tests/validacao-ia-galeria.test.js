@@ -22,9 +22,12 @@ assert.ok(html.includes('enviadaEm'), 'foto deve registrar timestamp de envio');
 assert.ok(html.includes('origem'), 'foto deve registrar origem camera/galeria');
 assert.ok(html.includes('renderGaleriaIA'), 'gestor deve ter galeria de validacao IA');
 assert.ok(html.includes('revisarValidacaoFoto'), 'gestor deve aprovar/reprovar manualmente');
+assert.ok(html.includes('analisarValidacaoPendente'), 'gestor deve conseguir analisar fotos pendentes/legadas');
+assert.ok(html.includes('Atualizar galeria'), 'gestor deve ter botao para recarregar a galeria');
 assert.ok(html.includes('/api/validacoes-fotos'), 'frontend deve consumir api de validacoes');
 
 assert.ok(listar.includes('validacoes_fotos'), 'listar deve anexar validacoes de fotos nas visitas');
 assert.ok(salvar.includes('RETURNING id'), 'salvar deve retornar id da visita para registrar validacoes');
+assert.ok(api.includes('limiteFotos'), 'api deve limitar volume de fotos retornadas na galeria');
 
 console.log('validacao-ia-galeria.test.js passou');

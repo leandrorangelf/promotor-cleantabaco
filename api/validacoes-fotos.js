@@ -71,7 +71,8 @@ export default async function handler(req, res) {
     await garantirTabela(sql);
 
     if (req.method === 'GET') {
-      let { promotor, status = '', de = '', ate = '' } = req.query;
+      let { promotor, status = '', de = '', ate = '', limite = '80' } = req.query;
+      const limiteFotos = Math.max(20, Math.min(120, Number(limite) || 80));
       if (sessao.tipo === 'promotor') promotor = sessao.nome;
 
       let promotoresPermitidos = null;
@@ -111,9 +112,11 @@ export default async function handler(req, res) {
 
       const itens = [];
       visitas.forEach(visita => {
+        if (itens.length >= limiteFotos) return;
         const dados = normalizarDados(visita.dados);
         const fotos = Array.isArray(visita.fotos) ? visita.fotos : [];
         fotos.forEach((foto, index) => {
+          if (itens.length >= limiteFotos) return;
           const validacao = porChave.get(`${visita.id}:${index}`) || {};
           const itemStatus = validacao.status_manual || validacao.status_ia || 'pendente';
           if (status && itemStatus !== status) return;

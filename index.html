@@ -1424,6 +1424,7 @@ button:active { transform: translateY(1px); }
             <option value="reprovado">Reprovadas</option>
           </select></div>
         </div>
+        <button class="btn-filtrar" type="button" onclick="atualizarGaleriaIA()" style="margin-top:12px;">Atualizar galeria</button>
         <div id="iaGaleriaResumo" class="foto-text" style="margin-top:12px;">Carregue a galeria para revisar as fotos.</div>
         <div id="iaGaleriaLista" style="margin-top:12px;"></div>
       </div>
@@ -2363,6 +2364,14 @@ async function carregarGaleriaIA() {
   }
 }
 
+async function atualizarGaleriaIA() {
+  validacoesIA = [];
+  const selectPromotor = document.getElementById('iaFiltroPromotor');
+  if (selectPromotor) selectPromotor.innerHTML = '<option value="">Todos</option>';
+  await carregarGaleriaIA();
+  renderGaleriaIA();
+}
+
 async function renderGaleriaIA() {
   if (!validacoesIA.length) await carregarGaleriaIA();
   const lista = document.getElementById('iaGaleriaLista');
@@ -2419,11 +2428,49 @@ async function renderGaleriaIA() {
           ${item.id ? `<div style="display:flex;gap:6px;margin-top:10px;">
             <button class="btn-detalhes" type="button" onclick="revisarValidacaoFoto(${item.id}, 'aprovado')">Aprovar</button>
             <button class="btn-detalhes" type="button" onclick="revisarValidacaoFoto(${item.id}, 'reprovado')">Reprovar</button>
-          </div>` : '<div style="font-size:12px;color:var(--text-muted);margin-top:10px;">Sem validacao registrada ainda.</div>'}
+          </div>` : `<div style="display:flex;gap:6px;margin-top:10px;">
+            <button class="btn-detalhes" type="button" onclick="analisarValidacaoPendente(${item.visita_id}, ${item.foto_index})">Analisar IA</button>
+          </div>`}
         </div>
       </div>
     `;
   }).join('')}</div>`;
+}
+
+async function analisarValidacaoPendente(visitaId, fotoIndex) {
+  const item = validacoesIA.find(v => String(v.visita_id) === String(visitaId) && Number(v.foto_index) === Number(fotoIndex));
+  if (!item) return;
+  try {
+    toast('Analisando foto...');
+    const foto = fotoMeta(item.foto);
+    let hash = item.imagem_hash || foto.imagemHash || '';
+    if (!hash) hash = await calcularHashFoto(foto.imagem);
+    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto: foto.imagem })
+    });
+    const resultado = await resIA.json();
+    if (!resIA.ok) throw new Error(resultado.erro || 'Erro ao analisar foto');
+
+    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        visita_id: visitaId,
+        foto_index: fotoIndex,
+        imagem_hash: hash,
+        cliente_nome: item.cliente_nome || '',
+        resultado
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    toast('Foto analisada');
+    await atualizarGaleriaIA();
+  } catch(e) {
+    toast('Nao foi possivel analisar: ' + e.message);
+  }
 }
 
 function abrirFotoGaleriaIA(visitaId, fotoIndex) {
