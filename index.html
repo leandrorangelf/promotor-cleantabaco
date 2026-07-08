@@ -1498,6 +1498,16 @@ function headers() {
   return h;
 }
 
+async function apiFetch(url, opts) {
+  const res = await fetch(url, opts);
+  if (res.status === 401) {
+    logout();
+    toast('Sessão expirada. Faça login novamente.');
+    throw new Error('Sessao expirada');
+  }
+  return res;
+}
+
 function montarErroLocalizacao(err, capturadoEm, tentativa) {
   let mensagem = err?.message || 'Nao foi possivel capturar o GPS';
   if (err?.code === 1) mensagem = 'Permissao de GPS negada neste aparelho';
@@ -2233,7 +2243,7 @@ async function analisarFotoIA() {
   try {
     if (resultado) resultado.textContent = 'Analisando foto...';
     const foto = await lerArquivoComoDataUrl(file);
-    const res = await fetch(`${API}/api/avaliar-foto`, {
+    const res = await apiFetch(`${API}/api/avaliar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ foto })
@@ -2361,13 +2371,13 @@ async function salvarVisita() {
       if (visitaOriginal?.dados?.localizacao) {
         dados.localizacao = visitaOriginal.dados.localizacao;
       }
-      res = await fetch(`${API}/api/editar`, {
+      res = await apiFetch(`${API}/api/editar`, {
         method: 'PUT',
         headers: headers(),
         body: JSON.stringify({ id: editandoId, promotor: usuarioAtual, dados, fotos })
       });
     } else {
-      res = await fetch(`${API}/api/salvar`, {
+      res = await apiFetch(`${API}/api/salvar`, {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ promotor: usuarioAtual, dados, fotos })
@@ -2440,7 +2450,7 @@ async function carregarVisitasPromotor(force=false) {
   if (!force && visitasPromotorPromise) return visitasPromotorPromise;
   visitasPromotorPromise = (async () => {
   try {
-    const res = await fetch(`${API}/api/listar?promotor=${encodeURIComponent(usuarioAtual)}`, { headers: headers() });
+    const res = await apiFetch(`${API}/api/listar?promotor=${encodeURIComponent(usuarioAtual)}`, { headers: headers() });
     const data = await res.json();
     visitasPromotor = data.visitas || [];
     visitasPromotorCarregadoEm = Date.now();
@@ -2509,7 +2519,7 @@ async function carregarClientes(force=false, silencioso=false) {
   clientesPromise = (async () => {
   try {
     await carregarVisitasPromotor(force);
-    const r = await fetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual), { headers: headers() });
+    const r = await apiFetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual), { headers: headers() });
     const d = await r.json();
     todosClientes = d.clientes || [];
     clientesCarregadoEm = Date.now();
@@ -2767,7 +2777,7 @@ async function editarVisita(id) {
 
   let fotosCarregadas;
   try {
-    const res = await fetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
+    const res = await apiFetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
     fotosCarregadas = data.fotos || [];
@@ -2868,12 +2878,12 @@ async function carregarGestor() {
   if (ate) url += `ate=${ate}T23:59:59Z&`;
 
   try {
-    const res = await fetch(url, { headers: headers() });
+    const res = await apiFetch(url, { headers: headers() });
     const data = await res.json();
     visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
     popularFiltroPromotoresPermitidos();
 
-    const resClientes = await fetch(`${API}/api/clientes${promotor ? '?promotor=' + encodeURIComponent(promotor) : ''}`, { headers: headers() });
+    const resClientes = await apiFetch(`${API}/api/clientes${promotor ? '?promotor=' + encodeURIComponent(promotor) : ''}`, { headers: headers() });
     const dataClientes = await resClientes.json();
     clientesGestor = dataClientes.clientes || [];
 
@@ -2911,7 +2921,7 @@ function limparFiltrosGestor() {
 
 async function carregarMetas() {
   try {
-    const res = await fetch(`${API}/api/metas`, { headers: headers() });
+    const res = await apiFetch(`${API}/api/metas`, { headers: headers() });
     const data = await res.json();
     metasSistema = data.metas || [];
   } catch(e) {
@@ -3042,7 +3052,7 @@ async function salvarMetasPromotorGestor() {
     return;
   }
   for (const [tipo_meta, valor] of metas) {
-    const res = await fetch(`${API}/api/metas`, {
+    const res = await apiFetch(`${API}/api/metas`, {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify({
@@ -3380,7 +3390,7 @@ async function carregarPromotoresAdmin() {
   const lista = document.getElementById('admListaPromotores');
   if (lista) lista.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
   try {
-    const res = await fetch(`${API}/api/promotores`, { headers: headers() });
+    const res = await apiFetch(`${API}/api/promotores`, { headers: headers() });
     const data = await res.json();
     promotoresAdmin = data.promotores || [];
     renderPromotoresAdmin();
@@ -3483,7 +3493,7 @@ async function salvarPromotorAdmin() {
     toast('Informe nome, usuario e senha');
     return;
   }
-  const res = await fetch(`${API}/api/promotores`, {
+  const res = await apiFetch(`${API}/api/promotores`, {
     method: id ? 'PUT' : 'POST',
     headers: headers(),
     body: JSON.stringify(body)
@@ -3500,7 +3510,7 @@ async function salvarPromotorAdmin() {
 
 async function desativarPromotorAdmin(id) {
   if (!confirm('Desativar este acesso?')) return;
-  const res = await fetch(`${API}/api/promotores`, {
+  const res = await apiFetch(`${API}/api/promotores`, {
     method: 'DELETE',
     headers: headers(),
     body: JSON.stringify({ id })
@@ -4224,7 +4234,7 @@ function abrirDetalheGestor(id) {
 async function carregarFotosModal(id) {
   const wrap = document.getElementById('modalFotosSecao');
   try {
-    const res = await fetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
+    const res = await apiFetch(`${API}/api/foto?id=${encodeURIComponent(id)}`, { headers: headers() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
     if (visitaDetalheAtual?.id !== id) return;
@@ -4350,7 +4360,7 @@ function renderModal(v, isGestor) {
 async function excluirVisitaGestor(id) {
   if (!confirm('Excluir esta visita? Ação irreversível.')) return;
   try {
-    const res = await fetch(`${API}/api/deletar`, {
+    const res = await apiFetch(`${API}/api/deletar`, {
       method: 'DELETE',
       headers: headers(),
       body: JSON.stringify({ id, gestor: true })
