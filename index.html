@@ -596,9 +596,18 @@ button:active { transform: translateY(1px); }
 .kpi-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
 .kpi-card.green { border-color: var(--mint); background: var(--mint-light); }
 .kpi-card.orange { border-color: #F4C36A; background: var(--orange-light); }
+.kpi-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.kpi-icon { font-size: 20px; line-height: 1; }
+.kpi-status-pill { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.kpi-status-pill.ok { background: var(--mint); color: #fff; }
+.kpi-status-pill.pendente { background: #F4C36A; color: #6b4a06; }
 .kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-.kpi-value { margin-top: 8px; font-size: 24px; line-height: 1.1; font-weight: 900; color: var(--text); }
+.kpi-value { margin-top: 8px; font-size: 28px; line-height: 1.1; font-weight: 900; color: var(--text); }
+.kpi-alvo { font-size: 13px; color: var(--text-muted); font-weight: 700; }
 .kpi-sub { margin-top: 5px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
+.kpi-bar { height: 10px; background: #EEF1F7; border-radius: 999px; margin-top: 10px; overflow: hidden; }
+.kpi-bar-fill { height: 100%; border-radius: 999px; background: var(--amber); }
+.kpi-card.green .kpi-bar-fill { background: var(--mint); }
 .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 300px; }
 .export-btn { padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); font-size: 12px; font-weight: 800; cursor: pointer; }
 .export-btn.orders { background: var(--mint); border-color: var(--mint); color: #fff; }
@@ -3078,19 +3087,23 @@ async function salvarMetasPromotorGestor() {
   preencherMetasPromotorSelecionado();
 }
 
+const KPI_ICONES = { bonus_pdv_venda: '💰', tabela_percentual: '📊', base_ou_cobertura: '🏪' };
+
 function renderPainelPromotor() {
   const cardsEl = document.getElementById('pPerformanceCards');
   const acoesEl = document.getElementById('pPerformanceAcoes');
   if (!cardsEl || !acoesEl || typeof calcularPerformancePromotor !== 'function') return;
   const perf = calcularPerformancePromotor({ promotor: usuarioAtual, visitas: visitasPromotor, clientes: todosClientes, metas: metasSistema });
-  const cards = Object.values(perf.cards);
-  cardsEl.innerHTML = cards.map(c => `
+  cardsEl.innerHTML = Object.entries(perf.cards).map(([chave, c]) => `
     <div class="kpi-card ${c.atingida ? 'green' : 'orange'}">
+      <div class="kpi-card-top">
+        <span class="kpi-icon">${KPI_ICONES[chave] || '📌'}</span>
+        <span class="kpi-status-pill ${c.atingida ? 'ok' : 'pendente'}">${c.atingida ? 'Meta batida ✓' : 'Faltam ' + c.faltam + (c.sufixo === '%' ? ' pts' : '')}</span>
+      </div>
       <div class="kpi-label">${c.label}</div>
-      <div class="kpi-value">${c.atual}${c.sufixo || ''} <span style="font-size:13px;color:var(--text-muted);">/ ${c.alvo}${c.sufixo || ''}</span></div>
+      <div class="kpi-value">${c.atual}${c.sufixo || ''} <span class="kpi-alvo">/ ${c.alvo}${c.sufixo || ''}</span></div>
       ${c.moeda ? `<div class="kpi-sub">Bônus: R$ ${Number(c.valorAtual || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})} / R$ ${Number(c.valorAlvo || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : ''}
-      <div class="kpi-sub">${c.atingida ? 'Meta batida' : (c.sufixo === '%' ? 'Faltam ' + c.faltam + ' pontos' : 'Faltam ' + c.faltam)}</div>
-      <div style="height:6px;background:#EEF1F7;border-radius:999px;margin-top:8px;overflow:hidden;"><div style="height:100%;width:${c.pct}%;background:${c.atingida?'var(--mint)':'var(--amber)'};"></div></div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:${c.pct}%;"></div></div>
     </div>
   `).join('');
   acoesEl.innerHTML = perf.proximosPassos.length
