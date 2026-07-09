@@ -35,9 +35,13 @@
     return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
   }
 
+  function statusValidacaoFoto(validacao) {
+    return validacao?.status_manual || validacao?.status_ia || 'pendente';
+  }
+
   function tabelaConfirmadaNaVisita(visita) {
-    if (Number(visita?.fotos_count || 0) > 0) return true;
-    return Array.isArray(visita?.fotos) && visita.fotos.length > 0;
+    const validacoes = visita?.dados?.presenca?.tabelaValidacoesFotos || [];
+    return validacoes.some(v => statusValidacaoFoto(v) === 'aprovado');
   }
 
   function dentroDoPeriodo(data, de, ate) {
@@ -105,7 +109,7 @@
       resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * valorClienteNovo, tetoClienteNovo);
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
 
-      // Meta 2: R$500 quando 50% da base de clientes tem pelo menos 1 foto registrada em visita no periodo (mes)
+      // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (IA ou revisao manual) em visita no periodo (mes)
       const chavesTabelaVisivel = new Set(
         visitasNoPeriodo.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );

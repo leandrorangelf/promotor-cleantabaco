@@ -1,14 +1,14 @@
 const assert = require('assert');
 const { calcularBonificacaoPromotores } = require('../bonus.js');
 
-function visita({ promotor, data, pdv, qty = {}, comFoto = false }) {
+function visita({ promotor, data, pdv, qty = {}, statusIa = '', statusManual = '' }) {
+  const validacoes = (statusIa || statusManual) ? [{ status_ia: statusIa, status_manual: statusManual }] : [];
   return {
     promotor,
     criado_em: data,
-    fotos_count: comFoto ? 1 : 0,
     dados: {
       pdv: { nomeFantasia: pdv },
-      presenca: {},
+      presenca: { tabelaValidacoesFotos: validacoes },
       comercial: {
         pedidoPac: {
           GR: qty.GR || 0,
@@ -45,22 +45,22 @@ for (let i = 0; i < 40; i++) {
   visitasBea.push(visita({ promotor: 'Bea', data: '2026-07-06T10:00:00Z', pdv: nome, qty: { GR: 1 } }));
 }
 
-// Meta 2 (Ana): base de 10 clientes, 5 com pelo menos 1 foto no periodo (50% - bate a meta)
+// Meta 2 (Ana): base de 10 clientes, 5 com foto aprovada pela IA no periodo (50% - bate a meta)
 const clientesAna = [];
 const visitasAna = [];
 for (let i = 0; i < 10; i++) {
   const nome = `PDV Tabela ${i}`;
   clientesAna.push(cliente({ promotor: 'Ana', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
-  visitasAna.push(visita({ promotor: 'Ana', data: '2026-07-10T10:00:00Z', pdv: nome, comFoto: i < 5 }));
+  visitasAna.push(visita({ promotor: 'Ana', data: '2026-07-10T10:00:00Z', pdv: nome, statusIa: i < 5 ? 'aprovado' : 'reprovado' }));
 }
 
-// Meta 2 (Rui): base de 10 clientes, 4 com pelo menos 1 foto (40% - nao bate a meta)
+// Meta 2 (Rui): base de 10 clientes, 4 com foto aprovada pela IA (40% - nao bate a meta)
 const clientesRui = [];
 const visitasRui = [];
 for (let i = 0; i < 10; i++) {
   const nome = `PDV Tabela Rui ${i}`;
   clientesRui.push(cliente({ promotor: 'Rui', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
-  visitasRui.push(visita({ promotor: 'Rui', data: '2026-07-10T10:00:00Z', pdv: nome, comFoto: i < 4 }));
+  visitasRui.push(visita({ promotor: 'Rui', data: '2026-07-10T10:00:00Z', pdv: nome, statusIa: i < 4 ? 'aprovado' : 'reprovado' }));
 }
 
 // Meta 3 (Ivo): 200 PDVs cadastrados e visitados no periodo
@@ -123,19 +123,23 @@ const resultadoConfigurado = calcularBonificacaoPromotores(
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.alvo, 2);
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.atingida, true);
 
-// Meta 2 (Iara): tabela conta pela presenca de foto na visita, independente de avaliacao de IA
-const resultadoFoto = calcularBonificacaoPromotores(
+// Meta 2 (Iara): revisao manual tem prioridade sobre a decisao automatica da IA
+// Loja 1: IA aprovou, sem revisao -> conta
+// Loja 2: IA reprovou, gestor aprovou manualmente -> conta
+// Loja 3: IA aprovou, gestor reprovou manualmente -> nao conta
+// Loja 4: sem nenhuma foto avaliada -> nao conta
+const resultadoRevisao = calcularBonificacaoPromotores(
   [
-    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 1', comFoto: true }),
-    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 2', comFoto: true }),
-    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 3', comFoto: false }),
-    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 4', comFoto: false })
+    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 1', statusIa: 'aprovado' }),
+    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 2', statusIa: 'reprovado', statusManual: 'aprovado' }),
+    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 3', statusIa: 'aprovado', statusManual: 'reprovado' }),
+    visita({ promotor: 'Iara', data: '2026-07-10T10:00:00Z', pdv: 'Loja 4' })
   ],
   ['Loja 1','Loja 2','Loja 3','Loja 4'].map(nome => cliente({ promotor: 'Iara', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' })),
   periodo,
   { Iara: { tabela_percentual: 50 } }
 );
-assert.strictEqual(resultadoFoto.Iara.metas.tabelaVisivelBase.atual, 50);
-assert.strictEqual(resultadoFoto.Iara.metas.tabelaVisivelBase.atingida, true);
+assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atual, 50);
+assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atingida, true);
 
 console.log('bonus.test.js passou');
