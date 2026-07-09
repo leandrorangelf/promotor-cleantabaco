@@ -16,4 +16,7 @@ assert.ok(html.includes("analisarFotoGaleria('" + "$" + "{item.visita_id}', " + 
 assert.ok(html.includes("analisarValidacaoPendente('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de analisarValidacaoPendente deve envolver visita_id em aspas');
 assert.ok(html.includes("abrirFotoGaleriaIA('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de abrirFotoGaleriaIA deve envolver visita_id em aspas');
 
+assert.ok(html.includes('async function confirmarTabelaManual'), 'deve existir funcao de confirmacao manual sem IA');
+assert.ok(html.includes("confirmarTabelaManual('${item.visita_id}', ${item.foto_index}"), 'botao de confirmacao manual deve estar na Galeria e na Galeria IA');
+
 console.log('validacao-fotos-visita-id.test.js passou');

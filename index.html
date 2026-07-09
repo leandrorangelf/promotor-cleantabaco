@@ -2510,6 +2510,7 @@ async function renderGaleriaIA() {
             <button class="btn-detalhes" type="button" onclick="revisarValidacaoFoto(${item.id}, 'reprovado')">Reprovar</button>
           </div>` : `<div style="display:flex;gap:6px;margin-top:10px;">
             <button class="btn-detalhes" type="button" onclick="analisarValidacaoPendente('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManual('${item.visita_id}', ${item.foto_index}, '${(item.cliente_nome || '').replace(/'/g, "\\'")}')">Confirmar tabela</button>
           </div>`}
         </div>
       </div>
@@ -2614,6 +2615,7 @@ function renderGaleria() {
           </div>`
         : `<div style="display:flex;gap:6px;margin-top:8px;">
             <button class="btn-detalhes" type="button" onclick="analisarFotoGaleria('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManual('${item.visita_id}', ${item.foto_index}, '${(item.cliente_nome || '').replace(/'/g, "\\'")}')">Confirmar tabela</button>
           </div>`)
       : '';
     return `
@@ -2668,6 +2670,39 @@ async function analisarFotoGaleria(visitaId, fotoIndex) {
     await carregarGaleria();
   } catch(e) {
     toast('Nao foi possivel analisar: ' + e.message);
+  }
+}
+
+async function confirmarTabelaManual(visitaId, fotoIndex, clienteNome) {
+  try {
+    toast('Confirmando tabela...');
+    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        visita_id: visitaId,
+        foto_index: fotoIndex,
+        cliente_nome: clienteNome || '',
+        resultado: {}
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+
+    const resPut = await apiFetch(`${API}/api/validacoes-fotos`, {
+      method: 'PUT',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: data.validacao.id, status_manual: 'aprovado' })
+    });
+    const dataPut = await resPut.json();
+    if (!resPut.ok) throw new Error(dataPut.erro || 'Erro ao confirmar tabela');
+
+    toast('Tabela confirmada manualmente');
+    await carregarGaleria();
+    validacoesIA = [];
+    await renderGaleriaIA();
+  } catch(e) {
+    toast('Nao foi possivel confirmar: ' + e.message);
   }
 }
 
