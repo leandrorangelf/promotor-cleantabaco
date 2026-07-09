@@ -2270,11 +2270,23 @@ function mascaraCNPJ(input) {
   input.value = v;
 }
 
+function fotoObjeto(foto) {
+  if (foto && typeof foto === 'object') return foto;
+  if (typeof foto === 'string' && foto.trim().startsWith('{')) {
+    try { return JSON.parse(foto); } catch(e) { /* nao era JSON, trata como dataURL abaixo */ }
+  }
+  return null;
+}
+
 function fotoSrc(foto) {
-  return typeof foto === 'string' ? foto : (foto?.imagem || '');
+  const obj = fotoObjeto(foto);
+  if (obj) return obj.imagem || '';
+  return typeof foto === 'string' ? foto : '';
 }
 
 function fotoMeta(foto) {
+  const obj = fotoObjeto(foto);
+  if (obj) return obj;
   return typeof foto === 'string' ? { imagem: foto, origem: 'legado' } : (foto || {});
 }
 

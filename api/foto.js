@@ -32,7 +32,11 @@ export default async function handler(req, res) {
       if (!permitido) return res.status(403).json({ erro: 'Sem permissao para ver fotos desta visita' });
     }
 
-    return res.status(200).json({ fotos: visita.fotos || [] });
+    const fotos = (visita.fotos || []).map(f => {
+      if (typeof f !== 'string') return f;
+      try { return JSON.parse(f); } catch(e) { return { imagem: f, origem: 'legado' }; }
+    });
+    return res.status(200).json({ fotos });
   } catch (e) {
     return res.status(500).json({ erro: e.message });
   }

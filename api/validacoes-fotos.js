@@ -33,6 +33,11 @@ function normalizarDados(dados) {
   return dados;
 }
 
+function normalizarFoto(foto) {
+  if (typeof foto !== 'string') return foto;
+  try { return JSON.parse(foto); } catch(e) { return { imagem: foto, origem: 'legado' }; }
+}
+
 function statusIa(resultado = {}) {
   if (resultado.aprovado === true || resultado.status_ia === 'aprovado') return 'aprovado';
   const score = Number(resultado.score || 0);
@@ -121,8 +126,9 @@ export default async function handler(req, res) {
         if (itens.length >= limiteFotos) return;
         const dados = normalizarDados(visita.dados);
         const fotos = Array.isArray(visita.fotos) ? visita.fotos : [];
-        fotos.forEach((foto, index) => {
+        fotos.forEach((fotoRaw, index) => {
           if (itens.length >= limiteFotos) return;
+          const foto = normalizarFoto(fotoRaw);
           const validacao = porChave.get(`${visita.id}:${index}`) || {};
           const itemStatus = validacao.status_manual || validacao.status_ia || 'pendente';
           if (status && itemStatus !== status) return;
