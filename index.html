@@ -1336,7 +1336,8 @@ button:active { transform: translateY(1px); }
             <label>Fotos</label>
             <select id="vFiltroFotos" onchange="renderListaGestor()">
               <option value="">Todas</option>
-              <option value="pendente">Sem avaliação de IA pendente</option>
+              <option value="com">Com fotos</option>
+              <option value="sem">Sem fotos</option>
             </select>
           </div>
         </div>
@@ -4585,11 +4586,8 @@ async function compartilharSugestao(i) {
 
 const UFS_BRASIL = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 
-function fotosPendentesAvaliacao(v) {
-  const total = Number(v.fotos_count || 0);
-  if (!total) return false;
-  const avaliadas = (v.dados?.presenca?.tabelaValidacoesFotos || []).length;
-  return avaliadas < total;
+function semFoto(v) {
+  return Number(v.fotos_count || 0) === 0;
 }
 
 function preencherFiltrosVisitas() {
@@ -4646,7 +4644,8 @@ function renderListaGestor() {
     if (fUF && d.pdv?.uf !== fUF) return false;
     if (fPedido === 'com' && d.comercial?.pedidoFeito !== 'Sim') return false;
     if (fPedido === 'sem' && d.comercial?.pedidoFeito === 'Sim') return false;
-    if (fFotos === 'pendente' && !fotosPendentesAvaliacao(v)) return false;
+    if (fFotos === 'com' && semFoto(v)) return false;
+    if (fFotos === 'sem' && !semFoto(v)) return false;
     return true;
   });
 
@@ -4671,7 +4670,7 @@ function renderListaGestor() {
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
     const status = statusDaVisita(v);
-    const pendente = fotosPendentesAvaliacao(v);
+    const semFotos = semFoto(v);
     return `
       <tr onclick="abrirDetalheGestor('${v.id}')">
         <td>${dataStr}</td>
@@ -4681,7 +4680,7 @@ function renderListaGestor() {
         <td>${[d.pdv?.cidade, d.pdv?.uf].filter(Boolean).join('/')||'—'}</td>
         <td>${temPedido ? 'Sim' : 'Não'}</td>
         <td><span class="status-chip ${statusClass(status)}">${status}</span></td>
-        <td><span class="${pendente ? 'foto-pendente-dot' : 'foto-ok-dot'}" title="${pendente ? 'Fotos pendentes de avaliação' : 'Fotos avaliadas'}"></span> ${v.fotos_count||0}</td>
+        <td><span class="${semFotos ? 'foto-pendente-dot' : 'foto-ok-dot'}" title="${semFotos ? 'Sem fotos' : 'Com fotos'}"></span> ${v.fotos_count||0}</td>
       </tr>
     `;
   }).join('') + '</tbody></table></div>';
