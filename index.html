@@ -2494,7 +2494,7 @@ async function renderGaleriaIA() {
     const alerta = item.possivel_reuso ? '<div style="margin-top:6px;color:var(--red);font-weight:800;font-size:12px;">Possivel foto repetida</div>' : '';
     return `
       <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;">
-        <button class="rel-foto-btn" type="button" onclick="abrirFotoGaleriaIA(${item.visita_id}, ${item.foto_index})" style="width:100%;border-radius:0;">
+        <button class="rel-foto-btn" type="button" onclick="abrirFotoGaleriaIA('${item.visita_id}', ${item.foto_index})" style="width:100%;border-radius:0;">
           <img src="${fotoSrc(item.foto)}" alt="Foto IA ${item.foto_index + 1}">
         </button>
         <div style="padding:10px;">
@@ -2509,7 +2509,7 @@ async function renderGaleriaIA() {
             <button class="btn-detalhes" type="button" onclick="revisarValidacaoFoto(${item.id}, 'aprovado')">Aprovar</button>
             <button class="btn-detalhes" type="button" onclick="revisarValidacaoFoto(${item.id}, 'reprovado')">Reprovar</button>
           </div>` : `<div style="display:flex;gap:6px;margin-top:10px;">
-            <button class="btn-detalhes" type="button" onclick="analisarValidacaoPendente(${item.visita_id}, ${item.foto_index})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="analisarValidacaoPendente('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
           </div>`}
         </div>
       </div>
@@ -2613,7 +2613,7 @@ function renderGaleria() {
             <button class="btn-detalhes" type="button" onclick="revisarFotoGaleria(${item.id}, 'reprovado')">Reprovar</button>
           </div>`
         : `<div style="display:flex;gap:6px;margin-top:8px;">
-            <button class="btn-detalhes" type="button" onclick="analisarFotoGaleria(${item.visita_id}, ${item.foto_index})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="analisarFotoGaleria('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
           </div>`)
       : '';
     return `

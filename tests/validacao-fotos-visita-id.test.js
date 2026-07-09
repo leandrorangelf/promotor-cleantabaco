@@ -11,4 +11,9 @@ assert.ok(!/const ids = visitas\.map\(v => Number\(v\.id\)\)/.test(api), 'GET na
 const listar = fs.readFileSync('api/listar.js', 'utf8');
 assert.ok(!/const ids = rows\.map\(v => Number\(v\.id\)\)/.test(listar), 'listar.js nao deve mais converter v.id para numero');
 
+const html = fs.readFileSync('index.html', 'utf8');
+assert.ok(html.includes("analisarFotoGaleria('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de analisarFotoGaleria deve envolver visita_id em aspas');
+assert.ok(html.includes("analisarValidacaoPendente('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de analisarValidacaoPendente deve envolver visita_id em aspas');
+assert.ok(html.includes("abrirFotoGaleriaIA('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de abrirFotoGaleriaIA deve envolver visita_id em aspas');
+
 console.log('validacao-fotos-visita-id.test.js passou');
