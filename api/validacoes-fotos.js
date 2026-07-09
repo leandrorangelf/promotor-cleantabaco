@@ -88,10 +88,16 @@ export default async function handler(req, res) {
       }
 
       let visitas;
-      if (promotoresPermitidos && !promotor) {
+      if (promotoresPermitidos && !promotor && de && ate) {
+        visitas = promotoresPermitidos.length
+          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`
+          : [];
+      } else if (promotoresPermitidos && !promotor) {
         visitas = promotoresPermitidos.length
           ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) ORDER BY criado_em DESC LIMIT 200`
           : [];
+      } else if (promotor && de && ate) {
+        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`;
       } else if (promotor) {
         visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} ORDER BY criado_em DESC LIMIT 200`;
       } else if (de && ate) {

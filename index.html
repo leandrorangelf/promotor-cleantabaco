@@ -235,6 +235,18 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .vg-promotor { font-size: 12px; color: var(--purple); font-weight: 700; margin-top: 2px; }
 .vg-info { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
+/* TABELA DE VISITAS */
+.table-wrap { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+.data-table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 11px 12px; border-bottom: 1px solid #F1EFE8; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr { cursor: pointer; }
+.data-table tbody tr:hover td { background: var(--cream); }
+.data-table .td-nome { font-weight: 600; }
+.foto-pendente-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--orange); }
+.foto-ok-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--mint); }
+
 /* MODAL DETALHE */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; overflow-y: auto; padding: 16px; }
 .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
@@ -1146,6 +1158,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria')">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance')">Performance</button>
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
     <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes')">Sugestões</button>
@@ -1293,8 +1306,60 @@ button:active { transform: translateY(1px); }
     <div class="page-intro"><h1>Visitas</h1><p>Encontre rapidamente qualquer atendimento realizado.</p></div>
     <div class="gestor-wrap">
       <div class="visit-summary" id="gRelacaoResumo"></div>
+      <div class="filtros">
+        <div class="filtro-row">
+          <div class="filtro-group"><label>Promotor</label><select id="vFiltroPromotor" onchange="renderListaGestor()"><option value="">Todos</option></select></div>
+          <div class="filtro-group"><label>Coordenador</label><select id="vFiltroCoordenador" onchange="renderListaGestor()"><option value="">Todos</option></select></div>
+        </div>
+        <div class="filtro-row">
+          <div class="filtro-group">
+            <label>Segmento</label>
+            <select id="vFiltroSegmento" onchange="renderListaGestor()">
+              <option value="">Todos</option>
+              <option>Bar</option><option>Mercearia / Mercadinho</option><option>Supermercado</option>
+              <option>Restaurante</option><option>Lanchonete</option><option>Distribuidora</option>
+              <option>Atacado</option><option>Conveniência</option><option>Tabacaria</option>
+            </select>
+          </div>
+          <div class="filtro-group"><label>UF</label><select id="vFiltroUF" onchange="renderListaGestor()"><option value="">Todas</option></select></div>
+        </div>
+        <div class="filtro-row">
+          <div class="filtro-group">
+            <label>Pedido</label>
+            <select id="vFiltroPedido" onchange="renderListaGestor()">
+              <option value="">Todos</option>
+              <option value="com">Com pedido</option>
+              <option value="sem">Sem pedido</option>
+            </select>
+          </div>
+          <div class="filtro-group">
+            <label>Fotos</label>
+            <select id="vFiltroFotos" onchange="renderListaGestor()">
+              <option value="">Todas</option>
+              <option value="pendente">Sem avaliação de IA pendente</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn-limpar-filtros" type="button" onclick="limparFiltrosVisitas()">Limpar filtros</button>
+        </div>
+      </div>
       <input type="text" class="busca-input" id="gBusca" oninput="renderListaGestor()" placeholder="Buscar por PDV, cidade, promotor...">
       <div id="gLista"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="gGaleria">
+    <div class="page-intro"><h1>Galeria</h1><p>Todas as fotos enviadas pelos promotores, para consulta rápida.</p></div>
+    <div class="gestor-wrap">
+      <div class="card">
+        <div class="filtros-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="filtro-group"><label>Promotor</label><select id="galFiltroPromotor" onchange="carregarGaleria()"><option value="">Todos</option></select></div>
+          <div class="filtro-group"><label>Dia</label><input type="date" id="galFiltroDia" onchange="carregarGaleria()"></div>
+        </div>
+        <div id="galeriaResumo" class="foto-text" style="margin-top:12px;">Carregue a galeria para ver as fotos.</div>
+        <div id="galeriaLista" style="margin-top:12px;"></div>
+      </div>
     </div>
   </div>
 
@@ -1502,6 +1567,7 @@ let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let validacoesIA = [];
 let validacoesIACarregando = false;
+let galeriaFotos = [];
 let acompanhamentoVisitaId = null;
 let revisitaRapidaAtiva = false;
 let visitasPromotorCarregadoEm = 0;
@@ -1756,6 +1822,7 @@ function mudarAbaG(aba) {
   document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
   if (aba === 'diretoria') renderDiretoria();
   if (aba === 'visitas') renderListaGestor();
+  if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') renderPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
@@ -2478,6 +2545,64 @@ function abrirFotoGaleriaIA(visitaId, fotoIndex) {
   fotosModalAtual = itens.map(v => v.foto);
   const pos = Math.max(0, itens.findIndex(v => Number(v.foto_index) === Number(fotoIndex)));
   abrirFoto(pos);
+}
+
+async function carregarGaleria() {
+  const selPromotor = document.getElementById('galFiltroPromotor');
+  const dia = document.getElementById('galFiltroDia')?.value || '';
+  const resumo = document.getElementById('galeriaResumo');
+  if (resumo) resumo.textContent = 'Carregando galeria...';
+  try {
+    let url = `${API}/api/validacoes-fotos?`;
+    if (selPromotor?.value) url += `promotor=${encodeURIComponent(selPromotor.value)}&`;
+    if (dia) url += `de=${dia}T00:00:00Z&ate=${dia}T23:59:59Z&`;
+    const res = await apiFetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao carregar galeria');
+    galeriaFotos = data.validacoes || [];
+    if (selPromotor && selPromotor.options.length <= 1) {
+      [...new Set(galeriaFotos.map(v => v.promotor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(nome => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        opt.textContent = nome;
+        selPromotor.appendChild(opt);
+      });
+    }
+  } catch(e) {
+    galeriaFotos = [];
+    if (resumo) resumo.textContent = 'Não foi possível carregar a galeria: ' + e.message;
+  }
+  renderGaleria();
+}
+
+function renderGaleria() {
+  const lista = document.getElementById('galeriaLista');
+  const resumo = document.getElementById('galeriaResumo');
+  if (!lista || !resumo) return;
+  resumo.textContent = `${galeriaFotos.length} foto(s) encontrada(s).`;
+  if (!galeriaFotos.length) {
+    lista.innerHTML = '<div class="empty">Nenhuma foto encontrada para os filtros.</div>';
+    return;
+  }
+  lista.innerHTML = `<div class="rel-fotos" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">${galeriaFotos.map((item,i) => {
+    const data = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : '—';
+    return `
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;">
+        <button class="rel-foto-btn" type="button" onclick="abrirFotoGaleria(${i})" style="width:100%;border-radius:0;">
+          <img src="${fotoSrc(item.foto)}" alt="Foto ${item.foto_index + 1} de ${item.cliente_nome || 'PDV'}">
+        </button>
+        <div style="padding:10px;">
+          <div style="font-weight:800;font-size:13px;">${item.cliente_nome || 'PDV sem nome'}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${item.promotor || '—'} · ${data}</div>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+function abrirFotoGaleria(i) {
+  fotosModalAtual = galeriaFotos.map(v => v.foto);
+  abrirFoto(i);
 }
 
 async function revisarValidacaoFoto(id, statusManual) {
@@ -4458,12 +4583,73 @@ async function compartilharSugestao(i) {
   }
 }
 
+const UFS_BRASIL = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
+function fotosPendentesAvaliacao(v) {
+  const total = Number(v.fotos_count || 0);
+  if (!total) return false;
+  const avaliadas = (v.dados?.presenca?.tabelaValidacoesFotos || []).length;
+  return avaliadas < total;
+}
+
+function preencherFiltrosVisitas() {
+  const selUF = document.getElementById('vFiltroUF');
+  if (selUF && selUF.options.length <= 1) {
+    selUF.innerHTML = '<option value="">Todas</option>' + UFS_BRASIL.map(uf => `<option>${uf}</option>`).join('');
+  }
+  const nomesPromotor = promotoresAdmin.length
+    ? promotoresAdmin.filter(p => p.ativo && p.tipo === 'promotor').map(p => p.nome)
+    : [...new Set(visitasGestor.map(v => v.promotor).filter(Boolean))];
+  const selPromotor = document.getElementById('vFiltroPromotor');
+  if (selPromotor) {
+    const atual = selPromotor.value;
+    selPromotor.innerHTML = '<option value="">Todos</option>' + [...new Set(nomesPromotor)].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(n => `<option>${n}</option>`).join('');
+    selPromotor.value = atual;
+  }
+  const coords = promotoresAdmin.filter(p => p.ativo && p.tipo === 'coordenador').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const selCoord = document.getElementById('vFiltroCoordenador');
+  if (selCoord) {
+    const atual = selCoord.value;
+    selCoord.innerHTML = '<option value="">Todos</option>' + coords.map(c => `<option value="${c.usuario}">${c.nome}</option>`).join('');
+    selCoord.value = atual;
+  }
+}
+
+function limparFiltrosVisitas() {
+  ['vFiltroPromotor','vFiltroCoordenador','vFiltroSegmento','vFiltroUF','vFiltroPedido','vFiltroFotos'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('gBusca').value = '';
+  renderListaGestor();
+}
+
 function renderListaGestor() {
+  preencherFiltrosVisitas();
   const busca = document.getElementById('gBusca').value.toLowerCase();
+  const fPromotor = document.getElementById('vFiltroPromotor')?.value || '';
+  const fCoordenador = document.getElementById('vFiltroCoordenador')?.value || '';
+  const fSegmento = document.getElementById('vFiltroSegmento')?.value || '';
+  const fUF = document.getElementById('vFiltroUF')?.value || '';
+  const fPedido = document.getElementById('vFiltroPedido')?.value || '';
+  const fFotos = document.getElementById('vFiltroFotos')?.value || '';
+  const promotoresDoCoordenador = fCoordenador
+    ? new Set(promotoresAdmin.filter(p => p.tipo === 'promotor' && p.coordenador_usuario === fCoordenador).map(p => p.nome))
+    : null;
+
   const filtradas = visitasGestor.filter(v => {
     const d = v.dados||{};
-    return ((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca);
+    if (!((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca)) return false;
+    if (fPromotor && v.promotor !== fPromotor) return false;
+    if (promotoresDoCoordenador && !promotoresDoCoordenador.has(v.promotor)) return false;
+    if (fSegmento && d.pdv?.tipo !== fSegmento) return false;
+    if (fUF && d.pdv?.uf !== fUF) return false;
+    if (fPedido === 'com' && d.comercial?.pedidoFeito !== 'Sim') return false;
+    if (fPedido === 'sem' && d.comercial?.pedidoFeito === 'Sim') return false;
+    if (fFotos === 'pendente' && !fotosPendentesAvaliacao(v)) return false;
+    return true;
   });
+
   const confirmados = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido confirmado').length;
   const entregues = visitasGestor.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
   const negociacao = visitasGestor.filter(v => statusDaVisita(v) === 'Em negociação').length;
@@ -4477,32 +4663,28 @@ function renderListaGestor() {
     document.getElementById('gLista').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>';
     return;
   }
-  document.getElementById('gLista').innerHTML = '<div class="lista-gestor">' + filtradas.map((v,i) => {
+  document.getElementById('gLista').innerHTML = `<div class="table-wrap"><table class="data-table"><thead><tr>
+    <th>Data</th><th>Promotor</th><th>PDV</th><th>Segmento</th><th>Cidade/UF</th><th>Pedido</th><th>Status</th><th>Fotos</th>
+  </tr></thead><tbody>` + filtradas.map(v => {
     const d = v.dados||{};
     const data = new Date(v.criado_em);
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    const skus = (d.presenca?.skusPresentes||[]).join(', ')||'—';
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
     const status = statusDaVisita(v);
+    const pendente = fotosPendentesAvaliacao(v);
     return `
-      <div class="visita-gestor" onclick="abrirDetalheGestor('${v.id}')">
-        <div class="vg-header">
-          <div>
-            <div class="vg-nome">${d.pdv?.nomeFantasia||'—'}</div>
-            <div class="vg-promotor">${v.promotor}</div>
-          </div>
-          <div class="vg-data">${dataStr}</div>
-        </div>
-        <div class="vg-info">${d.pdv?.tipo||''} ${d.pdv?.cidade ? '· '+d.pdv.cidade : ''} ${d.pdv?.uf ? '/'+d.pdv.uf : ''}</div>
-        <div style="margin-top:6px;">
-          <span class="badge badge-purple">${d.presenca?.temProduto||'—'}</span>
-          ${temPedido ? '<span class="badge badge-orange">Pedido</span>' : ''}
-          ${d.presenca?.ruptura ? '<span class="badge badge-red">Ruptura</span>' : ''}
-          <span class="status-chip ${statusClass(status)}">${status}</span>
-        </div>
-      </div>
+      <tr onclick="abrirDetalheGestor('${v.id}')">
+        <td>${dataStr}</td>
+        <td>${v.promotor}</td>
+        <td class="td-nome">${d.pdv?.nomeFantasia||'—'}</td>
+        <td>${d.pdv?.tipo||'—'}</td>
+        <td>${[d.pdv?.cidade, d.pdv?.uf].filter(Boolean).join('/')||'—'}</td>
+        <td>${temPedido ? 'Sim' : 'Não'}</td>
+        <td><span class="status-chip ${statusClass(status)}">${status}</span></td>
+        <td><span class="${pendente ? 'foto-pendente-dot' : 'foto-ok-dot'}" title="${pendente ? 'Fotos pendentes de avaliação' : 'Fotos avaliadas'}"></span> ${v.fotos_count||0}</td>
+      </tr>
     `;
-  }).join('') + '</div>';
+  }).join('') + '</tbody></table></div>';
 }
 
 function abrirDetalheGestor(id) {
