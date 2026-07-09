@@ -5,7 +5,7 @@ async function garantirTabela(sql) {
   await sql`
     CREATE TABLE IF NOT EXISTS validacoes_fotos (
       id SERIAL PRIMARY KEY,
-      visita_id INTEGER NOT NULL,
+      visita_id TEXT NOT NULL,
       promotor TEXT NOT NULL,
       cliente_nome TEXT DEFAULT '',
       foto_index INTEGER NOT NULL,
@@ -23,6 +23,11 @@ async function garantirTabela(sql) {
       UNIQUE(visita_id, foto_index)
     )
   `;
+  try {
+    await sql`ALTER TABLE validacoes_fotos ALTER COLUMN visita_id TYPE TEXT`;
+  } catch (e) {
+    // Coluna ja e TEXT ou tabela recem-criada — nao bloqueia o handler
+  }
 }
 
 function normalizarDados(dados) {
@@ -111,7 +116,7 @@ export default async function handler(req, res) {
         visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 300`;
       }
 
-      const ids = visitas.map(v => Number(v.id)).filter(Number.isFinite);
+      const ids = visitas.map(v => v.id).filter(Boolean);
       const validacoes = ids.length
         ? await sql`SELECT * FROM validacoes_fotos WHERE visita_id = ANY(${ids})`
         : [];
@@ -166,7 +171,7 @@ export default async function handler(req, res) {
       if (!visita) return res.status(403).json({ erro: 'Sem permissao para registrar validacao desta visita' });
 
       const duplicadas = imagem_hash
-        ? await sql`SELECT id FROM validacoes_fotos WHERE imagem_hash = ${imagem_hash} AND NOT (visita_id = ${visita_id} AND foto_index = ${Number(foto_index)}) LIMIT 1`
+        ? await sql`SELECT id FROM validacoes_fotos WHERE imagem_hash = ${imagem_hash} AND NOT (visita_id = ${String(visita_id)} AND foto_index = ${Number(foto_index)}) LIMIT 1`
         : [];
       const possivelReuso = duplicadas.length > 0;
       const status = possivelReuso ? 'revisao_manual' : statusIa(resultado);
@@ -176,7 +181,7 @@ export default async function handler(req, res) {
           score, motivo, materiais_detectados, possivel_reuso, atualizado_em
         )
         VALUES (
-          ${Number(visita_id)}, ${visita.promotor}, ${cliente_nome}, ${Number(foto_index)}, ${imagem_hash},
+          ${String(visita_id)}, ${visita.promotor}, ${cliente_nome}, ${Number(foto_index)}, ${imagem_hash},
           ${status}, ${Number(resultado.score || 0)}, ${resultado.motivo || ''},
           ${JSON.stringify(resultado.materiais_detectados || [])}::jsonb, ${possivelReuso}, NOW()
         )
