@@ -90,20 +90,20 @@ export default async function handler(req, res) {
       let visitas;
       if (promotoresPermitidos && !promotor && de && ate) {
         visitas = promotoresPermitidos.length
-          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`
+          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`
           : [];
       } else if (promotoresPermitidos && !promotor) {
         visitas = promotoresPermitidos.length
-          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) ORDER BY criado_em DESC LIMIT 200`
+          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 200`
           : [];
       } else if (promotor && de && ate) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`;
+        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`;
       } else if (promotor) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} ORDER BY criado_em DESC LIMIT 200`;
+        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 200`;
       } else if (de && ate) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 300`;
+        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 300`;
       } else {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas ORDER BY criado_em DESC LIMIT 300`;
+        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 300`;
       }
 
       const ids = visitas.map(v => Number(v.id));
