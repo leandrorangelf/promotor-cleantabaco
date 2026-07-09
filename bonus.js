@@ -35,19 +35,9 @@
     return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
   }
 
-  function validacaoTabelaAprovada(validacao) {
-    return validacao?.status_manual === 'aprovado' ||
-      validacao?.status_ia === 'aprovado' ||
-      validacao?.aprovado === true;
-  }
-
   function tabelaConfirmadaNaVisita(visita) {
-    const presenca = visita?.dados?.presenca || {};
-    const validacoes = presenca.tabelaValidacoesFotos || presenca.validacoesTabela || [];
-    if (Array.isArray(validacoes) && validacoes.length) {
-      return validacoes.some(validacaoTabelaAprovada);
-    }
-    return Boolean(presenca.tabelaVisivel);
+    if (Number(visita?.fotos_count || 0) > 0) return true;
+    return Array.isArray(visita?.fotos) && visita.fotos.length > 0;
   }
 
   function dentroDoPeriodo(data, de, ate) {
@@ -115,7 +105,7 @@
       resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * valorClienteNovo, tetoClienteNovo);
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
 
-      // Meta 2: R$500 quando 50% da base de clientes tem tabela de precos visivel (registrada com foto na visita)
+      // Meta 2: R$500 quando 50% da base de clientes tem pelo menos 1 foto registrada em visita no periodo (mes)
       const chavesTabelaVisivel = new Set(
         visitasNoPeriodo.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );

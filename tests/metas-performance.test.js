@@ -5,9 +5,10 @@ function visita({ pdv, data, pedido = false, tabela = false }) {
   return {
     promotor: 'Ana',
     criado_em: data,
+    fotos_count: tabela ? 1 : 0,
     dados: {
       pdv: { nomeFantasia: pdv, uf: 'SP' },
-      presenca: { tabelaVisivel: tabela },
+      presenca: {},
       comercial: {
         pedidoFeito: pedido ? 'Sim' : 'Nao',
         pedidoPac: pedido ? { GR: 1 } : { GR: 0 }
