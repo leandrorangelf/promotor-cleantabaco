@@ -8,4 +8,7 @@ assert.ok(api.includes('ALTER COLUMN visita_id TYPE TEXT'), 'deve migrar coluna 
 assert.ok(!api.includes('Number(visita_id)'), 'nao deve mais converter visita_id para numero');
 assert.ok(!/const ids = visitas\.map\(v => Number\(v\.id\)\)/.test(api), 'GET nao deve mais converter v.id para numero');
 
+const listar = fs.readFileSync('api/listar.js', 'utf8');
+assert.ok(!/const ids = rows\.map\(v => Number\(v\.id\)\)/.test(listar), 'listar.js nao deve mais converter v.id para numero');
+
 console.log('validacao-fotos-visita-id.test.js passou');

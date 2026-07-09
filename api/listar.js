@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       rows = await sql`select id, promotor, regiao, dados, criado_em, coalesce(jsonb_array_length(to_jsonb(fotos)),0) as fotos_count from visitas order by criado_em desc limit 500`;
     }
 
-    const ids = rows.map(v => Number(v.id)).filter(Boolean);
+    const ids = rows.map(v => v.id).filter(Boolean);
     if (ids.length) {
       try {
         const validacoes = await sql`
