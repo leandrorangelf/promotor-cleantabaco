@@ -25,6 +25,8 @@ assert.ok(html.includes('revisarValidacaoFoto'), 'gestor deve aprovar/reprovar m
 assert.ok(html.includes('analisarValidacaoPendente'), 'gestor deve conseguir analisar fotos pendentes/legadas');
 assert.ok(html.includes('Atualizar galeria'), 'gestor deve ter botao para recarregar a galeria');
 assert.ok(html.includes('/api/validacoes-fotos'), 'frontend deve consumir api de validacoes');
+assert.ok(html.includes('function atualizarValidacaoLocal'), 'frontend deve atualizar revisoes manuais sem recarregar todas as fotos');
+assert.ok(!html.includes('await carregarGaleria();\n    validacoesIA = [];\n    await renderGaleriaIA();'), 'confirmacao manual nao deve recarregar duas galerias apos salvar');
 
 assert.ok(listar.includes('validacoes_fotos'), 'listar deve anexar validacoes de fotos nas visitas');
 assert.ok(salvar.includes('RETURNING id'), 'salvar deve retornar id da visita para registrar validacoes');

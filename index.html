@@ -2364,6 +2364,44 @@ function lerArquivoComoDataUrl(file) {
   });
 }
 
+function compactarDataUrlImagem(dataUrl, max = 768, qualidade = 0.68) {
+  return new Promise(resolve => {
+    if (!String(dataUrl || '').startsWith('data:image/')) return resolve(dataUrl);
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+      if (w > max || h > max) {
+        if (w > h) { h = Math.round(h * max / w); w = max; }
+        else { w = Math.round(w * max / h); h = max; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', qualidade));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+async function prepararFotoParaIA(fotoEntrada) {
+  const meta = fotoMeta(fotoEntrada);
+  let src = meta.imagem || fotoSrc(fotoEntrada);
+  if (!src) throw new Error('Foto sem imagem para analise.');
+  if (!String(src).startsWith('data:image/')) {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error('download');
+      src = await lerArquivoComoDataUrl(await res.blob());
+    } catch(e) {
+      throw new Error('Foto em formato nao suportado para IA.');
+    }
+  }
+  return compactarDataUrlImagem(src);
+}
+
 function prepararFotoIA(event) {
   const status = document.getElementById('iaFotoStatus');
   const resultado = document.getElementById('iaResultado');
@@ -2396,14 +2434,14 @@ async function analisarFotoIA() {
 
   try {
     if (resultado) resultado.textContent = 'Analisando foto...';
-    const foto = await lerArquivoComoDataUrl(file);
+    const foto = await compactarDataUrlImagem(await lerArquivoComoDataUrl(file));
     const res = await apiFetch(`${API}/api/avaliar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ foto })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao avaliar foto');
+    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao avaliar foto');
     if (resultado) {
       const status = data.aprovado ? 'Aprovado' : (data.score >= 50 ? 'Revisao manual' : 'Reprovado');
       resultado.innerHTML = `<strong>${status}</strong><br>Score: ${data.score}<br>Modo: ${data.modo}<br>Materiais: ${(data.materiais_detectados || []).join(', ') || 'nenhum'}<br>${data.motivo || ''}`;
@@ -2523,16 +2561,17 @@ async function analisarValidacaoPendente(visitaId, fotoIndex) {
   if (!item) return;
   try {
     toast('Analisando foto...');
-    const foto = fotoMeta(item.foto);
-    let hash = item.imagem_hash || foto.imagemHash || '';
-    if (!hash) hash = await calcularHashFoto(foto.imagem);
+    const foto = await prepararFotoParaIA(item.foto);
+    const meta = fotoMeta(item.foto);
+    let hash = item.imagem_hash || meta.imagemHash || '';
+    if (!hash) hash = await calcularHashFoto(meta.imagem || foto);
     const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: foto.imagem })
+      body: JSON.stringify({ foto })
     });
     const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.erro || 'Erro ao analisar foto');
+    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
 
     const res = await apiFetch(`${API}/api/validacoes-fotos`, {
       method: 'POST',
@@ -2643,15 +2682,16 @@ async function analisarFotoGaleria(visitaId, fotoIndex) {
   try {
     toast('Analisando foto...');
     const foto = fotoMeta(item.foto);
+    const fotoIA = await prepararFotoParaIA(item.foto);
     let hash = item.imagem_hash || foto.imagemHash || '';
-    if (!hash) hash = await calcularHashFoto(foto.imagem);
+    if (!hash) hash = await calcularHashFoto(foto.imagem || fotoIA);
     const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: foto.imagem })
+      body: JSON.stringify({ foto: fotoIA })
     });
     const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.erro || 'Erro ao analisar foto');
+    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
 
     const res = await apiFetch(`${API}/api/validacoes-fotos`, {
       method: 'POST',
@@ -2671,6 +2711,17 @@ async function analisarFotoGaleria(visitaId, fotoIndex) {
   } catch(e) {
     toast('Nao foi possivel analisar: ' + e.message);
   }
+}
+
+function atualizarValidacaoLocal(validacao = {}) {
+  const corresponde = item => {
+    if (!item) return false;
+    if (validacao.id && item.id === validacao.id) return true;
+    return String(item.visita_id) === String(validacao.visita_id) && Number(item.foto_index) === Number(validacao.foto_index);
+  };
+  const mesclar = item => corresponde(item) ? { ...item, ...validacao } : item;
+  validacoesIA = validacoesIA.map(mesclar);
+  galeriaFotos = galeriaFotos.map(mesclar);
 }
 
 async function confirmarTabelaManual(visitaId, fotoIndex, clienteNome) {
@@ -2697,10 +2748,16 @@ async function confirmarTabelaManual(visitaId, fotoIndex, clienteNome) {
     const dataPut = await resPut.json();
     if (!resPut.ok) throw new Error(dataPut.erro || 'Erro ao confirmar tabela');
 
+    atualizarValidacaoLocal({
+      ...data.validacao,
+      ...dataPut.validacao,
+      visita_id: visitaId,
+      foto_index: fotoIndex,
+      cliente_nome: clienteNome || data.validacao?.cliente_nome || ''
+    });
+    renderGaleria();
+    if (validacoesIA.length) renderGaleriaIA();
     toast('Tabela confirmada manualmente');
-    await carregarGaleria();
-    validacoesIA = [];
-    await renderGaleriaIA();
   } catch(e) {
     toast('Nao foi possivel confirmar: ' + e.message);
   }
@@ -2715,8 +2772,10 @@ async function revisarFotoGaleria(id, statusManual) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao revisar foto');
+    atualizarValidacaoLocal(data.validacao);
+    renderGaleria();
+    if (validacoesIA.length) renderGaleriaIA();
     toast(statusManual === 'aprovado' ? 'Foto aprovada' : 'Foto reprovada');
-    await carregarGaleria();
   } catch(e) {
     toast('Nao foi possivel revisar: ' + e.message);
   }
@@ -2731,7 +2790,7 @@ async function revisarValidacaoFoto(id, statusManual) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao revisar foto');
-    validacoesIA = validacoesIA.map(v => v.id === id ? { ...v, ...data.validacao } : v);
+    atualizarValidacaoLocal(data.validacao);
     toast(statusManual === 'aprovado' ? 'Foto aprovada para meta' : 'Foto reprovada');
     renderGaleriaIA();
   } catch(e) {
@@ -2779,14 +2838,15 @@ async function registrarValidacoesVisita(visitaId, dados, fotosDaVisita) {
     const foto = fotoMeta(fotosDaVisita[i]);
     let resultado = { status_ia: 'pendente', score: 0, motivo: 'Validacao IA pendente ou indisponivel.' };
     try {
+      const fotoIA = await prepararFotoParaIA(fotosDaVisita[i]);
       const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
         method: 'POST',
         headers: { ...headers(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foto: foto.imagem })
+        body: JSON.stringify({ foto: fotoIA })
       });
       const dataIA = await resIA.json();
       if (resIA.ok) resultado = dataIA;
-      else resultado = { status_ia: 'revisao_manual', score: 50, motivo: dataIA.erro || 'IA nao concluiu a analise.' };
+      else resultado = { status_ia: 'revisao_manual', score: 50, motivo: dataIA.detalhe || dataIA.erro || 'IA nao concluiu a analise.' };
     } catch(e) {
       resultado = { status_ia: 'revisao_manual', score: 50, motivo: 'IA indisponivel: ' + e.message };
     }

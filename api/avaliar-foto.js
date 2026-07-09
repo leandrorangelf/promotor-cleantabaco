@@ -33,11 +33,24 @@ function extrairJson(texto) {
   }
 }
 
+function normalizarImagemEntrada(foto) {
+  const valor = String(foto || '').trim();
+  const dataUrl = valor.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/);
+  const mimeType = dataUrl ? dataUrl[1].toLowerCase() : 'image/jpeg';
+  const base64 = (dataUrl ? dataUrl[2] : valor).replace(/\s/g, '');
+
+  if (!base64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) {
+    throw new Error('Imagem invalida para analise IA');
+  }
+
+  return { mimeType, base64 };
+}
+
 async function avaliarComGemini(foto) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY nao configurada');
 
-  const base64 = String(foto).replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+  const imagem = normalizarImagemEntrada(foto);
   const prompt = [
     'Voce esta analisando fotos enviadas por promotores da Clean Tabaco.',
     'O objetivo principal e identificar se existe uma TABELA DE PRECOS oficial da Clean Tabaco ou El Poncio na foto.',
@@ -64,7 +77,7 @@ async function avaliarComGemini(foto) {
       contents: [{
         parts: [
           { text: prompt },
-          { inline_data: { mime_type: 'image/jpeg', data: base64 } }
+          { inline_data: { mime_type: imagem.mimeType, data: imagem.base64 } }
         ]
       }]
     })
