@@ -106,7 +106,7 @@ export default async function handler(req, res) {
         visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 300`;
       }
 
-      const ids = visitas.map(v => Number(v.id));
+      const ids = visitas.map(v => Number(v.id)).filter(Number.isFinite);
       const validacoes = ids.length
         ? await sql`SELECT * FROM validacoes_fotos WHERE visita_id = ANY(${ids})`
         : [];
