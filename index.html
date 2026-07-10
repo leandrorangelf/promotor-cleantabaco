@@ -1567,6 +1567,9 @@ let galeriaFotos = [];
 let galeriaVisiveis = [];
 let filaRevisaoIndex = -1;
 let acompanhamentoVisitaId = null;
+let visitasPerformance = [];
+let clientesPerformance = [];
+let performanceMesCarregado = '';
 let revisitaRapidaAtiva = false;
 let visitasPromotorCarregadoEm = 0;
 let clientesCarregadoEm = 0;
@@ -1812,7 +1815,7 @@ function mudarAbaG(aba) {
   if (aba === 'diretoria') renderDiretoria();
   if (aba === 'visitas') renderListaGestor();
   if (aba === 'galeria') carregarGaleria();
-  if (aba === 'performance') renderPerformance();
+  if (aba === 'performance') carregarPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
   if (aba === 'mapa') { sincronizarFiltrosMapa(); renderMapa(); }
@@ -4087,13 +4090,37 @@ async function desativarPromotorAdmin(id) {
 }
 
 // ====== PÁGINA PERFORMANCE DOS PROMOTORES ======
+function periodoMesAtual() {
+  const hoje = new Date();
+  return {
+    de: new Date(hoje.getFullYear(), hoje.getMonth(), 1, 0, 0, 0, 0).toISOString(),
+    ate: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999).toISOString()
+  };
+}
+
+// A Performance e sempre mensal, independente dos filtros de data da Visao geral/Mapa
+async function carregarPerformance() {
+  const periodo = periodoMesAtual();
+  const chaveMes = periodo.de.slice(0, 7);
+  if (performanceMesCarregado === chaveMes && visitasPerformance.length) { renderPerformance(); return; }
+  try {
+    const res = await apiFetch(`${API}/api/listar?de=${periodo.de}&ate=${periodo.ate}`, { headers: headers() });
+    const data = await res.json();
+    visitasPerformance = data.visitas || [];
+    const resClientes = await apiFetch(`${API}/api/clientes`, { headers: headers() });
+    const dataClientes = await resClientes.json();
+    clientesPerformance = dataClientes.clientes || [];
+    performanceMesCarregado = chaveMes;
+  } catch(e) {
+    toast('Erro ao carregar performance do mes');
+  }
+  renderPerformance();
+}
+
 function renderPerformance() {
   const prom = {};
-  const periodoBonus = {
-    de: document.getElementById('gFiltroDe')?.value ? document.getElementById('gFiltroDe').value + 'T00:00:00Z' : null,
-    ate: document.getElementById('gFiltroAte')?.value ? document.getElementById('gFiltroAte').value + 'T23:59:59Z' : null
-  };
-  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasGestor, clientesGestor, periodoBonus) : {};
+  const periodoBonus = periodoMesAtual();
+  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasPerformance, clientesPerformance, periodoBonus) : {};
   const dinheiroBonus = valor => 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const bonusVazio = () => ({
     totalBonus: 0,
@@ -4107,7 +4134,7 @@ function renderPerformance() {
     <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:${meta.atingida?'var(--mint-light)':'var(--orange-light)'};color:${meta.atingida?'var(--mint)':'var(--amber)'};">
       ${meta.atingida?'✓':'•'} ${texto}
     </span>`;
-  visitasGestor.forEach(v => {
+  visitasPerformance.forEach(v => {
     const n = v.promotor;
     if (!n) return;
     if (!prom[n]) prom[n] = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0 };
@@ -4126,7 +4153,7 @@ function renderPerformance() {
   const tabela = document.getElementById('gPerfTabela');
 
   if (!ordenado.length) {
-    if (cards) cards.innerHTML = '<div class="empty" style="grid-column:1/-1;">Sem dados no período. Ajuste os filtros na Visão geral.</div>';
+    if (cards) cards.innerHTML = '<div class="empty" style="grid-column:1/-1;">Nenhuma visita registrada neste mês ainda.</div>';
     if (tabela) tabela.innerHTML = '<div class="empty">Sem dados</div>';
     return;
   }
