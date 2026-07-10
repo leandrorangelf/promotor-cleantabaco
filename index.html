@@ -1535,6 +1535,7 @@ button:active { transform: translateY(1px); }
   <div class="foto-lightbox-revisao" id="fotoLightboxRevisao" style="display:none;">
     <div id="fotoLightboxInfo" style="font-size:13px;margin-bottom:10px;"></div>
     <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn-detalhes" id="fotoLightboxAnalisar" type="button" onclick="analisarFotoModal()" style="display:none;">Analisar IA</button>
       <button class="btn-detalhes" type="button" onclick="revisarFotoModal('aprovado')">Aprovar</button>
       <button class="btn-detalhes" type="button" onclick="revisarFotoModal('reprovado')">Reprovar</button>
     </div>
@@ -2512,7 +2513,7 @@ function renderGaleria() {
             <button class="btn-detalhes" type="button" onclick="revisarFotoGaleria(${item.id}, 'reprovado')">Reprovar</button>
           </div>`
         : `<div style="display:flex;gap:6px;margin-top:8px;">
-            <button class="btn-detalhes" type="button" onclick="analisarFotoGaleria(this, '${item.visita_id}', ${item.foto_index})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="abrirFilaRevisao('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
             <button class="btn-detalhes" type="button" onclick="confirmarTabelaManual('${item.visita_id}', ${item.foto_index}, '${(item.cliente_nome || '').replace(/'/g, "\\'")}')">Confirmar tabela</button>
           </div>`)
       : '';
@@ -2536,6 +2537,14 @@ function renderGaleria() {
 function abrirFotoGaleria(i) {
   fotosModalAtual = galeriaVisiveis.map(v => v.foto);
   abrirFoto(i, tipoAtual === 'gestor' ? 'revisao' : 'modal');
+}
+
+function abrirFilaRevisao(visitaId, fotoIndex) {
+  const i = galeriaVisiveis.findIndex(item => String(item.visita_id) === String(visitaId) && Number(item.foto_index) === Number(fotoIndex));
+  if (i >= 0) {
+    fotosModalAtual = galeriaVisiveis.map(v => v.foto);
+    abrirFoto(i, 'revisao');
+  }
 }
 
 async function analisarFotoGaleria(botao, visitaId, fotoIndex) {
@@ -2575,6 +2584,55 @@ async function analisarFotoGaleria(botao, visitaId, fotoIndex) {
   } catch(e) {
     toast('Nao foi possivel analisar: ' + e.message);
     if (botao) { botao.disabled = false; botao.textContent = textoOriginal; }
+  }
+}
+
+function filaRevisaoAtual() {
+  return galeriaVisiveis.filter(item => !['aprovado', 'reprovado'].includes(statusValidacaoIA(item)));
+}
+
+function avancarParaProximaFotoPendente() {
+  galeriaVisiveis = filaRevisaoAtual();
+  renderGaleria();
+  if (!galeriaVisiveis.length) { fecharFoto(); return; }
+  abrirFoto(0, 'revisao');
+}
+
+async function analisarFotoModal() {
+  const item = galeriaVisiveis[filaRevisaoIndex];
+  const botao = document.getElementById('fotoLightboxAnalisar');
+  if (!item || item.id || !botao) return;
+  botao.disabled = true;
+  botao.textContent = 'Analisando...';
+  try {
+    const foto = fotoMeta(item.foto);
+    const fotoIA = await prepararFotoParaIA(item.foto);
+    const hash = item.imagem_hash || foto.imagemHash || await calcularHashFoto(foto.imagem || fotoIA);
+    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+      method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto: fotoIA })
+    });
+    const resultado = await resIA.json();
+    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
+    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
+      method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visita_id: item.visita_id, foto_index: item.foto_index, imagem_hash: hash, cliente_nome: item.cliente_nome || '', resultado })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    atualizarValidacaoLocal(data.validacao);
+    if (statusValidacaoIA(data.validacao) === 'revisao_manual') {
+      renderGaleria();
+      abrirFoto(filaRevisaoIndex, 'revisao');
+      toast('Foto analisada: precisa de revisao');
+    } else {
+      toast('Foto analisada');
+      avancarParaProximaFotoPendente();
+    }
+  } catch(e) {
+    toast('Nao foi possivel analisar: ' + e.message);
+    botao.disabled = false;
+    botao.textContent = 'Analisar IA';
   }
 }
 
@@ -2626,7 +2684,7 @@ async function confirmarTabelaManual(visitaId, fotoIndex, clienteNome) {
   }
 }
 
-async function revisarFotoGaleria(id, statusManual) {
+async function revisarFotoGaleria(id, statusManual, emFila = false) {
   try {
     const res = await apiFetch(`${API}/api/validacoes-fotos`, {
       method: 'PUT',
@@ -2636,8 +2694,9 @@ async function revisarFotoGaleria(id, statusManual) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao revisar foto');
     atualizarValidacaoLocal(data.validacao);
-    renderGaleria();
     toast(statusManual === 'aprovado' ? 'Foto aprovada' : 'Foto reprovada');
+    if (emFila) avancarParaProximaFotoPendente();
+    else renderGaleria();
     return true;
   } catch(e) {
     toast('Nao foi possivel revisar: ' + e.message);
@@ -2648,8 +2707,7 @@ async function revisarFotoGaleria(id, statusManual) {
 async function revisarFotoModal(statusManual) {
   const item = galeriaVisiveis[filaRevisaoIndex];
   if (!item || !item.id) return;
-  const ok = await revisarFotoGaleria(item.id, statusManual);
-  if (ok) avancarRevisaoModal();
+  await revisarFotoGaleria(item.id, statusManual, true);
 }
 
 function avancarRevisaoModal() {
@@ -2679,6 +2737,7 @@ function abrirFoto(i, origem='modal') {
   const nextBtn = document.getElementById('fotoLightboxNext');
   const painel = document.getElementById('fotoLightboxRevisao');
   const info = document.getElementById('fotoLightboxInfo');
+  const analisar = document.getElementById('fotoLightboxAnalisar');
   if (origem === 'revisao') {
     filaRevisaoIndex = i;
     const item = galeriaVisiveis[i];
@@ -2686,8 +2745,11 @@ function abrirFoto(i, origem='modal') {
     nextBtn.style.display = i < galeriaVisiveis.length - 1 ? '' : 'none';
     if (item) {
       const status = statusValidacaoIA(item);
-      info.innerHTML = `<strong>${esc(item.cliente_nome || 'PDV sem nome')}</strong> · ${esc(item.promotor || '—')}<br>Status: ${labelStatusValidacao(status)} · Score: ${Number(item.score || 0)}<br>${esc(item.motivo || '')}`;
-      painel.style.display = item.id ? 'block' : 'none';
+      info.innerHTML = `<strong>${esc(item.cliente_nome || 'PDV sem nome')}</strong> · ${esc(item.promotor || '—')}<br>${i + 1}/${galeriaVisiveis.length} · Status: ${labelStatusValidacao(status)} · Score: ${Number(item.score || 0)}<br>${esc(item.motivo || '')}`;
+      painel.style.display = tipoAtual === 'gestor' ? 'block' : 'none';
+      analisar.style.display = item.id ? 'none' : '';
+      analisar.disabled = false;
+      analisar.textContent = 'Analisar IA';
     } else {
       painel.style.display = 'none';
     }

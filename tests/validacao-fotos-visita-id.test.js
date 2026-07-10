@@ -12,7 +12,7 @@ const listar = fs.readFileSync('api/listar.js', 'utf8');
 assert.ok(!/const ids = rows\.map\(v => Number\(v\.id\)\)/.test(listar), 'listar.js nao deve mais converter v.id para numero');
 
 const html = fs.readFileSync('index.html', 'utf8');
-assert.ok(html.includes("analisarFotoGaleria(this, '" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de analisarFotoGaleria deve envolver visita_id em aspas');
+assert.ok(html.includes("abrirFilaRevisao('" + "$" + "{item.visita_id}', " + "$" + "{item.foto_index})"), 'onclick de abrir fila deve envolver visita_id em aspas');
 
 assert.ok(html.includes('async function confirmarTabelaManual'), 'deve existir funcao de confirmacao manual sem IA');
 assert.ok(html.includes("confirmarTabelaManual('${item.visita_id}', ${item.foto_index}"), 'botao de confirmacao manual deve estar na Galeria e na Galeria IA');
