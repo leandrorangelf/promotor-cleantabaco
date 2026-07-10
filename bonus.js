@@ -111,12 +111,15 @@
 
       // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (manualmente) em qualquer visita ate hoje
       // (nao restringe ao periodo do mes: uma tabela ja confirmada continua valendo nos meses seguintes)
+      // O percentual e sempre calculado sobre a base minima (200, ou a meta configurada), nunca sobre uma
+      // base pequena ainda em formacao — senao 1 tabela em 2 clientes cadastrados já bateria 50%.
       const chavesTabelaVisivel = new Set(
         visitasDoPromotor.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );
       const totalBase = clientesDoPromotor.length;
       const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
-      const percentualTabela = totalBase ? Math.round((comTabelaVisivel / totalBase) * 100) : 0;
+      const baseParaPercentual = Math.max(totalBase, resumo.metas.baseDuzentosPdvs.alvo);
+      const percentualTabela = baseParaPercentual ? Math.round((comTabelaVisivel / baseParaPercentual) * 100) : 0;
       resumo.metas.tabelaVisivelBase.atual = percentualTabela;
       resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= resumo.metas.tabelaVisivelBase.alvo;
       resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;

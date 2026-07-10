@@ -45,7 +45,9 @@ for (let i = 0; i < 40; i++) {
   visitasBea.push(visita({ promotor: 'Bea', data: '2026-07-06T10:00:00Z', pdv: nome, qty: { GR: 1 } }));
 }
 
-// Meta 2 (Ana): base de 10 clientes, 5 com foto aprovada pela IA no periodo (50% - bate a meta)
+// Meta 2 (Ana): base de so 10 clientes (abaixo do minimo de 200), 5 com tabela aprovada.
+// O percentual deve ser calculado sobre a base minima (200), nao sobre os 10 cadastrados,
+// senao bastaria cadastrar poucos clientes e aprovar 1 tabela pra bater 50% artificialmente.
 const clientesAna = [];
 const visitasAna = [];
 for (let i = 0; i < 10; i++) {
@@ -63,6 +65,15 @@ for (let i = 0; i < 10; i++) {
   visitasRui.push(visita({ promotor: 'Rui', data: '2026-07-10T10:00:00Z', pdv: nome, statusIa: i < 4 ? 'aprovado' : 'reprovado' }));
 }
 
+// Meta 2 (Leo): base cheia de 200 clientes, 100 com tabela aprovada (50% da base real - bate a meta)
+const clientesLeo = [];
+const visitasLeo = [];
+for (let i = 0; i < 200; i++) {
+  const nome = `PDV Tabela Leo ${i}`;
+  clientesLeo.push(cliente({ promotor: 'Leo', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasLeo.push(visita({ promotor: 'Leo', data: '2026-07-10T10:00:00Z', pdv: nome, statusIa: i < 100 ? 'aprovado' : 'reprovado' }));
+}
+
 // Meta 3 (Ivo): 200 PDVs cadastrados e visitados no periodo
 const clientesIvo = [];
 const visitasIvo = [];
@@ -73,8 +84,8 @@ for (let i = 0; i < 200; i++) {
 }
 
 const resultado = calcularBonificacaoPromotores(
-  [...visitasWil, ...visitasBea, ...visitasAna, ...visitasRui, ...visitasIvo],
-  [...clientesWil, ...clientesBea, ...clientesAna, ...clientesRui, ...clientesIvo],
+  [...visitasWil, ...visitasBea, ...visitasAna, ...visitasRui, ...visitasLeo, ...visitasIvo],
+  [...clientesWil, ...clientesBea, ...clientesAna, ...clientesRui, ...clientesLeo, ...clientesIvo],
   periodo
 );
 
@@ -86,13 +97,17 @@ assert.strictEqual(resultado.Wil.totalBonus, 300);
 assert.strictEqual(resultado.Bea.metas.clienteNovoPositivado.atual, 40);
 assert.strictEqual(resultado.Bea.metas.clienteNovoPositivado.valor, 500);
 
-assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atual, 50);
-assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atingida, true);
-assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.valor, 500);
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atual, 3);
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.atingida, false);
+assert.strictEqual(resultado.Ana.metas.tabelaVisivelBase.valor, 0);
 
-assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.atual, 40);
+assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.atual, 2);
 assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.atingida, false);
 assert.strictEqual(resultado.Rui.metas.tabelaVisivelBase.valor, 0);
+
+assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.atual, 50);
+assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.atingida, true);
+assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.valor, 500);
 
 assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atual, 200);
 assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atingida, true);
@@ -137,7 +152,7 @@ const resultadoRevisao = calcularBonificacaoPromotores(
   ],
   ['Loja 1','Loja 2','Loja 3','Loja 4'].map(nome => cliente({ promotor: 'Iara', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' })),
   periodo,
-  { Iara: { tabela_percentual: 50 } }
+  { Iara: { tabela_percentual: 50, base_clientes: 4 } }
 );
 assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atual, 50);
 assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atingida, true);
