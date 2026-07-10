@@ -1184,8 +1184,6 @@ button:active { transform: translateY(1px); }
             <label>Promotor</label>
             <select id="gFiltroPromotor">
               <option value="">Todos</option>
-              <option>Francisco</option><option>Anderson</option><option>André</option>
-              <option>Cristiano</option><option>Jarbas</option><option>Kayan</option><option>Wil</option>
             </select>
           </div>
           <div class="filtro-group">
@@ -1445,8 +1443,6 @@ button:active { transform: translateY(1px); }
             <label>Promotor</label>
             <select id="mapaFiltroPromotor">
               <option value="">Todos</option>
-              <option>Francisco</option><option>Anderson</option><option>André</option>
-              <option>Cristiano</option><option>Jarbas</option><option>Kayan</option><option>Wil</option>
             </select>
           </div>
           <div class="filtro-group"><label>De</label><input type="date" id="mapaFiltroDe"></div>
@@ -3575,6 +3571,7 @@ async function carregarGestor() {
     const data = await res.json();
     visitasGestor = aplicarFiltrosLocaisGestor(data.visitas || []);
     popularFiltroPromotoresPermitidos();
+    popularFiltroPromotoresGestor();
 
     const resClientes = await apiFetch(`${API}/api/clientes${promotor ? '?promotor=' + encodeURIComponent(promotor) : ''}`, { headers: headers() });
     const dataClientes = await resClientes.json();
@@ -4127,6 +4124,19 @@ function preencherFiltroPromotores() {
 function popularFiltroPromotoresPermitidos() {
   if (!(tipoAtual === 'coordenador')) return;
   const nomes = [...new Set(visitasGestor.map(v => v.promotor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  ['gFiltroPromotor','mapaFiltroPromotor'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const atual = nomes.includes(sel.value) ? sel.value : '';
+    sel.innerHTML = '<option value="">Todos</option>' + nomes.map(n => `<option>${n}</option>`).join('');
+    sel.value = atual;
+  });
+}
+
+function popularFiltroPromotoresGestor() {
+  if (tipoAtual === 'coordenador') return;
+  const nomes = [...new Set(visitasGestor.map(v => v.promotor).filter(Boolean))]
+    .sort((a,b) => a.localeCompare(b, 'pt-BR'));
   ['gFiltroPromotor','mapaFiltroPromotor'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
