@@ -109,9 +109,10 @@
       resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * valorClienteNovo, tetoClienteNovo);
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
 
-      // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (IA ou revisao manual) em visita no periodo (mes)
+      // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (manualmente) em qualquer visita ate hoje
+      // (nao restringe ao periodo do mes: uma tabela ja confirmada continua valendo nos meses seguintes)
       const chavesTabelaVisivel = new Set(
-        visitasNoPeriodo.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
+        visitasDoPromotor.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );
       const totalBase = clientesDoPromotor.length;
       const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
