@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     } else if (promotor) {
       rows = await sql`
         SELECT * FROM clientes WHERE promotor = ${promotor}
-        ORDER BY nome_fantasia LIMIT 100
+        ORDER BY nome_fantasia LIMIT 5000
       `;
     } else {
       rows = await sql`
