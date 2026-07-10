@@ -1598,7 +1598,8 @@ function headers() {
 async function apiFetch(url, opts) {
   const res = await fetch(url, opts);
   if (res.status === 401) {
-    logout();
+    salvarRascunhoVisita();
+    logout(true);
     toast('Sessão expirada. Faça login novamente.');
     throw new Error('Sessao expirada');
   }
@@ -1776,7 +1777,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
   }
 }
 
-function logout() {
+function logout(preservarFormulario = false) {
   localStorage.removeItem('ct_user');
   usuarioAtual = null; tipoAtual = null; authToken = '';
   visitasPromotorCarregadoEm = 0; clientesCarregadoEm = 0;
@@ -1786,7 +1787,7 @@ function logout() {
   document.getElementById('appGestor').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginSenha').value = '';
-  limparFormulario();
+  if (!preservarFormulario) limparFormulario();
 }
 
 // NAVEGAÇÃO PROMOTOR
@@ -2835,6 +2836,8 @@ async function salvarVisita() {
     return;
   }
 
+  salvarRascunhoVisita();
+
   const btn = document.getElementById('btnSalvar');
   btn.disabled = true;
   btn.textContent = 'Salvando...';
@@ -2937,7 +2940,7 @@ async function salvarVisita() {
       toast('Erro: ' + (data.erro || 'tente novamente'));
     }
   } catch(e) {
-    toast('❌ Sem conexão. Tente novamente.');
+    if (e.message !== 'Sessao expirada') toast('❌ Sem conexão. Tente novamente.');
   }
 
   btn.disabled = false;
@@ -3001,9 +3004,20 @@ function capturarRascunhoVisita() {
   };
 }
 
+function rascunhoTemConteudo(draft = {}) {
+  const campos = Object.values(draft.campos || {}).some(v => typeof v === 'boolean' ? v : String(v || '').trim());
+  const radios = Object.values(draft.radios || {}).some(v => String(v || '').trim());
+  return campos || radios || (draft.fotos || []).length > 0 || (draft.skusSelecionados || []).length > 0 || (draft.concSelecionados || []).length > 0;
+}
+
 function salvarRascunhoVisita() {
   if (!usuarioAtual || editandoId) return;
-  try { localStorage.setItem('ct_draft_visita_' + usuarioAtual, JSON.stringify(capturarRascunhoVisita())); } catch(e) {}
+  const chave = 'ct_draft_visita_' + usuarioAtual;
+  const draft = capturarRascunhoVisita();
+  try {
+    if (!rascunhoTemConteudo(draft)) { localStorage.removeItem(chave); return; }
+    localStorage.setItem(chave, JSON.stringify(draft));
+  } catch(e) {}
 }
 
 function agendarRascunhoVisita() {
@@ -3018,7 +3032,7 @@ function restaurarRascunhoVisita(nome) {
     if (!raw) return false;
     draft = JSON.parse(raw);
   } catch(e) { return false; }
-  if (!draft) return false;
+  if (!draft || !rascunhoTemConteudo(draft)) return false;
 
   Object.entries(draft.campos || {}).forEach(([id, val]) => {
     const el = document.getElementById(id);
