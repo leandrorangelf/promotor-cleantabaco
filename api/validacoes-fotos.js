@@ -45,10 +45,8 @@ function normalizarFoto(foto) {
 
 function statusIa(resultado = {}) {
   if (resultado.aprovado === true || resultado.status_ia === 'aprovado') return 'aprovado';
-  const score = Number(resultado.score || 0);
-  if (score >= 50) return 'revisao_manual';
-  if (resultado.status_ia) return resultado.status_ia;
-  return 'reprovado';
+  if (resultado.status_ia === 'reprovado') return 'reprovado';
+  return 'revisao_manual';
 }
 
 async function validarAcessoVisita(sql, sessao, visitaId) {

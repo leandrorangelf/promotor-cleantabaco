@@ -52,25 +52,26 @@ async function avaliarComGemini(foto) {
 
   const imagem = normalizarImagemEntrada(foto);
   const prompt = [
-    'Voce esta analisando fotos enviadas por promotores da Clean Tabaco.',
-    'O objetivo principal e identificar se existe uma TABELA DE PRECOS oficial da Clean Tabaco ou El Poncio na foto.',
-    'Textos reais que podem aparecer na tabela ou no material: Cretec, Gudang, Gudang Garam, El Poncio, El Poncio Gudang Garam, uma evolucao Cretec.',
-    'O nome Cretec pode ter variacao visual no logo, incluindo um C invertido no ultimo C; considere isso como indicio valido.',
-    'A tabela verde e a tabela vermelha sao modelos oficiais importantes; se houver uma tabela verde ou tabela vermelha com colunas, precos, produtos ou esses textos, considere como forte indicio de tabela oficial.',
-    'Tolere leitura imperfeita de OCR: textos parecidos como gurjao garam, gudan garam, gudang garan ou garam devem ser tratados como possivel Gudang Garam quando aparecerem em uma tabela verde ou vermelha.',
-    'Considere como tabela valida mesmo se estiver inclinada, parcialmente cortada, com reflexo, distante ou presa em parede, balcao, expositor ou display.',
-    'Nao exija que o ambiente seja um PDV real. A prioridade e reconhecer a tabela ou material de marketing.',
-    'Se houver qualquer indicio claro de tabela de precos da Clean Tabaco ou El Poncio, retorne aprovado true e inclua tabela_precos em materiais_detectados.',
-    'Use score alto quando houver texto de precos, colunas, lista de produtos, logo, marca Clean Tabaco ou El Poncio.',
-    'Se houver sinais visuais de tabela verde ou vermelha oficial mas a leitura do texto estiver ruim, use score intermediario e nao retorne reprovado direto.',
-    'Use score intermediario quando parecer tabela ou material oficial, mas a imagem estiver ruim ou parcialmente visivel.',
-    'Tambem procure wobler, display, cartaz, adesivo, expositor ou material similar.',
+    'Voce esta analisando fotos enviadas por promotores da Clean Tabaco para validar se mostram a TABELA DE PRECOS oficial da Clean Tabaco ou El Poncio.',
+    'So aprove a foto se voce conseguir ler, na propria imagem, pelo menos uma das seguintes evidencias textuais/visuais oficiais:',
+    '- As palavras Gudang, Garam, Gudang Garam (ou variacao de OCR proxima como gudan garam, gudang garan);',
+    '- A palavra Click;',
+    '- A palavra Cretec (o logo pode ter um C invertido no ultimo C, isso ainda conta como Cretec);',
+    '- A frase "evolucao Cretec";',
+    '- A marca El Poncio;',
+    '- A frase "aqui tem" seguida de uma das marcas acima (ex: "aqui tem Gudang", "aqui tem Cretec");',
+    '- Uma tabela de precos no modelo oficial verde ou vermelho contendo o numero 30 (ex: "tabela verde com 30" ou "tabela vermelha com 30").',
+    'Se NENHUMA dessas evidencias estiver legivel na foto, retorne aprovado false e score baixo (0 a 30), mesmo que a imagem pareca ser de um PDV ou pareca uma tabela generica.',
+    'Fotos de pessoas, objetos aleatorios, prints de tela, ou qualquer imagem sem relacao com material de PDV Clean Tabaco/El Poncio devem ser reprovadas com score proximo de 0.',
+    'Se a evidencia textual estiver presente mas a foto estiver borrada, escura, cortada ou de dificil leitura, use score intermediario (40 a 60) e aprovado false, pedindo revisao manual.',
+    'Se a evidencia estiver clara e legivel, use score alto (70 a 100) e aprovado true.',
+    'Inclua em materiais_detectados os itens especificos encontrados (ex: gudang_garam, cretec, click, el_poncio, tabela_verde_30, tabela_vermelha_30).',
     'Responda somente JSON valido com os campos:',
     'aprovado boolean, score number 0-100, materiais_detectados array de strings,',
     'pdv_detectado boolean, qualidade_foto string, motivo string.'
   ].join(' ');
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
