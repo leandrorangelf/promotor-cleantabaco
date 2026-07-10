@@ -1563,6 +1563,7 @@ let concSelecionados = [];
 let fotos = [];
 let iaFotoSelecionada = null;
 let editandoId = null;
+let editandoPromotor = null;
 let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let galeriaFotos = [];
@@ -2941,14 +2942,14 @@ async function salvarVisita() {
 
     let res;
     if (editandoId) {
-      const visitaOriginal = visitasPromotor.find(v => String(v.id) === String(editandoId));
+      const visitaOriginal = [...visitasPromotor, ...visitasGestor].find(v => String(v.id) === String(editandoId));
       if (visitaOriginal?.dados?.localizacao) {
         dados.localizacao = visitaOriginal.dados.localizacao;
       }
       res = await apiFetch(`${API}/api/editar`, {
         method: 'PUT',
         headers: headers(),
-        body: JSON.stringify({ id: editandoId, promotor: usuarioAtual, dados, fotos: fotosParaSalvar })
+        body: JSON.stringify({ id: editandoId, promotor: editandoPromotor || usuarioAtual, dados, fotos: fotosParaSalvar })
       });
     } else {
       res = await apiFetch(`${API}/api/salvar`, {
@@ -2968,11 +2969,20 @@ async function salvarVisita() {
       } else {
         toast('Visita salva sem GPS: ' + (dados.localizacao?.erro || 'nao capturado'), 4200);
       }
+      const edicaoGestor = tipoAtual === 'gestor';
       editandoId = null;
+      editandoPromotor = null;
       limparFormulario();
-      await carregarVisitasPromotor(true);
-      clientesCarregadoEm = 0;
-      mudarAbaP('historico');
+      if (edicaoGestor) {
+        document.getElementById('appPromotor').style.display = 'none';
+        document.getElementById('appGestor').style.display = 'block';
+        await carregarGestor();
+        fecharModal();
+      } else {
+        await carregarVisitasPromotor(true);
+        clientesCarregadoEm = 0;
+        mudarAbaP('historico');
+      }
     } else {
       toast('Erro: ' + (data.erro || 'tente novamente'));
     }
@@ -2988,7 +2998,7 @@ function limparFormulario() {
   ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   document.getElementById('tipoEstab').value = '';
   document.getElementById('uf').value = '';
-  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; acompanhamentoVisitaId = null; revisitaRapidaAtiva = false;
+  skusSelecionados = []; concSelecionados = []; concDetalhes = {}; fotos = []; editandoId = null; editandoPromotor = null; acompanhamentoVisitaId = null; revisitaRapidaAtiva = false;
   document.getElementById('revisitaAviso')?.classList.remove('open');
   const buscaRev = document.getElementById('buscaRevisita'); if (buscaRev) buscaRev.value = '';
   const resRev = document.getElementById('resultadoRevisita'); if (resRev) { resRev.innerHTML = ''; resRev.classList.remove('open'); }
@@ -3174,6 +3184,7 @@ function renderHistorico() {
         </div>
         <div class="visita-actions">
           <button class="btn-detalhes" onclick="abrirDetalhePromotor('${v.id}')">Ver detalhes</button>
+          <button class="btn-editar" onclick="editarVisita('${v.id}', visitasPromotor)">Editar</button>
         </div>
       </div>
     `;
@@ -3447,8 +3458,8 @@ function abrirDetalhePromotor(id) {
   carregarFotosModal(id);
 }
 
-async function editarVisita(id) {
-  const v = visitasPromotor.find(x => x.id === id);
+async function editarVisita(id, lista = visitasPromotor) {
+  const v = lista.find(x => String(x.id) === String(id));
   if (!v) return;
 
   let fotosCarregadas;
@@ -3464,6 +3475,12 @@ async function editarVisita(id) {
 
   const d = v.dados || {};
   editandoId = id;
+  editandoPromotor = v.promotor || usuarioAtual;
+  if (tipoAtual === 'gestor') {
+    document.getElementById('appGestor').style.display = 'none';
+    document.getElementById('appPromotor').style.display = 'block';
+    document.getElementById('headerNomeP').textContent = 'Editando visita de ' + (v.promotor || 'promotor');
+  }
 
   // Preencher PDV
   ['nomeFantasia','cnpj','ie','endereco','cidade','nomeComprador','telefone','distribuidor','concDominante','observacoes'].forEach(campo => {
@@ -5145,6 +5162,7 @@ function renderModal(v, isGestor) {
           <button onclick="gerarPDF(visitaDetalheAtual)" style="flex:1;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📄 Gerar PDF</button>
         </div>
       ` : ''}
+      <button class="btn-editar" onclick="editarVisita('${v.id}', ${isGestor ? 'visitasGestor' : 'visitasPromotor'})">Editar visita</button>
       ${isGestor ? `<button class="modal-btn-excluir" onclick="excluirVisitaGestor('${v.id}')">🗑 Excluir visita</button>` : ''}
     </div>
   `;

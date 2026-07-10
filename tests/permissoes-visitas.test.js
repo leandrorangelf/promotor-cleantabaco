@@ -5,7 +5,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const deletar = fs.readFileSync('api/deletar.js', 'utf8');
 
 assert.ok(html.includes("btn-detalhes"), 'historico do promotor deve manter botao de detalhes');
-assert.ok(!html.includes("onclick=\"editarVisita('${v.id}')\""), 'historico do promotor nao deve exibir editar visita');
+assert.ok(html.includes("onclick=\"editarVisita('${v.id}', visitasPromotor)\""), 'historico do promotor deve permitir editar visita');
 assert.ok(!html.includes("onclick=\"excluirVisitaPromotor('${v.id}')\""), 'historico do promotor nao deve exibir excluir visita');
 assert.ok(!html.includes('async function excluirVisitaPromotor'), 'frontend do promotor nao deve ter funcao de exclusao');
 assert.ok(deletar.includes('if (!souGestor)'), 'api deve restringir delete a gestor');
