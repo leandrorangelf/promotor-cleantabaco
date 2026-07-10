@@ -769,6 +769,7 @@ button:active { transform: translateY(1px); }
       <p>Acompanhe suas metas do mes e veja o que falta para bater.</p>
     </div>
     <div class="gestor-wrap">
+      <div class="card" id="pResumoMesCard" style="margin-bottom:14px;"></div>
       <div class="resumo-grid" id="pPerformanceCards"></div>
       <div class="card">
         <div class="card-title">Próximos passos</div>
@@ -3640,6 +3641,21 @@ function renderPainelPromotor() {
   const acoesEl = document.getElementById('pPerformanceAcoes');
   if (!cardsEl || !acoesEl || typeof calcularPerformancePromotor !== 'function') return;
   const perf = calcularPerformancePromotor({ promotor: usuarioAtual, visitas: visitasPromotor, clientes: todosClientes, metas: metasSistema });
+
+  const resumoEl = document.getElementById('pResumoMesCard');
+  if (resumoEl && typeof calcularBonificacaoPromotores === 'function' && typeof resolverMetasPromotor === 'function') {
+    const periodo = periodoMesAtual();
+    const visitasDoMes = visitasPromotor.filter(v => {
+      const t = new Date(v.criado_em).getTime();
+      return t >= new Date(periodo.de).getTime() && t <= new Date(periodo.ate).getTime();
+    });
+    const clientesDoPromotor = todosClientes.filter(c => c.promotor === usuarioAtual);
+    const metasResolvidas = resolverMetasPromotor({ promotor: usuarioAtual, uf: perf.uf, metas: metasSistema });
+    const resultadoBonus = calcularBonificacaoPromotores(visitasDoMes, clientesDoPromotor, periodo, { [usuarioAtual]: metasResolvidas });
+    const bonus = resultadoBonus[usuarioAtual] || bonusVazio();
+    const stats = statsVisitasPromotor(visitasDoMes);
+    resumoEl.innerHTML = `<div class="card-title">Resumo do mês</div>${resumoBonusStatsHTML(stats, bonus)}`;
+  }
   cardsEl.innerHTML = Object.entries(perf.cards).map(([chave, c]) => `
     <div class="kpi-card ${c.atingida ? 'green' : 'orange'}">
       <div class="kpi-card-top">
@@ -4117,36 +4133,77 @@ async function carregarPerformance() {
   renderPerformance();
 }
 
-function renderPerformance() {
-  const prom = {};
-  const periodoBonus = periodoMesAtual();
-  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasPerformance, clientesPerformance, periodoBonus) : {};
-  const dinheiroBonus = valor => 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const bonusVazio = () => ({
+function dinheiroBonus(valor) { return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function bonusVazio() {
+  return {
     totalBonus: 0,
     metas: {
       clienteNovoPositivado: { atingida: false, atual: 0, alvo: 1 },
       tabelaVisivelBase: { atingida: false, atual: 0, alvo: 50 },
       baseDuzentosPdvs: { atingida: false, atual: 0, alvo: 200 }
     }
-  });
-  const metaChip = (texto, meta) => `
-    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:${meta.atingida?'var(--mint-light)':'var(--orange-light)'};color:${meta.atingida?'var(--mint)':'var(--amber)'};">
+  };
+}
+
+function metaChipHTML(texto, meta) {
+  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:${meta.atingida?'var(--mint-light)':'var(--orange-light)'};color:${meta.atingida?'var(--mint)':'var(--amber)'};">
       ${meta.atingida?'✓':'•'} ${texto}
     </span>`;
+}
+
+function statsVisitasPromotor(visitas) {
+  const d = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0 };
+  visitas.forEach(v => {
+    d.visitas++;
+    if (['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))) d.pedidos++;
+    if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) d.parceiros++;
+    if (v.dados?.presenca?.ruptura) d.ruptura++;
+    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
+    const preco = v.dados?.comercial?.pedidoPreco||{};
+    ['GR','GM','CM','CC'].forEach(s => { d.valor += (qty[s]||0)*(preco[s]||0); d.pacotes += (qty[s]||0); });
+  });
+  return d;
+}
+
+// Bloco de bonus estimado + estatisticas do mes, reutilizado no card do gestor (por promotor)
+// e no painel do proprio promotor ("Minha performance")
+function resumoBonusStatsHTML(d, bonus) {
+  const conv = d.visitas ? Math.round(d.pedidos/d.visitas*100) : 0;
+  const ok = conv >= 50;
+  return `
+    <div style="margin-bottom:12px;padding:10px;border:1px solid ${bonus.totalBonus>=1500?'var(--mint)':'#F1EFE8'};border-radius:10px;background:${bonus.totalBonus>=1500?'var(--mint-light)':'#FAFBFE'};">
+      <div style="color:var(--text-muted);font-size:10px;font-weight:800;">BÔNUS ESTIMADO</div>
+      <div style="font-weight:900;font-size:20px;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)} <span style="font-size:11px;color:var(--text-muted);font-weight:700;">/ R$ 1.500,00</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
+        ${metaChipHTML(`Cliente novo +15/un (${bonus.metas.clienteNovoPositivado.atual}/${bonus.metas.clienteNovoPositivado.alvo || 1})`, bonus.metas.clienteNovoPositivado)}
+        ${metaChipHTML(`Base c/ tabela (${bonus.metas.tabelaVisivelBase.atual}%/${bonus.metas.tabelaVisivelBase.alvo}%)`, bonus.metas.tabelaVisivelBase)}
+        ${metaChipHTML(`PDVs no mês (${bonus.metas.baseDuzentosPdvs.atual}/${bonus.metas.baseDuzentosPdvs.alvo})`, bonus.metas.baseDuzentosPdvs)}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+      <div><div style="color:var(--text-muted);font-size:10px;">VISITAS</div><div style="font-weight:800;font-size:16px;">${d.visitas}</div></div>
+      <div><div style="color:var(--text-muted);font-size:10px;">PEDIDOS</div><div style="font-weight:800;font-size:16px;">${d.pedidos}</div></div>
+      <div><div style="color:var(--text-muted);font-size:10px;">CONVERSÃO</div><div style="font-weight:800;font-size:16px;color:${ok?'var(--mint)':'var(--amber)'};">${d.visitas?conv+'%':'—'}</div></div>
+      <div><div style="color:var(--text-muted);font-size:10px;">PARCEIROS</div><div style="font-weight:800;font-size:16px;">${d.parceiros}</div></div>
+      <div><div style="color:var(--text-muted);font-size:10px;">PACOTES</div><div style="font-weight:800;font-size:16px;">${d.pacotes.toLocaleString('pt-BR')}</div></div>
+      <div><div style="color:var(--text-muted);font-size:10px;">VALOR GERADO</div><div style="font-weight:800;font-size:16px;color:var(--mint);">${d.valor>0?'R$ '+d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'R$ 0,00'}</div></div>
+    </div>
+  `;
+}
+
+function renderPerformance() {
+  const prom = {};
+  const periodoBonus = periodoMesAtual();
+  const bonusPorPromotor = typeof calcularBonificacaoPromotores === 'function' ? calcularBonificacaoPromotores(visitasPerformance, clientesPerformance, periodoBonus) : {};
   visitasPerformance.forEach(v => {
     const n = v.promotor;
     if (!n) return;
-    if (!prom[n]) prom[n] = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0 };
-    prom[n].visitas++;
-    if (['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))) prom[n].pedidos++;
-    if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) prom[n].parceiros++;
-    if (v.dados?.presenca?.ruptura) prom[n].ruptura++;
-    const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
-    const preco = v.dados?.comercial?.pedidoPreco||{};
-    ['GR','GM','CM','CC'].forEach(s => { prom[n].valor += (qty[s]||0)*(preco[s]||0); prom[n].pacotes += (qty[s]||0); });
+    if (!prom[n]) prom[n] = [];
+    prom[n].push(v);
   });
-  const ordenado = Object.entries(prom).sort((a,b)=>b[1].valor-a[1].valor || b[1].visitas-a[1].visitas);
+  const statsPorPromotor = Object.fromEntries(Object.entries(prom).map(([n, lista]) => [n, statsVisitasPromotor(lista)]));
+  const ordenado = Object.entries(statsPorPromotor).sort((a,b)=>b[1].valor-a[1].valor || b[1].visitas-a[1].visitas);
   const maxV = ordenado[0] ? Math.max(...ordenado.map(([,d])=>d.visitas)) : 1;
 
   const cards = document.getElementById('gPerfCards');
@@ -4160,8 +4217,6 @@ function renderPerformance() {
 
   const medalha = ['🥇','🥈','🥉'];
   cards.innerHTML = ordenado.map(([nome,d],i) => {
-    const conv = d.visitas ? Math.round(d.pedidos/d.visitas*100) : 0;
-    const ok = conv >= 50;
     const bonus = bonusPorPromotor[nome] || bonusVazio();
     return `<div class="card" style="margin:0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -4174,25 +4229,7 @@ function renderPerformance() {
       <div style="height:6px;background:#EDEAF7;border-radius:4px;overflow:hidden;margin-bottom:12px;">
         <div style="height:100%;width:${Math.round(d.visitas/maxV*100)}%;background:var(--purple);"></div>
       </div>
-      <div style="margin-bottom:12px;padding:10px;border:1px solid ${bonus.totalBonus>=1500?'var(--mint)':'#F1EFE8'};border-radius:10px;background:${bonus.totalBonus>=1500?'var(--mint-light)':'#FAFBFE'};">
-        <div style="color:var(--text-muted);font-size:10px;font-weight:800;">BÔNUS ESTIMADO</div>
-        <div style="font-weight:900;font-size:20px;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)} <span style="font-size:11px;color:var(--text-muted);font-weight:700;">/ R$ 1.500,00</span></div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
-          ${metaChip('Cliente novo +15/un', bonus.metas.clienteNovoPositivado)}
-          ${metaChip('50% base c/ tabela', bonus.metas.tabelaVisivelBase)}
-          ${metaChip('200 PDVs no mês', bonus.metas.baseDuzentosPdvs)}
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-        <div><div style="color:var(--text-muted);font-size:10px;">PEDIDOS</div><div style="font-weight:800;font-size:16px;">${d.pedidos}</div></div>
-        <div><div style="color:var(--text-muted);font-size:10px;">CONVERSÃO</div><div style="font-weight:800;font-size:16px;color:${ok?'var(--mint)':'var(--amber)'};">${d.visitas?conv+'%':'—'}</div></div>
-        <div><div style="color:var(--text-muted);font-size:10px;">PARCEIROS</div><div style="font-weight:800;font-size:16px;">${d.parceiros}</div></div>
-        <div><div style="color:var(--text-muted);font-size:10px;">PACOTES</div><div style="font-weight:800;font-size:16px;">${d.pacotes.toLocaleString('pt-BR')}</div></div>
-      </div>
-      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #F1EFE8;">
-        <div style="color:var(--text-muted);font-size:10px;">VALOR GERADO</div>
-        <div style="font-weight:800;font-size:18px;color:var(--mint);">${d.valor>0?'R$ '+d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'R$ 0,00'}</div>
-      </div>
+      ${resumoBonusStatsHTML(d, bonus)}
     </div>`;
   }).join('');
 
@@ -4216,7 +4253,7 @@ function renderPerformance() {
         return `<tr style="border-bottom:1px solid #F1EFE8;">
           <td style="padding:9px 8px;font-weight:700;">${nome}</td>
           <td style="text-align:right;padding:9px 8px;font-weight:900;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)}</td>
-          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChip('Cliente novo', bonus.metas.clienteNovoPositivado)}${metaChip('50% tabela', bonus.metas.tabelaVisivelBase)}${metaChip('200 PDVs', bonus.metas.baseDuzentosPdvs)}</div></td>
+          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChipHTML('Cliente novo', bonus.metas.clienteNovoPositivado)}${metaChipHTML('50% tabela', bonus.metas.tabelaVisivelBase)}${metaChipHTML('200 PDVs', bonus.metas.baseDuzentosPdvs)}</div></td>
           <td style="text-align:center;padding:9px 8px;font-weight:700;">${d.visitas}</td>
           <td style="text-align:center;padding:9px 8px;">${d.pedidos}</td>
           <td style="text-align:center;padding:9px 8px;"><span style="background:${ok?'var(--mint-light)':'var(--orange-light)'};color:${ok?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">${d.visitas?conv+'%':'—'}</span></td>
