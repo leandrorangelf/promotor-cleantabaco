@@ -2593,10 +2593,11 @@ function filaRevisaoAtual() {
 }
 
 function avancarParaProximaFotoPendente() {
-  galeriaVisiveis = filaRevisaoAtual();
   renderGaleria();
-  if (!galeriaVisiveis.length) { fecharFoto(); return; }
-  abrirFoto(0, 'revisao');
+  const fila = filaRevisaoAtual();
+  const proximo = fila.length ? galeriaVisiveis.indexOf(fila[0]) : -1;
+  if (proximo < 0) { fecharFoto(); return; }
+  abrirFoto(proximo, 'revisao');
 }
 
 async function analisarFotoModal() {
@@ -2645,6 +2646,35 @@ function atualizarValidacaoLocal(validacao = {}) {
   };
   const mesclar = item => corresponde(item) ? { ...item, ...validacao } : item;
   galeriaFotos = galeriaFotos.map(mesclar);
+}
+
+async function registrarRevisaoManual(item, statusManual) {
+  let validacao = item;
+  if (!item.id) {
+    const foto = fotoMeta(item.foto);
+    const resPost = await apiFetch(`${API}/api/validacoes-fotos`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        visita_id: item.visita_id,
+        foto_index: item.foto_index,
+        imagem_hash: item.imagem_hash || foto.imagemHash || '',
+        cliente_nome: item.cliente_nome || '',
+        resultado: {}
+      })
+    });
+    const dataPost = await resPost.json();
+    if (!resPost.ok) throw new Error(dataPost.erro || 'Erro ao registrar validacao');
+    validacao = dataPost.validacao;
+  }
+  const resPut = await apiFetch(`${API}/api/validacoes-fotos`, {
+    method: 'PUT',
+    headers: { ...headers(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: validacao.id, status_manual: statusManual })
+  });
+  const dataPut = await resPut.json();
+  if (!resPut.ok) throw new Error(dataPut.erro || 'Erro ao revisar foto');
+  return { ...validacao, ...dataPut.validacao, visita_id: item.visita_id, foto_index: item.foto_index };
 }
 
 async function confirmarTabelaManual(visitaId, fotoIndex, clienteNome) {
@@ -2707,8 +2737,15 @@ async function revisarFotoGaleria(id, statusManual, emFila = false) {
 
 async function revisarFotoModal(statusManual) {
   const item = galeriaVisiveis[filaRevisaoIndex];
-  if (!item || !item.id) return;
-  await revisarFotoGaleria(item.id, statusManual, true);
+  if (!item) return;
+  try {
+    const validacao = await registrarRevisaoManual(item, statusManual);
+    atualizarValidacaoLocal(validacao);
+    toast(statusManual === 'aprovado' ? 'Foto aprovada' : 'Foto reprovada');
+    avancarParaProximaFotoPendente();
+  } catch(e) {
+    toast('Nao foi possivel revisar: ' + e.message);
+  }
 }
 
 function avancarRevisaoModal() {
@@ -2726,7 +2763,7 @@ function navegarFotoRevisao(direcao) {
 
 function abrirFoto(i, origem='modal') {
   const lista = origem === 'edicao' ? fotos : fotosModalAtual;
-  const src = fotoSrc(lista[i]);
+  const src = fotoSrc(origem === 'revisao' ? (galeriaVisiveis[i]?.foto || lista[i]) : lista[i]);
   if (!src) return;
   const img = document.getElementById('fotoLightboxImg');
   img.src = src;

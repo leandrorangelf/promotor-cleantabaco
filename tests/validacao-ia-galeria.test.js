@@ -30,7 +30,9 @@ assert.ok(!html.includes('await carregarGaleria();'), 'analisar/revisar foto nao
 assert.ok(html.includes('function analisarFotoModal'), 'modal deve permitir analisar IA a foto atual');
 assert.ok(html.includes('function avancarParaProximaFotoPendente'), 'fila deve avancar para a proxima foto pendente');
 assert.ok(html.includes('function abrirFilaRevisao'), 'grade deve abrir o fluxo sequencial no modal');
-assert.ok(html.includes('galeriaVisiveis = filaRevisaoAtual()'), 'fila deve ser recalculada localmente apos revisao');
+assert.ok(html.includes('const fila = filaRevisaoAtual()'), 'fila deve ser recalculada localmente apos revisao');
+assert.ok(html.includes('async function registrarRevisaoManual'), 'modal deve registrar aprovacao manual sem depender da IA');
+assert.ok(html.includes('galeriaVisiveis[i]?.foto || lista[i]'), 'modal deve usar a foto do item atual ao navegar');
 
 assert.ok(listar.includes('validacoes_fotos'), 'listar deve anexar validacoes de fotos nas visitas');
 assert.ok(salvar.includes('RETURNING id'), 'salvar deve retornar id da visita para registrar validacoes');
