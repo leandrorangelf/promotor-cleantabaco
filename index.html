@@ -1762,21 +1762,11 @@ function fazerLogin(nome, tipo, usuario='', token='') {
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;
-    // Restaura fotos do rascunho caso a página tenha sido recarregada
-    // pela câmera nativa do iOS ao voltar para o app
-    try {
-      const draftKey = 'ct_draft_fotos_' + nome;
-      const savedFotos = localStorage.getItem(draftKey);
-      if (savedFotos) {
-        const parsed = JSON.parse(savedFotos);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          fotos = parsed;
-          renderFotos();
-          mudarAbaP('nova');
-          toast('📸 ' + parsed.length + ' foto(s) do rascunho restaurada(s). Confira o formulário antes de salvar.');
-        }
-      }
-    } catch(e) {}
+    // Restaura o rascunho da visita caso a página tenha sido recarregada
+    // pela câmera nativa (Android/iOS derrubando a aba em segundo plano)
+    if (restaurarRascunhoVisita(nome)) {
+      toast('📋 Rascunho da visita restaurado. Confira o formulário antes de salvar.');
+    }
     carregarMetas().then(() => Promise.all([carregarVisitasPromotor(), carregarClientes(false, true)])).then(() => renderPainelPromotor());
   }
 }
@@ -2343,11 +2333,7 @@ function renderFotos() {
   document.getElementById('fotoGrid').innerHTML = fotos.map((f,i) => `
     <div class="foto-thumb"><img src="${fotoSrc(f)}" alt="Foto ${i+1} da visita" onclick="abrirFoto(${i}, 'edicao')"><button class="foto-del" onclick="removerFoto(${i})" aria-label="Remover foto ${i+1}">×</button></div>
   `).join('');
-  // Persiste rascunho de fotos no localStorage para sobreviver ao reload
-  // causado pela câmera nativa no iOS ao retornar para o app
-  if (usuarioAtual && !editandoId) {
-    try { localStorage.setItem('ct_draft_fotos_' + usuarioAtual, JSON.stringify(fotos)); } catch(e) {}
-  }
+  salvarRascunhoVisita();
 }
 
 function removerFoto(i) { fotos.splice(i,1); renderFotos(); }
@@ -2900,7 +2886,7 @@ function limparFormulario() {
   document.getElementById('revisitaAviso')?.classList.remove('open');
   const buscaRev = document.getElementById('buscaRevisita'); if (buscaRev) buscaRev.value = '';
   const resRev = document.getElementById('resultadoRevisita'); if (resRev) { resRev.innerHTML = ''; resRev.classList.remove('open'); }
-  try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
+  try { if (usuarioAtual) localStorage.removeItem('ct_draft_visita_' + usuarioAtual); } catch(e) {}
   renderFotos();
   document.querySelectorAll('.sku-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#concorrentes .conc-item').forEach(el => el.classList.remove('active'));
@@ -2922,6 +2908,95 @@ function limparFormulario() {
   setRadioValor('motivoResistencia', '', 4);
   irSecao(0);
   document.getElementById('btnSalvar').textContent = '✓ Salvar Visita';
+}
+
+// RASCUNHO DA VISITA (protege contra a aba ser encerrada pelo Android/iOS
+// ao abrir a camera nativa e outros fechamentos inesperados)
+const RASCUNHO_GRUPOS_RADIO = ['temProduto','destaque','precoTabela','frequencia','pedidoFeito','receptividade','motivoResistencia'];
+let rascunhoVisitaTimer = null;
+
+function capturarRascunhoVisita() {
+  const campos = {};
+  document.querySelectorAll('#pNova input[id], #pNova select[id], #pNova textarea[id]').forEach(el => {
+    if (el.type === 'file') return;
+    campos[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  const radios = {};
+  RASCUNHO_GRUPOS_RADIO.forEach(g => { radios[g] = getRadio(g); });
+  const qtys = {};
+  ['qtyGR','qtyGM','qtyCM','qtyCC'].forEach(id => { qtys[id] = document.getElementById(id)?.textContent || '0'; });
+  return {
+    campos, radios, qtys,
+    skusSelecionados: [...skusSelecionados],
+    concSelecionados: [...concSelecionados],
+    concDetalhes: { ...concDetalhes },
+    secaoAtual,
+    fotos
+  };
+}
+
+function salvarRascunhoVisita() {
+  if (!usuarioAtual || editandoId) return;
+  try { localStorage.setItem('ct_draft_visita_' + usuarioAtual, JSON.stringify(capturarRascunhoVisita())); } catch(e) {}
+}
+
+function agendarRascunhoVisita() {
+  clearTimeout(rascunhoVisitaTimer);
+  rascunhoVisitaTimer = setTimeout(salvarRascunhoVisita, 400);
+}
+
+function restaurarRascunhoVisita(nome) {
+  let draft;
+  try {
+    const raw = localStorage.getItem('ct_draft_visita_' + nome);
+    if (!raw) return false;
+    draft = JSON.parse(raw);
+  } catch(e) { return false; }
+  if (!draft) return false;
+
+  Object.entries(draft.campos || {}).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      el.checked = Boolean(val);
+      el.closest('.check-item')?.classList.toggle('checked', el.checked);
+    } else {
+      el.value = val;
+    }
+  });
+
+  RASCUNHO_GRUPOS_RADIO.forEach(g => { if (draft.radios?.[g]) setRadioValor(g, draft.radios[g]); });
+  const pillPedido = document.querySelector('#pedidoFeito .radio-pill.active');
+  if (pillPedido) togglePedidos(pillPedido);
+
+  Object.entries(draft.qtys || {}).forEach(([id, texto]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = texto;
+  });
+  calcularTotalPedido();
+
+  skusSelecionados = Array.isArray(draft.skusSelecionados) ? draft.skusSelecionados : [];
+  document.querySelectorAll('#skusGrid .sku-item').forEach(el => {
+    const sku = el.querySelector('.sku-name')?.textContent.trim();
+    el.classList.toggle('active', skusSelecionados.includes(sku));
+  });
+
+  concSelecionados = Array.isArray(draft.concSelecionados) ? draft.concSelecionados : [];
+  concDetalhes = draft.concDetalhes || {};
+  document.querySelectorAll('#concorrentes .conc-item').forEach(el => {
+    const txt = (el.childNodes[0]?.textContent || '').trim();
+    el.classList.toggle('active', concSelecionados.includes(txt));
+  });
+  renderConcDetalhes();
+
+  if (Array.isArray(draft.fotos) && draft.fotos.length) {
+    fotos = draft.fotos;
+    renderFotos();
+  }
+
+  mudarAbaP('nova');
+  irSecao(Number(draft.secaoAtual) || 0);
+  return true;
 }
 
 // CARREGAR PROMOTOR
@@ -3338,7 +3413,7 @@ async function editarVisita(id) {
   });
 
   // Fotos (ao editar, descarta rascunho e usa as fotos da visita)
-  try { if (usuarioAtual) localStorage.removeItem('ct_draft_fotos_' + usuarioAtual); } catch(e) {}
+  try { if (usuarioAtual) localStorage.removeItem('ct_draft_visita_' + usuarioAtual); } catch(e) {}
   fotos = [...fotosCarregadas];
   renderFotos();
 
@@ -4924,6 +4999,16 @@ document.getElementById('fotoLightbox').addEventListener('click', function(e) { 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && document.getElementById('fotoLightbox').classList.contains('open')) fecharFoto();
 });
+
+// Autosalva o rascunho da visita a cada alteracao no formulario, e forca o salvamento
+// imediato quando a aba sai de foco (ex: ao abrir a camera nativa) para nao perder
+// dados caso o sistema operacional encerre a aba em segundo plano.
+const pNovaEl = document.getElementById('pNova');
+if (pNovaEl) {
+  ['input', 'change', 'click'].forEach(evento => pNovaEl.addEventListener(evento, agendarRascunhoVisita));
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') salvarRascunhoVisita(); });
+window.addEventListener('pagehide', salvarRascunhoVisita);
 
 // INIT
 window.onload = function() {
