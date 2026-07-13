@@ -133,6 +133,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .foto-thumb { position: relative; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 1; }
 .foto-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .foto-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.foto-aviso { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(214,69,29,0.85); color: #fff; font-size: 11px; font-weight: 700; text-align: center; padding: 4px 2px; }
 
 /* PEDIDO */
 .pedido-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1EFE8; }
@@ -2333,14 +2334,17 @@ async function calcularHashFoto(dataUrl) {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function criarFotoComMetadados(dataUrl, origem) {
-  const agora = new Date().toISOString();
+async function criarFotoComMetadados(dataUrl, origem, exifData = null) {
+  const agora = new Date();
+  const divergenteHoras = exifData ? Math.abs(agora - exifData) / 3600000 : 0;
   return {
     imagem: dataUrl,
     origem,
-    capturadaEm: agora,
+    capturadaEm: agora.toISOString(),
     enviadaEm: '',
-    imagemHash: await calcularHashFoto(dataUrl)
+    imagemHash: await calcularHashFoto(dataUrl),
+    exifCapturadaEm: exifData ? exifData.toISOString() : '',
+    exifDivergente: divergenteHoras > 2
   };
 }
 
@@ -2352,6 +2356,52 @@ function prepararFotosParaEnvio(lista) {
     }
     return { ...foto, enviadaEm: foto.enviadaEm || enviadaEm };
   });
+}
+
+function lerExifDataOriginal(buffer) {
+  try {
+    const view = new DataView(buffer);
+    if (view.getUint16(0) !== 0xFFD8) return null;
+    let offset = 2;
+    while (offset < view.byteLength) {
+      const marker = view.getUint16(offset);
+      if (marker === 0xFFE1) {
+        const exifOffset = offset + 4;
+        if (view.getUint32(exifOffset) !== 0x45786966) return null; // "Exif"
+        const tiffOffset = exifOffset + 6;
+        const little = view.getUint16(tiffOffset) === 0x4949;
+        const ifd0Offset = tiffOffset + view.getUint32(tiffOffset + 4, little);
+        const lerTagsData = base => {
+          const n = view.getUint16(base, little);
+          for (let i = 0; i < n; i++) {
+            const entry = base + 2 + i * 12;
+            const tag = view.getUint16(entry, little);
+            if (tag === 0x8769) return tiffOffset + view.getUint32(entry + 8, little); // Exif SubIFD
+          }
+          return null;
+        };
+        const subIfdOffset = lerTagsData(ifd0Offset);
+        if (subIfdOffset == null) return null;
+        const n = view.getUint16(subIfdOffset, little);
+        for (let i = 0; i < n; i++) {
+          const entry = subIfdOffset + 2 + i * 12;
+          if (view.getUint16(entry, little) === 0x9003) { // DateTimeOriginal
+            const strOffset = tiffOffset + view.getUint32(entry + 8, little);
+            let texto = '';
+            for (let c = 0; c < 19; c++) texto += String.fromCharCode(view.getUint8(strOffset + c));
+            const m = texto.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+            if (!m) return null;
+            return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+          }
+        }
+        return null;
+      }
+      offset += 2 + view.getUint16(offset + 2);
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
 function carimbarDataHora(ctx, w, h) {
@@ -2371,6 +2421,7 @@ function carimbarDataHora(ctx, w, h) {
 function processarFotos(event) {
   const origem = event.target.id === 'fotoCameraInput' ? 'camera' : 'galeria';
   Array.from(event.target.files).forEach(file => {
+    const leituraExif = origem === 'galeria' ? file.arrayBuffer().then(lerExifDataOriginal).catch(() => null) : Promise.resolve(null);
     const reader = new FileReader();
     reader.onload = e => {
       const img = new Image();
@@ -2383,7 +2434,8 @@ function processarFotos(event) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         if (origem === 'camera') carimbarDataHora(ctx, w, h);
-        fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem));
+        const exifData = await leituraExif;
+        fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifData));
         renderFotos();
       };
       img.src = e.target.result;
@@ -2395,7 +2447,11 @@ function processarFotos(event) {
 
 function renderFotos() {
   document.getElementById('fotoGrid').innerHTML = fotos.map((f,i) => `
-    <div class="foto-thumb"><img src="${fotoSrc(f)}" alt="Foto ${i+1} da visita" onclick="abrirFoto(${i}, 'edicao')"><button class="foto-del" onclick="removerFoto(${i})" aria-label="Remover foto ${i+1}">×</button></div>
+    <div class="foto-thumb">
+      <img src="${fotoSrc(f)}" alt="Foto ${i+1} da visita" onclick="abrirFoto(${i}, 'edicao')">
+      ${f.exifDivergente ? '<div class="foto-aviso" title="A data original desta foto (EXIF) parece ser antiga">⚠️ Foto antiga?</div>' : ''}
+      <button class="foto-del" onclick="removerFoto(${i})" aria-label="Remover foto ${i+1}">×</button>
+    </div>
   `).join('');
   salvarRascunhoVisita();
 }
