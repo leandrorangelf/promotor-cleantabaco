@@ -34,13 +34,12 @@ export default async function handler(req, res) {
       ? await sql`select dados, criado_em from visitas where promotor = ${promotor} and criado_em >= ${de}::timestamptz and criado_em <= ${ate}::timestamptz order by criado_em asc`
       : await sql`select dados, criado_em from visitas where promotor = ${promotor} order by criado_em asc`;
 
-    const pontos = rows
+    const visitasComGps = rows
       .map(v => typeof v.dados === 'string' ? JSON.parse(v.dados) : v.dados)
-      .map(d => d?.localizacao)
-      .filter(loc => loc?.ok && Number.isFinite(+loc.latitude) && Number.isFinite(+loc.longitude))
-      .map(loc => `${loc.latitude},${loc.longitude}`);
+      .map(d => ({ nome: d?.pdv?.nomeFantasia || 'PDV não identificado', localizacao: d?.localizacao }))
+      .filter(v => v.localizacao?.ok && Number.isFinite(+v.localizacao.latitude) && Number.isFinite(+v.localizacao.longitude));
 
-    if (pontos.length < 2) {
+    if (visitasComGps.length < 2) {
       return res.status(200).json({ km: null, motivo: 'Rota insuficiente (menos de 2 visitas com GPS no período)' });
     }
 
@@ -49,6 +48,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ km: null, motivo: 'Chave do Google Directions nao configurada' });
     }
 
+    const pontos = visitasComGps.map(v => `${v.localizacao.latitude},${v.localizacao.longitude}`);
     const origem = pontos[0];
     const destino = pontos[pontos.length - 1];
     const waypoints = pontos.slice(1, -1);
@@ -64,8 +64,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ km: null, motivo: 'Nao foi possivel calcular a rota agora' });
     }
 
-    const metros = dados.routes[0].legs.reduce((soma, perna) => soma + (perna.distance?.value || 0), 0);
-    return res.status(200).json({ km: Math.round(metros / 100) / 10 });
+    const legs = dados.routes[0].legs;
+    const metros = legs.reduce((soma, perna) => soma + (perna.distance?.value || 0), 0);
+    const trechos = legs.map((perna, i) => ({
+      de: visitasComGps[i].nome,
+      para: visitasComGps[i + 1].nome,
+      km: Math.round((perna.distance?.value || 0) / 100) / 10
+    }));
+    return res.status(200).json({ km: Math.round(metros / 100) / 10, trechos });
   } catch (e) {
     return res.status(200).json({ km: null, motivo: 'Erro ao calcular rota: ' + e.message });
   }

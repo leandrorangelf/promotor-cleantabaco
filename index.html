@@ -1483,6 +1483,7 @@ button:active { transform: translateY(1px); }
       </div>
       <div id="mapaLeafletEl" class="mapa-box"></div>
       <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período/promotor selecionado.</div>
+      <div id="mapaKmTrechos" style="margin-top:12px;"></div>
     </div>
   </div>
 
@@ -3928,10 +3929,12 @@ async function carregarMapa() {
 async function carregarKmRota(promotor, de, ate) {
   const card = document.getElementById('mapaKmCard');
   const valor = document.getElementById('mapaKmValor');
+  const trechosEl = document.getElementById('mapaKmTrechos');
   if (!card || !valor) return;
-  if (!promotor) { card.style.display = 'none'; return; }
+  if (!promotor) { card.style.display = 'none'; if (trechosEl) trechosEl.innerHTML = ''; return; }
   card.style.display = 'block';
   valor.textContent = 'Calculando...';
+  if (trechosEl) trechosEl.innerHTML = '';
   try {
     let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&`;
     if (de) url += `de=${de}T00:00:00Z&`;
@@ -3940,6 +3943,14 @@ async function carregarKmRota(promotor, de, ate) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao calcular km');
     valor.textContent = data.km != null ? `${data.km.toLocaleString('pt-BR')} km` : (data.motivo || 'Indisponível');
+    if (trechosEl && data.trechos?.length) {
+      trechosEl.innerHTML = `
+        <div class="card-title">Km entre pontos da rota</div>
+        <div class="card">${data.trechos.map(t => `
+          <div class="rel-row"><span class="rel-key">${esc(t.de)} → ${esc(t.para)}</span><span class="rel-val">${t.km.toLocaleString('pt-BR')} km</span></div>
+        `).join('')}</div>
+      `;
+    }
   } catch (e) {
     valor.textContent = 'Não foi possível calcular agora';
   }
