@@ -1818,7 +1818,7 @@ function mudarAbaG(aba) {
   if (aba === 'performance') carregarPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
-  if (aba === 'mapa') { sincronizarFiltrosMapa(); renderMapa(); }
+  if (aba === 'mapa') { resetarFiltrosMapa(); carregarMapa(); }
   if (aba === 'metas') renderMetasGestor();
   if (aba === 'promotores') carregarPromotoresAdmin();
 }
@@ -3802,33 +3802,36 @@ function renderPainelPromotor() {
 
 let mapaLeaflet = null;
 let mapaCamadaPontos = null;
+let visitasMapa = [];
 
-function sincronizarFiltrosMapa() {
-  const pares = [
-    ['gFiltroPromotor', 'mapaFiltroPromotor'],
-    ['gFiltroDe', 'mapaFiltroDe'],
-    ['gFiltroAte', 'mapaFiltroAte']
-  ];
-  pares.forEach(([origem, destino]) => {
-    const o = document.getElementById(origem);
-    const d = document.getElementById(destino);
-    if (o && d && d.value !== o.value) d.value = o.value;
-  });
+function resetarFiltrosMapa() {
+  const agora = new Date();
+  const hoje = [agora.getFullYear(), String(agora.getMonth() + 1).padStart(2, '0'), String(agora.getDate()).padStart(2, '0')].join('-');
+  document.getElementById('mapaFiltroDe').value = hoje;
+  document.getElementById('mapaFiltroAte').value = hoje;
+}
+
+async function carregarMapa() {
+  const promotor = document.getElementById('mapaFiltroPromotor').value;
+  const de = document.getElementById('mapaFiltroDe').value;
+  const ate = document.getElementById('mapaFiltroAte').value;
+  let url = `${API}/api/listar?`;
+  if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+  if (de) url += `de=${de}T00:00:00Z&`;
+  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  try {
+    const res = await apiFetch(url, { headers: headers() });
+    const data = await res.json();
+    visitasMapa = data.visitas || [];
+  } catch(e) {
+    visitasMapa = [];
+    toast('Erro ao carregar dados do mapa');
+  }
+  renderMapa();
 }
 
 async function aplicarFiltrosMapa() {
-  const pares = [
-    ['mapaFiltroPromotor', 'gFiltroPromotor'],
-    ['mapaFiltroDe', 'gFiltroDe'],
-    ['mapaFiltroAte', 'gFiltroAte']
-  ];
-  pares.forEach(([origem, destino]) => {
-    const o = document.getElementById(origem);
-    const d = document.getElementById(destino);
-    if (o && d) d.value = o.value;
-  });
-  await carregarGestor();
-  renderMapa();
+  await carregarMapa();
 }
 
 async function limparFiltrosMapa() {
@@ -3840,7 +3843,7 @@ async function limparFiltrosMapa() {
 }
 
 function renderMapa() {
-  const pontos = visitasGestor
+  const pontos = visitasMapa
     .filter(v => v.dados?.localizacao?.ok
       && Number.isFinite(+v.dados.localizacao.latitude)
       && Number.isFinite(+v.dados.localizacao.longitude))

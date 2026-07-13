@@ -12,15 +12,19 @@ assert.ok(html.includes(`data-gestor-page="mapa"`), 'deve existir botao de nav p
 assert.ok(html.includes(`id="gMapa"`), 'deve existir a pagina gMapa');
 assert.ok(html.includes(`id="mapaFiltroPromotor"`), 'mapa deve ter filtro proprio de promotor');
 assert.ok(html.includes('function aplicarFiltrosMapa()'), 'mapa deve aplicar filtros pela propria aba');
-assert.ok(html.includes('sincronizarFiltrosMapa'), 'mapa deve sincronizar filtros com a visao geral');
+assert.ok(html.includes('resetarFiltrosMapa'), 'mapa deve resetar o periodo ao abrir');
 assert.ok(html.includes(`id="mapaLeafletEl"`), 'deve existir o container do Leaflet');
 
 assert.ok(html.includes('function renderMapa()'), 'deve existir a funcao renderMapa');
+assert.ok(html.includes('let visitasMapa = [];'), 'mapa deve manter dados proprios');
+assert.ok(html.includes('async function carregarMapa()'), 'mapa deve carregar dados com filtros proprios');
+assert.ok(/if \(aba === 'mapa'\) \{ resetarFiltrosMapa\(\); carregarMapa\(\); \}/.test(html), 'abrir mapa deve resetar o periodo para hoje e carregar dados proprios');
+assert.ok(!html.includes('function sincronizarFiltrosMapa()'), 'mapa nao deve sincronizar datas com a visao geral');
+assert.ok(!/function aplicarFiltrosMapa\(\)\s*\{[\s\S]{0,200}gFiltroDe/.test(html), 'aplicar filtro do mapa nao deve escrever na visao geral');
 assert.ok(html.includes('function popularFiltroPromotoresGestor()'), 'filtros devem ser preenchidos a partir dos promotores retornados');
 assert.ok(html.includes("visitasGestor.map(v => v.promotor)"), 'filtro deve considerar promotores presentes nas visitas');
 assert.ok(!html.includes('<option>Anderson</option>'), 'filtros nao devem depender de lista fixa de promotores');
 assert.ok(/if \(!mapaLeaflet\)/.test(html), 'deve ter guard contra reinicializar o mapa Leaflet mais de uma vez');
 assert.ok(/mapaCamadaPontos\.clearLayers\(\)/.test(html), 'deve limpar a camada de pontos antes de redesenhar (evita residuo)');
-assert.ok(/if \(aba === 'mapa'\) \{ sincronizarFiltrosMapa\(\); renderMapa\(\); \}/.test(html), 'mudarAbaG deve sincronizar filtros e chamar renderMapa ao abrir a aba');
 
 console.log('mapa-timeline.test.js passou');
