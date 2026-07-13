@@ -90,6 +90,7 @@ Sistema de gestão de promotores de PDV (pontos de venda). Duas frentes: app do 
 - `AUTH_SECRET` — opcional, chave do HMAC dos tokens de sessão.
 - `GEMINI_API_KEY` — usada por `api/avaliar-foto.js` (validação de foto por IA).
 - `IA_VALIDACAO_REAL` — feature flag para ligar a validação real por IA (`api/avaliar-foto.js`).
+- `GOOGLE_DIRECTIONS_API_KEY` — usada por `api/rota-km.js` (cálculo de km real de rua da rota diária do promotor). Sem ela, a rota retorna `km: null`.
 
 ### Planejamento
 

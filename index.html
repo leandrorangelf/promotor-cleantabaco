@@ -1477,6 +1477,10 @@ button:active { transform: translateY(1px); }
         </div>
       </div>
       <div id="mapaStatus" class="mapa-status"></div>
+      <div id="mapaKmCard" class="card" style="display:none;margin-bottom:12px;">
+        <div class="card-title">Km da rota do dia</div>
+        <div id="mapaKmValor" style="font-size:28px;font-weight:800;color:var(--purple);">—</div>
+      </div>
       <div id="mapaLeafletEl" class="mapa-box"></div>
       <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período/promotor selecionado.</div>
     </div>
@@ -3918,6 +3922,27 @@ async function carregarMapa() {
     toast('Erro ao carregar dados do mapa');
   }
   renderMapa();
+  carregarKmRota(promotor, de, ate);
+}
+
+async function carregarKmRota(promotor, de, ate) {
+  const card = document.getElementById('mapaKmCard');
+  const valor = document.getElementById('mapaKmValor');
+  if (!card || !valor) return;
+  if (!promotor) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  valor.textContent = 'Calculando...';
+  try {
+    let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&`;
+    if (de) url += `de=${de}T00:00:00Z&`;
+    if (ate) url += `ate=${ate}T23:59:59Z&`;
+    const res = await apiFetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao calcular km');
+    valor.textContent = data.km != null ? `${data.km.toLocaleString('pt-BR')} km` : (data.motivo || 'Indisponível');
+  } catch (e) {
+    valor.textContent = 'Não foi possível calcular agora';
+  }
 }
 
 async function aplicarFiltrosMapa() {
