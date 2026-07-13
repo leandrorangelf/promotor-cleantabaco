@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Manual do Promotor | Cleantabaco</title>
+<style>
+:root {
+  --purple: #1E1648; --purple-light: #EEEDFE; --purple-mid: #6B5DD3;
+  --mint: #1A8C62; --mint-light: #D8F5EC;
+  --orange: #C4720A; --orange-light: #FFF0D0;
+  --red: #C42040; --red-light: #FFE8EC;
+  --gold: #C4970A; --gold-light: #FFF6DC;
+  --cream: #F4F2EF; --border: #D0CCC4;
+  --text: #1A1428; --text-muted: #6B6480;
+  --radius: 14px; --radius-sm: 8px;
+  --card-bg: #fff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); font-size: 15px; min-height: 100vh; }
+
+/* ===== TOP BAR ===== */
+.topbar {
+  background: linear-gradient(120deg, var(--purple) 0%, #2A1F63 100%);
+  color: #fff; padding: 18px 20px; position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.15);
+}
+.topbar .back { color: rgba(255,255,255,.75); text-decoration: none; font-size: 20px; line-height: 1; padding: 6px; border-radius: 8px; }
+.topbar .back:hover { background: rgba(255,255,255,.1); }
+.topbar h1 { font-size: 17px; font-weight: 800; letter-spacing: .2px; }
+.topbar p { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 1px; }
+
+/* ===== MANUAL TABS ===== */
+.doc-tabs { display: flex; gap: 8px; padding: 14px 16px 0; max-width: 1100px; margin: 0 auto; overflow-x: auto; }
+.doc-tab {
+  flex: 0 0 auto; padding: 10px 16px; border-radius: 999px; border: 1.5px solid var(--border);
+  background: #fff; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--text-muted);
+  white-space: nowrap; transition: all .15s; font-family: inherit;
+}
+.doc-tab.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+/* ===== LAYOUT ===== */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
+.toc { position: sticky; top: 90px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; max-height: calc(100vh - 110px); overflow-y: auto; }
+.toc a { display: block; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none; margin-bottom: 2px; }
+.toc a:hover { background: var(--purple-light); color: var(--purple); }
+.toc a.active { background: var(--purple); color: #fff; }
+
+.doc { display: none; }
+.doc.active { display: block; }
+
+/* ===== HERO ===== */
+.hero {
+  background: linear-gradient(135deg, var(--purple) 0%, #2E2470 60%, #443A8C 100%);
+  color: #fff; border-radius: var(--radius); padding: 34px 26px; margin-bottom: 20px; position: relative; overflow: hidden;
+}
+.hero::after { content:''; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%; background: rgba(255,255,255,.06); }
+.hero .tag { display:inline-block; background: var(--gold); color: #2A1E00; font-weight: 800; font-size: 11px; letter-spacing: .5px; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+.hero h2 { font-size: 26px; font-weight: 900; line-height: 1.15; margin-bottom: 8px; }
+.hero h2 em { font-style: normal; color: #E9C64A; }
+.hero .sub { font-size: 14px; color: rgba(255,255,255,.7); font-style: italic; }
+.hero .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+.hero .chips span { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); padding: 5px 12px; border-radius: 999px; font-size: 12px; color: rgba(255,255,255,.85); }
+
+/* ===== SECTION ===== */
+.section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; overflow: hidden; scroll-margin-top: 90px; }
+.section-head { padding: 18px 22px; background: var(--purple); color: #fff; display: flex; align-items: center; gap: 12px; }
+.section-head .num { background: var(--gold); color: #2A1E00; font-weight: 900; font-size: 13px; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.section-head h3 { font-size: 17px; font-weight: 800; }
+.section-body { padding: 20px 22px; }
+.section-lead { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+
+.callout { border-left: 4px solid var(--gold); background: var(--gold-light); padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13.5px; color: #5C4600; margin-bottom: 16px; line-height: 1.5; }
+.callout.red { border-color: var(--red); background: var(--red-light); color: #7A0E28; }
+.callout.mint { border-color: var(--mint); background: var(--mint-light); color: #0E5A3D; }
+
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.card { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px; background: #fff; }
+.card b { display: block; font-size: 14px; margin-bottom: 5px; color: var(--purple); }
+.card p { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+
+.step-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F1EFE8; }
+.step-row:last-child { border-bottom: none; }
+.step-row .n { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--purple-light); color: var(--purple); font-weight: 800; font-size: 12.5px; display: flex; align-items: center; justify-content: center; }
+.step-row div b { display: block; font-size: 14px; margin-bottom: 2px; }
+.step-row div span { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+
+.check-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 18px; }
+.check-cols h4 { font-size: 12px; letter-spacing: .4px; color: var(--purple); text-transform: uppercase; margin-bottom: 10px; font-weight: 800; }
+.check-cols ul { list-style: none; }
+.check-cols li { font-size: 13px; padding: 6px 0 6px 24px; position: relative; color: var(--text); line-height: 1.4; }
+.check-cols li::before { content: '☐'; position: absolute; left: 0; color: var(--purple-mid); }
+
+.channels { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; }
+.channel { border-radius: var(--radius-sm); padding: 16px 10px; text-align: center; color: #fff; font-weight: 700; font-size: 13px; }
+
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+.compare .good, .compare .bad { border-radius: var(--radius-sm); padding: 14px 16px; }
+.compare .good { background: var(--mint-light); border: 1.5px solid #9FDDC3; }
+.compare .bad { background: var(--red-light); border: 1.5px solid #F3AFC0; }
+.compare h5 { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+.compare .good h5 { color: #0E5A3D; }
+.compare .bad h5 { color: #7A0E28; }
+.compare ul { list-style: none; font-size: 13px; line-height: 1.7; }
+.compare .good li { color: #0E5A3D; }
+.compare .bad li { color: #7A0E28; }
+
+.quote { font-style: italic; font-size: 14px; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 14px; margin-top: 16px; }
+
+.product-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .3px; margin-bottom: 10px; }
+
+footer.legal { text-align: center; font-size: 11px; color: var(--text-muted); padding: 24px 16px 40px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 800px) {
+  .wrap { grid-template-columns: 1fr; }
+  .toc { position: static; max-height: none; display: flex; overflow-x: auto; gap: 4px; }
+  .toc a { flex: 0 0 auto; white-space: nowrap; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="back" title="Voltar">←</a>
+  <div>
+    <h1>📘 Manual do Promotor</h1>
+    <p>Consulta rápida — merchandising, portfólio e argumentos de venda</p>
+  </div>
+</div>
+
+<div class="doc-tabs">
+  <button class="doc-tab active" data-doc="merch" onclick="mudarDoc('merch')">🏪 Merchandising no PDV</button>
+  <button class="doc-tab" data-doc="poncio" onclick="mudarDoc('poncio')">📦 Guia El Poncio</button>
+</div>
+
+<div class="wrap">
+  <nav class="toc" id="toc-merch">
+    <a href="#m-papel" class="active">01 Nosso Papel</a>
+    <a href="#m-canais">02 Canais de Atuação</a>
+    <a href="#m-vis1">03 Visibilidade Primária</a>
+    <a href="#m-vis2">04 Visibilidade Secundária</a>
+    <a href="#m-tabela">05 Tabela de Preços</a>
+    <a href="#m-exposicao">06 Exposição do Produto</a>
+    <a href="#m-disp">07 Disponibilidade</a>
+    <a href="#m-verbal">08 Verbalização</a>
+    <a href="#m-estoque">09 Gestão de Estoque</a>
+    <a href="#m-acoes">10 Ações Regionais</a>
+    <a href="#m-checklist">11 Checklist da Visita</a>
+  </nav>
+  <nav class="toc" id="toc-poncio" style="display:none">
+    <a href="#p-gudang" class="active">Gudang Garam</a>
+    <a href="#p-cretec">Cretec Twin Ten</a>
+    <a href="#p-clean">Clean Click</a>
+    <a href="#p-cravo">O Cravo — Diferencial</a>
+    <a href="#p-fresco">Produto Fresco</a>
+    <a href="#p-frontais">Marcas Frontais</a>
+  </nav>
+
+  <!-- ============ DOC 1: MERCHANDISING ============ -->
+  <div class="doc active" id="doc-merch">
+
+    <div class="hero">
+      <span class="tag">MANUAL OFICIAL</span>
+      <h2>Merchandising <em>no Ponto de Venda</em></h2>
+      <p class="sub">Guia para Promotores de Vendas — Categoria Tabaco</p>
+      <div class="chips">
+        <span>Visibilidade Primária</span><span>Visibilidade Secundária</span><span>Tabela de Preços</span>
+        <span>Disponibilidade</span><span>Verbalização</span><span>Estoque</span><span>Ações Regionais</span>
+      </div>
+    </div>
+
+    <div class="section" id="m-papel">
+      <div class="section-head"><div class="num">01</div><h3>Nosso Papel — Atribuições do Promotor</h3></div>
+      <div class="section-body">
+        <div class="step-row"><div class="n">1</div><div><b>Visibilidade Primária</b><span>Garantir presença do produto nas áreas quentes do PDV com material de merchandising adequado.</span></div></div>
+        <div class="step-row"><div class="n">2</div><div><b>Visibilidade Secundária</b><span>Ampliar a exposição em pontos extras para maximizar o contato com o consumidor.</span></div></div>
+        <div class="step-row"><div class="n">3</div><div><b>Tabela de Preços</b><span>Afixar e manter atualizada a tabela de preços em local visível, conforme normativa vigente.</span></div></div>
+        <div class="step-row"><div class="n">4</div><div><b>Exposição do Produto</b><span>Manter produtos expostos e visíveis ao consumidor — a compra da categoria é fortemente impulsiva.</span></div></div>
+        <div class="step-row"><div class="n">5</div><div><b>Disponibilidade & Verbalização</b><span>Garantir disponibilidade das marcas e verbalizar ativamente sobre os produtos ao lojista.</span></div></div>
+        <div class="step-row"><div class="n">6</div><div><b>Gestão de Estoque & Ações Regionais</b><span>Acompanhar estoque dos clientes e executar ações determinadas pela equipe regional.</span></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="m-canais">
+      <div class="section-head"><div class="num">02</div><h3>Canais de Atuação</h3></div>
+      <div class="section-body">
+        <p class="section-lead">Em todos esses canais o TABACO é categoria de destaque — nossa atuação define o sell-out!</p>
+        <div class="channels">
+          <div class="channel" style="background:#1E5C8C">Conveniências / S-Store</div>
+          <div class="channel" style="background:#1A8C4E">Empórios</div>
+          <div class="channel" style="background:#6A2C91">Supermercados & Atacados</div>
+          <div class="channel" style="background:#B3401A">Tabacarias</div>
+          <div class="channel" style="background:#C4970A">Padarias</div>
+          <div class="channel" style="background:#1E5C8C">Armazéns</div>
+          <div class="channel" style="background:#8C1A2E">Adegas & Dist. de Bebidas</div>
+          <div class="channel" style="background:#1E5C8C">Outros Canais de Tabaco</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-vis1">
+      <div class="section-head"><div class="num">03</div><h3>Visibilidade Primária</h3></div>
+      <div class="section-body">
+        <p class="section-lead">Presença do produto e do material de merchandising nas ÁREAS QUENTES do ponto de venda — locais de maior tráfego e visibilidade natural do consumidor.</p>
+        <div class="callout">💡 <b>Conceito-chave:</b> Se o consumidor não VÊ, ele não COMPRA. A visibilidade primária é o primeiro passo para a venda.</div>
+        <div class="grid-cards">
+          <div class="card"><b>📍 Frente ao Caixa / Balcão</b><p>Posicione expositores, displays ou a tabela de preços no campo de visão direto de quem paga.</p></div>
+          <div class="card"><b>🔥 Gôndola de Destaque</b><p>Ocupe sempre a posição de maior visibilidade — altura dos olhos, frente do corredor.</p></div>
+          <div class="card"><b>🚪 Entrada da Loja / Circulação</b><p>Pontos de entrada e corredores de fluxo intenso são ideais para materiais de destaque.</p></div>
+          <div class="card"><b>📦 Display & Expositor Próprio</b><p>Utilize os materiais fornecidos pela empresa (clip strip, wobbler, display de balcão/chão).</p></div>
+          <div class="card"><b>✨ Organização & Limpeza</b><p>Produto bem organizado, limpo e com frente completa transmite qualidade e facilita a escolha.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-vis2">
+      <div class="section-head"><div class="num">04</div><h3>Visibilidade Secundária</h3></div>
+      <div class="section-body">
+        <p class="section-lead">Pontos de exposição extras além da gôndola principal — ampliam a cobertura visual e multiplicam as chances de compra por impulso.</p>
+        <div class="grid-cards">
+          <div class="card"><b>1. Display de Balcão</b><p>Próximo ao caixa. Máxima visibilidade no momento da decisão de compra.</p></div>
+          <div class="card"><b>2. Clip Strip / Wobbler</b><p>Na borda de gôndola ou prateleira de produtos complementares (isqueiros, fósforos).</p></div>
+          <div class="card"><b>3. Ilha / Display de Chão</b><p>Em supermercados e atacados: ilhas de destaque com alto volume de produto.</p></div>
+          <div class="card"><b>4. Banners & Cartazes</b><p>Paredes, vitrines e áreas de espera — visibilidade da marca antes da decisão.</p></div>
+          <div class="card"><b>5. Check-out / Caixa</b><p>O ponto mais estratégico — 100% do fluxo passa pelo caixa. Nunca deixe sem material.</p></div>
+          <div class="card"><b>6. Refrigerador / Freezer Visível</b><p>Quando aplicável: etiquetas e adesivos na área de bebidas para associação de ocasião.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-tabela">
+      <div class="section-head"><div class="num">05</div><h3>Tabela de Preços</h3></div>
+      <div class="section-body">
+        <div class="callout red">⚠️ <b>Obrigação legal:</b> A tabela de preços deve ser mantida em local visível ao consumidor, conforme Instrução Normativa 1.204/2011. A não afixação sujeita o estabelecimento a penalidades.</div>
+        <div class="check-cols">
+          <div>
+            <h4>Onde afixar</h4>
+            <ul style="list-style:none">
+              <li>✅ Balcão do caixa — campo de visão do consumidor</li>
+              <li>✅ Próximo ao expositor ou display de produto</li>
+              <li>✅ Parede atrás do atendente (balcão fechado)</li>
+              <li>✅ No refrigerador ou vitrine, quando exposto</li>
+              <li>❌ Nunca em local oculto, de costas ou fora do alcance visual</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Boas práticas</h4>
+            <ul style="list-style:none">
+              <li>🔄 Substituir imediatamente quando houver atualização de preços</li>
+              <li>🔍 Verificar se está legível, sem rasuras ou dobras</li>
+              <li>📌 Fixar firmemente — não pode cair ou virar</li>
+              <li>🖨️ Utilizar apenas tabelas fornecidas pela empresa</li>
+              <li>📋 Registrar a afixação com foto no aplicativo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-exposicao">
+      <div class="section-head"><div class="num">06</div><h3>Exposição do Produto</h3></div>
+      <div class="section-body">
+        <div class="callout red">🔥 <b>A compra de tabaco é fortemente por impulso.</b> Se o produto não está visível, o consumidor não lembra de comprar — ou compra da concorrência.</div>
+        <div class="grid-cards">
+          <div class="card"><b>Facing completo</b><p>Mantenha todas as frentes de produto alinhadas, sem buracos. Reorganize sempre que necessário.</p></div>
+          <div class="card"><b>SKUs visíveis</b><p>Todas as marcas e variantes devem estar expostas — nunca esconder um SKU atrás do outro.</p></div>
+          <div class="card"><b>Produto na altura dos olhos</b><p>Entre 1,20m e 1,60m do chão é a faixa de maior conversão. Priorize nossas marcas ali.</p></div>
+          <div class="card"><b>Frente do balcão / vitrine</b><p>Em lojas com balcão, o produto deve ficar acessível visualmente ao consumidor.</p></div>
+          <div class="card"><b>Clareza nas marcas</b><p>Identificação clara de cada marca e variante facilita a escolha e reduz o atrito na compra.</p></div>
+          <div class="card"><b>Material POP ativo</b><p>Wobblers, stop shelfs e glorifiers direcionam o olhar para as nossas marcas.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-disp">
+      <div class="section-head"><div class="num">07</div><h3>Disponibilidade de Produto</h3></div>
+      <div class="section-body">
+        <div class="callout mint">"Produto que falta VENDE zero. Produto que sobra VENDE menos do que poderia. O equilíbrio é a chave."</div>
+        <div class="step-row"><div class="n">1</div><div><b>Verifique o estoque na visita</b><span>Confira prateleira + depósito. Identifique rupturas e itens próximos ao esgotamento.</span></div></div>
+        <div class="step-row"><div class="n">2</div><div><b>Reponha a prateleira</b><span>Traga produto do depósito e complete o facing. Nunca deixe a gôndola com buracos.</span></div></div>
+        <div class="step-row"><div class="n">3</div><div><b>Alerte sobre ruptura iminente</b><span>Se o estoque estiver baixo, alerte o lojista e registre o pedido de reposição no sistema.</span></div></div>
+        <div class="step-row"><div class="n">4</div><div><b>Garanta o mix completo</b><span>Todas as marcas e variantes do portfólio acordado devem estar disponíveis. Falta de SKU = perda de venda.</span></div></div>
+        <div class="step-row"><div class="n">5</div><div><b>Monitore giro e validade</b><span>Produtos mais antigos à frente (PEPS). Identifique itens de baixo giro que bloqueiam espaço.</span></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="m-verbal">
+      <div class="section-head"><div class="num">08</div><h3>Verbalização dos Produtos</h3></div>
+      <div class="section-body">
+        <p class="section-lead">O promotor deve FALAR sobre os produtos com o lojista em cada visita — apresentar, educar e criar demanda ativa.</p>
+        <div class="check-cols">
+          <div>
+            <h4>O que verbalizar</h4>
+            <ul>
+              <li>Preço e posicionamento de cada marca</li>
+              <li>Lançamentos e novidades do portfólio</li>
+              <li>Marcas de maior giro e rentabilidade</li>
+              <li>Ações promocionais e incentivos vigentes</li>
+              <li>Disponibilidade de reposição e prazo</li>
+              <li>Resultados de sell-out</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Como verbalizar</h4>
+            <div class="step-row"><div class="n">•</div><div><b>Seja objetivo</b><span>2 a 3 minutos de conversa focada. O lojista tem pouco tempo.</span></div></div>
+            <div class="step-row"><div class="n">•</div><div><b>Use dados</b><span>"Essa marca tem crescido X% na região — você deveria ter mais."</span></div></div>
+            <div class="step-row"><div class="n">•</div><div><b>Gere necessidade</b><span>Mostre o que está faltando na loja e o impacto nas vendas.</span></div></div>
+            <div class="step-row"><div class="n">•</div><div><b>Encerre com ação</b><span>Sempre feche com um pedido, uma reposição ou um compromisso.</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-estoque">
+      <div class="section-head"><div class="num">09</div><h3>Gestão de Estoque dos Clientes</h3></div>
+      <div class="section-body">
+        <div class="step-row"><div class="n">1</div><div><b>Verificar</b><span>Confira prateleira e depósito em cada visita. Anote quantidades por SKU.</span></div></div>
+        <div class="step-row"><div class="n">2</div><div><b>Registrar</b><span>Lance os estoques no sistema/aplicativo. Foto obrigatória.</span></div></div>
+        <div class="step-row"><div class="n">3</div><div><b>Repor</b><span>Complete a gôndola com produto do depósito. Filling completo.</span></div></div>
+        <div class="step-row"><div class="n">4</div><div><b>Solicitar</b><span>Se estoque baixo: faça o pedido ou alerte o representante comercial.</span></div></div>
+        <div class="step-row"><div class="n">5</div><div><b>Acompanhar</b><span>Na próxima visita, confirme recebimento e verifique se a ruptura foi sanada.</span></div></div>
+        <div class="callout">📌 <b>Importante:</b> Todo o processo de gestão de estoque deve ser registrado no sistema. O histórico é fundamental para o planejamento de pedidos e prevenção de rupturas.</div>
+      </div>
+    </div>
+
+    <div class="section" id="m-acoes">
+      <div class="section-head"><div class="num">10</div><h3>Ações Regionais</h3></div>
+      <div class="section-body">
+        <p class="section-lead">As ações são determinadas pelos Regionais e DEVEM ser executadas com rigor e dentro dos prazos estabelecidos.</p>
+        <div class="grid-cards">
+          <div class="card"><b>★ Ações de Visibilidade</b><p>Implantação de material de PDV (displays, banners, wobbler) nas datas e formatos definidos pelo regional.</p></div>
+          <div class="card"><b>% Ações Promocionais</b><p>Ofertas, combos e incentivos especiais. Execução fiel do material e comunicação clara ao lojista.</p></div>
+          <div class="card"><b>$ Pesquisa de Preços</b><p>Levantamento de preços da concorrência nos PDVs — dado estratégico para decisões regionais.</p></div>
+          <div class="card"><b>◆ Ativações Sazonais</b><p>Ações específicas para datas comemorativas, lançamentos ou períodos de alta demanda.</p></div>
+          <div class="card"><b>● Evidências Fotográficas</b><p>Toda ação executada deve ser registrada com foto antes e depois, geolocalizada, no sistema.</p></div>
+          <div class="card"><b>↑ Feedback ao Regional</b><p>Reportar diariamente o andamento das ações — o regional precisa das informações em tempo real.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="m-checklist">
+      <div class="section-head"><div class="num">11</div><h3>Roteiro da Visita — Checklist do Promotor</h3></div>
+      <div class="section-body">
+        <div class="check-cols">
+          <div>
+            <h4>Antes da visita</h4>
+            <ul>
+              <li>Verificar rota e agenda do dia</li>
+              <li>Conferir materiais de PDV disponíveis</li>
+              <li>Revisar ações regionais vigentes</li>
+              <li>Checar histórico do cliente</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Durante a visita</h4>
+            <ul>
+              <li>Verificar estoque (prateleira + depósito)</li>
+              <li>Repor e organizar o facing completo</li>
+              <li>Afixar / conferir tabela de preços</li>
+              <li>Implantar visibilidade primária</li>
+              <li>Implantar visibilidade secundária</li>
+              <li>Verbalizar produtos e novidades ao lojista</li>
+              <li>Executar ações regionais determinadas</li>
+              <li>Registrar evidências fotográficas</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Após a visita</h4>
+            <ul>
+              <li>Lançar visita no sistema / app</li>
+              <li>Registrar pedidos ou ocorrências</li>
+              <li>Reportar ao regional se necessário</li>
+              <li>Preparar próxima visita</li>
+            </ul>
+          </div>
+        </div>
+        <div class="quote">"Excelência no PDV é o que transforma visibilidade em venda. Cada visita é uma oportunidade de crescimento — para a marca e para você!"</div>
+      </div>
+    </div>
+
+    <footer class="legal">USO INTERNO — EXCLUSIVO PARA PROMOTORES DE VENDAS</footer>
+  </div>
+
+  <!-- ============ DOC 2: EL PONCIO ============ -->
+  <div class="doc" id="doc-poncio">
+
+    <div class="hero" style="background:linear-gradient(135deg,#0F1A2E 0%, #16213E 60%, #1E2C4E 100%)">
+      <span class="tag">EXCLUSIVO PARA USO INTERNO</span>
+      <h2>EL PONCIO <em>— Guia do Promotor</em></h2>
+      <p class="sub">Gudang Garam · Cretec · Clean Click — Argumentos de venda, marcas frontais e identificação de produto</p>
+    </div>
+
+    <div class="section" id="p-gudang">
+      <div class="section-head" style="background:#7A1F1F"><div class="num" style="background:#E9C64A">GG</div><h3>Gudang Garam</h3></div>
+      <div class="section-body">
+        <p class="section-lead"><b>Argumentos de venda</b></p>
+        <div class="grid-cards">
+          <div class="card"><b>► Tradição desde 1958</b><p>Mais de 65 anos de expertise — uma das marcas de kretek mais reconhecidas no mundo.</p></div>
+          <div class="card"><b>► 40% de Cravo Real</b><p>Blend artesanal com 40% de cravo indonésio selecionado — sabor e aroma únicos no mercado.</p></div>
+          <div class="card"><b>► Produção Artesanal</b><p>Colheita manual, seleção rigorosa e harmonização especializada das especiarias.</p></div>
+          <div class="card"><b>► Premium Importado</b><p>Produto importado diretamente da Indonésia, berço da tradição do cigarro kretek.</p></div>
+          <div class="card"><b>► Experiência Única</b><p>Não é apenas um cigarro — é um ritual para quem valoriza autenticidade e sofisticação.</p></div>
+        </div>
+        <div class="quote">"Para quem sabe reconhecer o valor de algo verdadeiramente autêntico."</div>
+      </div>
+    </div>
+
+    <div class="section" id="p-cretec">
+      <div class="section-head" style="background:#1A5C3A"><div class="num" style="background:#E9C64A">CT</div><h3>Cretec Twin Ten</h3></div>
+      <div class="section-body">
+        <p class="section-lead"><b>Argumentos de venda</b></p>
+        <div class="grid-cards">
+          <div class="card"><b>► Dois Sabores, Uma Linha</b><p>Cereja ou Mentol — dois blends únicos para diferentes perfis de consumidor.</p></div>
+          <div class="card"><b>► Blend Exclusivo</b><p>Tabaco com cravo + cereja ou mentol: experiência de contraste e harmonia em cada cigarro.</p></div>
+          <div class="card"><b>► Design Diferenciado</b><p>Embalagem preta e imponente que se destaca na gôndola — chama atenção imediatamente.</p></div>
+          <div class="card"><b>► Estilo e Cultura</b><p>Inspirado na tradição de Java e Indonésia, com apelo visual moderno e diferenciado.</p></div>
+          <div class="card"><b>► Nicho Exclusivo</b><p>Kretek com blend de cereja: sem equivalente direto entre os concorrentes nacionais.</p></div>
+        </div>
+        <div class="quote">"Para paladares exigentes que buscam inovar na experiência."</div>
+      </div>
+    </div>
+
+    <div class="section" id="p-clean">
+      <div class="section-head" style="background:#1E5C8C"><div class="num" style="background:#E9C64A">CC</div><h3>Clean Click</h3></div>
+      <div class="section-body">
+        <p class="section-lead"><b>Argumentos de venda</b></p>
+        <div class="grid-cards">
+          <div class="card"><b>► Cápsula de Menta Esmagável</b><p>O consumidor ativa o frescor quando quiser — tecnologia de cápsula em alta global.</p></div>
+          <div class="card"><b>► Design Premium</b><p>Embalagem preta com gradiente azul/verde — elegante e moderna, para quem quer se destacar.</p></div>
+          <div class="card"><b>► Blend Suave e Equilibrado</b><p>Sabor leve e envolvente que combina com o estilo de vida contemporâneo do consumidor.</p></div>
+          <div class="card"><b>► Inovação que Vende</b><p>Produtos com cápsula têm crescimento acelerado — apresente como a escolha do futuro.</p></div>
+          <div class="card"><b>► Escolha Consciente</b><p>Para quem entende que sofisticação está nos detalhes — elegante, inovador e à frente.</p></div>
+        </div>
+        <div class="quote">"Para quem é exigente, elegante e quer estar à frente do tempo."</div>
+      </div>
+    </div>
+
+    <div class="section" id="p-cravo">
+      <div class="section-head"><div class="num">🌿</div><h3>O Cravo: Nosso Grande Diferencial</h3></div>
+      <div class="section-body">
+        <div class="grid-cards">
+          <div class="card"><b>► Tradição Milenar</b><p>O cravo é usado como especiaria desde a Antiguidade. Motivou as grandes navegações europeias até a Ásia.</p></div>
+          <div class="card"><b>► Maior Consumo Mundial</b><p>A Indonésia consome mais de 50% da produção mundial de cravo — principalmente em cigarros kretek como o Gudang Garam.</p></div>
+          <div class="card"><b>► Propriedades Únicas</b><p>O eugenol (óleo do cravo) é antisséptico natural com propriedades medicinais reconhecidas internacionalmente.</p></div>
+          <div class="card"><b>► Aroma Inconfundível</b><p>O cravo perfuma o ambiente de forma suave e característica — o consumidor identifica e associa ao produto imediatamente.</p></div>
+          <div class="card"><b>► 40% de Cravo</b><p>O Gudang Garam contém 40% de cravo na composição — um blend artesanal único que nenhum concorrente replica.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="p-fresco">
+      <div class="section-head"><div class="num">🔍</div><h3>Como Identificar o Produto Fresco</h3></div>
+      <div class="section-body">
+        <div class="compare">
+          <div class="bad">
+            <h5>⚠️ Embalagem antiga</h5>
+            <ul>
+              <li>Fabricação: mais de 6 meses</li>
+              <li>Embalagem "PROFESSIONAL" (nome antigo da linha)</li>
+              <li>Cigarro enegrecido · Sabor comprometido</li>
+              <li><b>NÃO OFEREÇA AO CLIENTE</b></li>
+            </ul>
+          </div>
+          <div class="good">
+            <h5>✔️ Produto recém-fabricado</h5>
+            <ul>
+              <li>Fabricação: menos de 6 meses</li>
+              <li>Embalagem "EL PONCIO" (nome atual da linha)</li>
+              <li>Cigarro branco · Sabor pleno</li>
+              <li><b>PRODUTO IDEAL PARA OFERECER</b></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="p-frontais">
+      <div class="section-head"><div class="num">VS</div><h3>Marcas Frontais — Comparativo de Posicionamento</h3></div>
+      <div class="section-body">
+
+        <p class="section-lead"><b>Cretec Menta</b> vs Concorrente: Djarum Black Menta</p>
+        <div class="compare">
+          <div class="good"><h5>✔ Cretec Menta</h5><ul>
+            <li>Marca nacional — apoio logístico e reposição rápida</li>
+            <li>Design arrojado e embalagem diferenciada na gôndola</li>
+            <li>Blend exclusivo kretek com mentol — sabor único</li>
+            <li>Preço competitivo para ampliar margem do PDV</li>
+          </ul></div>
+          <div class="bad"><h5>✗ Djarum Black Menta</h5><ul>
+            <li>Produto importado — custo mais elevado</li>
+            <li>Disponibilidade limitada no mercado</li>
+            <li>Menos presença no PDV regional</li>
+          </ul></div>
+        </div>
+
+        <p class="section-lead" style="margin-top:22px"><b>Cretec Cereja</b> — sem concorrência direta</p>
+        <div class="compare">
+          <div class="good"><h5>✔ Cretec Cereja</h5><ul>
+            <li>Único blend de cravo + cereja no mercado</li>
+            <li>Embalagem rosa impactante — destaque garantido na gôndola</li>
+            <li>Público feminino e consumidores de perfil premium</li>
+            <li>Oportunidade de expandir a base de clientes do PDV</li>
+          </ul></div>
+          <div class="bad"><h5>✗ Sem concorrência</h5><ul>
+            <li>Nenhum outro produto no mercado brasileiro oferece esta combinação de sabor</li>
+            <li><b>VANTAGEM ÚNICA DE MERCADO</b></li>
+          </ul></div>
+        </div>
+
+        <p class="section-lead" style="margin-top:22px"><b>Gudang Garam Vermelho</b> vs Concorrente: Sampoerna Select</p>
+        <div class="compare">
+          <div class="good"><h5>✔ Gudang Garam Vermelho</h5><ul>
+            <li>40% cravo — blend artesanal único e autêntico</li>
+            <li>Tradição de 65 anos reconhecida mundialmente</li>
+            <li>Aroma característico que fideliza o consumidor</li>
+            <li>Produto fresh disponível — rotatividade garantida</li>
+          </ul></div>
+          <div class="bad"><h5>✗ Sampoerna Select</h5><ul>
+            <li>Blend industrial com menos cravo</li>
+            <li>Posicionamento premium, custo mais alto para o PDV</li>
+            <li>Menor intensidade de cravo — experiência inferior</li>
+          </ul></div>
+        </div>
+
+        <p class="section-lead" style="margin-top:22px"><b>Gudang Garam Verde</b> vs Concorrente: Sampoerna Menthol</p>
+        <div class="compare">
+          <div class="good"><h5>✔ Gudang Garam Verde</h5><ul>
+            <li>40% cravo + mentol natural — dupla experiência sensorial</li>
+            <li>Versão verde para quem prefere leveza com frescor</li>
+            <li>Autenticidade indonésia em variante refrescante</li>
+            <li>Complementa o portfólio ampliando o público-alvo</li>
+          </ul></div>
+          <div class="bad"><h5>✗ Sampoerna Menthol</h5><ul>
+            <li>Menos cravo real no blend — sabor mais artificial</li>
+            <li>Sem a tradição artesanal do Gudang Garam</li>
+            <li>Produto com menos diferenciais de mercado</li>
+          </ul></div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="legal">EXCLUSIVO PARA USO INTERNO · EL PONCIO DISTRIBUIDORA · 2025</footer>
+  </div>
+
+</div>
+
+<script>
+function mudarDoc(doc) {
+  document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.doc-tab[data-doc="${doc}"]`).classList.add('active');
+  document.querySelectorAll('.doc').forEach(d => d.classList.remove('active'));
+  document.getElementById('doc-' + doc).classList.add('active');
+  document.getElementById('toc-merch').style.display = doc === 'merch' ? 'block' : 'none';
+  document.getElementById('toc-poncio').style.display = doc === 'poncio' ? 'block' : 'none';
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+// destaca item ativo no sumário conforme rolagem
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      document.querySelectorAll('.toc a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

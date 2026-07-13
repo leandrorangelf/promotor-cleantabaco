@@ -1574,7 +1574,7 @@ button:active { transform: translateY(1px); }
 <script src="bonus.js"></script>
 <script src="performance.js"></script>
 <script>
-const API = '';
+const API = 'https://promotor-cleantabaco.vercel.app';
 
 
 let usuarioAtual = null;
@@ -3386,7 +3386,7 @@ async function carregarClientes(force=false, silencioso=false) {
   clientesPromise = (async () => {
   try {
     await carregarVisitasPromotor(force);
-    const r = await apiFetch('/api/clientes?promotor=' + encodeURIComponent(usuarioAtual), { headers: headers() });
+    const r = await apiFetch(`${API}/api/clientes?promotor=` + encodeURIComponent(usuarioAtual), { headers: headers() });
     const d = await r.json();
     todosClientes = d.clientes || [];
     clientesCarregadoEm = Date.now();
