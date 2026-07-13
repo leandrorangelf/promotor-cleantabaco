@@ -760,6 +760,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
     <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes')">Carteira</button>
     <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico')">Histórico</button>
+    <button class="nav-btn" data-p-page="fotos" onclick="mudarAbaP('fotos')">Minhas fotos</button>
     <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📘 Manual</a>
   </div>
 
@@ -1143,6 +1144,26 @@ button:active { transform: translateY(1px); }
     <div class="hist-wrap">
       <input type="text" class="busca-input" id="buscaClientes" oninput="buscarClientes()" placeholder="Buscar por nome ou CNPJ...">
       <div id="listaClientes"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- MINHAS FOTOS -->
+  <div class="page" id="pFotos">
+    <div class="page-intro">
+      <h1>Minhas fotos</h1>
+      <p>Veja quais fotos foram aprovadas e reprovadas, para entender o padrão esperado.</p>
+    </div>
+    <div class="hist-wrap">
+      <div class="filtros-grid" style="display:grid;grid-template-columns:1fr;gap:10px;">
+        <div class="filtro-group"><label>Status</label><select id="pFotosFiltroStatus" onchange="renderMinhasFotos()">
+          <option value="">Aprovadas e reprovadas</option>
+          <option value="aprovado">Somente aprovadas</option>
+          <option value="reprovado">Somente reprovadas</option>
+          <option value="todas">Todas (inclui pendentes)</option>
+        </select></div>
+      </div>
+      <div id="pFotosResumo" class="foto-text" style="margin-top:12px;">Carregue suas fotos.</div>
+      <div id="pFotosLista" style="margin-top:12px;"></div>
     </div>
   </div>
 </div>
@@ -1808,6 +1829,7 @@ function mudarAbaP(aba) {
     if (todosClientes.length) renderClientes(todosClientes);
     carregarClientes();
   }
+  if (aba === 'fotos') carregarMinhasFotos();
 }
 
 // NAVEGAÇÃO GESTOR
@@ -2458,6 +2480,73 @@ function labelStatusValidacao(status) {
   }[status] || status || 'Pendente';
 }
 
+let minhasFotos = [];
+let minhasFotosVisiveis = [];
+
+async function carregarMinhasFotos() {
+  const resumo = document.getElementById('pFotosResumo');
+  if (resumo) resumo.textContent = 'Carregando suas fotos...';
+  try {
+    const res = await apiFetch(`${API}/api/validacoes-fotos`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
+    minhasFotos = data.validacoes || [];
+  } catch (e) {
+    minhasFotos = [];
+    if (resumo) resumo.textContent = 'Não foi possível carregar suas fotos: ' + e.message;
+    return;
+  }
+  renderMinhasFotos();
+}
+
+function renderMinhasFotos() {
+  const lista = document.getElementById('pFotosLista');
+  const resumo = document.getElementById('pFotosResumo');
+  if (!lista || !resumo) return;
+  const filtro = document.getElementById('pFotosFiltroStatus')?.value || '';
+  minhasFotosVisiveis = filtro === 'todas'
+    ? minhasFotos
+    : filtro
+      ? minhasFotos.filter(item => statusValidacaoIA(item) === filtro)
+      : minhasFotos.filter(item => ['aprovado', 'reprovado'].includes(statusValidacaoIA(item)));
+  const aprovadas = minhasFotos.filter(i => statusValidacaoIA(i) === 'aprovado').length;
+  const reprovadas = minhasFotos.filter(i => statusValidacaoIA(i) === 'reprovado').length;
+  resumo.textContent = `${aprovadas} aprovada(s) · ${reprovadas} reprovada(s) de ${minhasFotos.length} foto(s) no total.`;
+  if (!minhasFotosVisiveis.length) {
+    lista.innerHTML = '<div class="empty">Nenhuma foto encontrada para o filtro.</div>';
+    return;
+  }
+  lista.innerHTML = `<div class="rel-fotos" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">${minhasFotosVisiveis.map((item, i) => {
+    const data = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : '—';
+    const src = fotoSrc(item.foto);
+    const miolo = src
+      ? `<button class="rel-foto-btn" type="button" onclick="abrirFotoMinhasFotos(${i})" style="width:100%;border-radius:0;">
+          <img src="${src}" alt="Foto ${item.foto_index + 1} de ${esc(item.cliente_nome || 'PDV')}">
+        </button>`
+      : `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#EEF1F7;color:var(--text-muted);font-size:12px;text-align:center;padding:8px;">Foto indisponível</div>`;
+    const status = statusValidacaoIA(item);
+    return `
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;">
+        ${miolo}
+        <div style="padding:10px;">
+          <div style="font-weight:800;font-size:13px;">${esc(item.cliente_nome || 'PDV sem nome')}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${data}</div>
+          <div style="margin-top:6px;"><span class="status-chip ${statusClass(status === 'aprovado' ? 'Pedido entregue' : status === 'reprovado' ? 'Cancelado' : 'Em negociação')}">${labelStatusValidacao(status)}</span></div>
+          ${status === 'reprovado' ? `
+            ${item.motivo ? `<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">${esc(item.motivo)}</div>` : ''}
+            ${(item.materiais_detectados || []).length ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Materiais detectados: ${(item.materiais_detectados || []).map(esc).join(', ')}</div>` : ''}
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+function abrirFotoMinhasFotos(i) {
+  fotosModalAtual = minhasFotosVisiveis.map(v => v.foto);
+  abrirFoto(i, 'modal');
+}
+
 async function carregarGaleria() {
   const selPromotor = document.getElementById('galFiltroPromotor');
   const dia = document.getElementById('galFiltroDia')?.value || '';
@@ -2880,6 +2969,7 @@ async function salvarVisita() {
   btn.disabled = true;
   btn.textContent = 'Salvando...';
 
+  try {
   const dados = {
     pdv: {
       nomeFantasia: nome,
@@ -2932,7 +3022,6 @@ async function salvarVisita() {
     observacoes: document.getElementById('observacoes').value,
   };
 
-  try {
     const fotosParaSalvar = prepararFotosParaEnvio(fotos);
     if (!editandoId) {
       btn.textContent = 'Capturando GPS... aguarde';
@@ -2987,11 +3076,11 @@ async function salvarVisita() {
       toast('Erro: ' + (data.erro || 'tente novamente'));
     }
   } catch(e) {
-    if (e.message !== 'Sessao expirada') toast('❌ Sem conexão. Tente novamente.');
+    if (e.message !== 'Sessao expirada') toast('❌ Erro ao salvar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Salvar Visita';
   }
-
-  btn.disabled = false;
-  btn.textContent = '✓ Salvar Visita';
 }
 
 function limparFormulario() {
