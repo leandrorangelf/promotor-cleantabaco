@@ -1733,6 +1733,14 @@ function fecharSenha() {
   loginPendente = null;
 }
 
+function definirPeriodoMesAtual() {
+  const hoje = new Date();
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const dataLocal = data => [data.getFullYear(), String(data.getMonth() + 1).padStart(2, '0'), String(data.getDate()).padStart(2, '0')].join('-');
+  document.getElementById('gFiltroDe').value = dataLocal(inicio);
+  document.getElementById('gFiltroAte').value = dataLocal(hoje);
+}
+
 function fazerLogin(nome, tipo, usuario='', token='') {
   usuarioAtual = nome;
   tipoAtual = tipo;
@@ -1744,11 +1752,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
     document.getElementById('appGestor').style.display = 'block';
     document.getElementById('headerNomeG').textContent = nome;
     document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
-    const hoje = new Date();
-    const trintaDias = new Date();
-    trintaDias.setDate(hoje.getDate() - 30);
-    document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
-    document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
+    definirPeriodoMesAtual();
     if (tipo === 'diretoria') {
       document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelector('#appGestor .nav-btn[data-gestor-page="diretoria"]')?.classList.add('active');
@@ -3602,10 +3606,7 @@ function limparFiltrosGestor() {
   document.getElementById('gFiltroTipo').value = '';
   document.getElementById('gFiltroCidade').value = '';
   document.getElementById('gFiltroStatus').value = '';
-  const hoje = new Date();
-  const trintaDias = new Date(); trintaDias.setDate(hoje.getDate()-30);
-  document.getElementById('gFiltroAte').value = hoje.toISOString().split('T')[0];
-  document.getElementById('gFiltroDe').value = trintaDias.toISOString().split('T')[0];
+  definirPeriodoMesAtual();
   carregarGestor();
 }
 
