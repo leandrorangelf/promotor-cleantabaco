@@ -2354,6 +2354,20 @@ function prepararFotosParaEnvio(lista) {
   });
 }
 
+function carimbarDataHora(ctx, w, h) {
+  const texto = new Date().toLocaleString('pt-BR');
+  const tamanho = Math.max(12, Math.round(w * 0.035));
+  ctx.font = `bold ${tamanho}px sans-serif`;
+  ctx.textBaseline = 'bottom';
+  const largura = ctx.measureText(texto).width;
+  const x = w - largura - 10;
+  const y = h - 8;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(x - 6, y - tamanho - 4, largura + 12, tamanho + 10);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(texto, x, y);
+}
+
 function processarFotos(event) {
   const origem = event.target.id === 'fotoCameraInput' ? 'camera' : 'galeria';
   Array.from(event.target.files).forEach(file => {
@@ -2366,7 +2380,9 @@ function processarFotos(event) {
         let w = img.width, h = img.height;
         if (w > max || h > max) { if (w > h) { h = h*max/w; w = max; } else { w = w*max/h; h = max; } }
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        if (origem === 'camera') carimbarDataHora(ctx, w, h);
         fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem));
         renderFotos();
       };
