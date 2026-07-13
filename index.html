@@ -1332,6 +1332,10 @@ button:active { transform: translateY(1px); }
       <div class="visit-summary" id="gRelacaoResumo"></div>
       <div class="filtros">
         <div class="filtro-row">
+          <div class="filtro-group"><label>De</label><input type="date" id="vFiltroDe" onchange="renderListaGestor()"></div>
+          <div class="filtro-group"><label>Até</label><input type="date" id="vFiltroAte" onchange="renderListaGestor()"></div>
+        </div>
+        <div class="filtro-row">
           <div class="filtro-group"><label>Promotor</label><select id="vFiltroPromotor" onchange="renderListaGestor()"><option value="">Todos</option></select></div>
           <div class="filtro-group"><label>Coordenador</label><select id="vFiltroCoordenador" onchange="renderListaGestor()"><option value="">Todos</option></select></div>
         </div>
@@ -1759,12 +1763,22 @@ function fecharSenha() {
   loginPendente = null;
 }
 
+function dataLocal(data) {
+  return [data.getFullYear(), String(data.getMonth() + 1).padStart(2, '0'), String(data.getDate()).padStart(2, '0')].join('-');
+}
+
 function definirPeriodoMesAtual() {
   const hoje = new Date();
   const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const dataLocal = data => [data.getFullYear(), String(data.getMonth() + 1).padStart(2, '0'), String(data.getDate()).padStart(2, '0')].join('-');
   document.getElementById('gFiltroDe').value = dataLocal(inicio);
   document.getElementById('gFiltroAte').value = dataLocal(hoje);
+}
+
+function definirPeriodoVisitasHoje() {
+  const de = document.getElementById('vFiltroDe');
+  const ate = document.getElementById('vFiltroAte');
+  if (de && !de.value) de.value = dataLocal(new Date());
+  if (ate && !ate.value) ate.value = dataLocal(new Date());
 }
 
 function fazerLogin(nome, tipo, usuario='', token='') {
@@ -1844,7 +1858,7 @@ function mudarAbaG(aba) {
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
   if (aba === 'diretoria') renderDiretoria();
-  if (aba === 'visitas') renderListaGestor();
+  if (aba === 'visitas') { definirPeriodoVisitasHoje(); renderListaGestor(); }
   if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') carregarPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
@@ -5102,17 +5116,20 @@ function preencherFiltrosVisitas() {
 }
 
 function limparFiltrosVisitas() {
-  ['vFiltroPromotor','vFiltroCoordenador','vFiltroSegmento','vFiltroUF','vFiltroPedido','vFiltroFotos'].forEach(id => {
+  ['vFiltroDe','vFiltroAte','vFiltroPromotor','vFiltroCoordenador','vFiltroSegmento','vFiltroUF','vFiltroPedido','vFiltroFotos'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
   document.getElementById('gBusca').value = '';
+  definirPeriodoVisitasHoje();
   renderListaGestor();
 }
 
 function renderListaGestor() {
   preencherFiltrosVisitas();
   const busca = document.getElementById('gBusca').value.toLowerCase();
+  const fDe = document.getElementById('vFiltroDe')?.value || '';
+  const fAte = document.getElementById('vFiltroAte')?.value || '';
   const fPromotor = document.getElementById('vFiltroPromotor')?.value || '';
   const fCoordenador = document.getElementById('vFiltroCoordenador')?.value || '';
   const fSegmento = document.getElementById('vFiltroSegmento')?.value || '';
@@ -5126,6 +5143,8 @@ function renderListaGestor() {
   const filtradas = visitasGestor.filter(v => {
     const d = v.dados||{};
     if (!((d.pdv?.nomeFantasia||'')+(d.pdv?.cidade||'')+(v.promotor||'')).toLowerCase().includes(busca)) return false;
+    if (fDe && dataLocal(new Date(v.criado_em)) < fDe) return false;
+    if (fAte && dataLocal(new Date(v.criado_em)) > fAte) return false;
     if (fPromotor && v.promotor !== fPromotor) return false;
     if (promotoresDoCoordenador && !promotoresDoCoordenador.has(v.promotor)) return false;
     if (fSegmento && d.pdv?.tipo !== fSegmento) return false;
