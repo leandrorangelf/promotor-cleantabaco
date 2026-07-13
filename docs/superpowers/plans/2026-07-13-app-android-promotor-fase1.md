@@ -1,6 +1,6 @@
 # App Android do Promotor — Fase 1 (Bootstrap Capacitor) Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Criar o projeto Capacitor em `app/`, empacotando o `index.html` atual como app Android instalável, sem alterar o comportamento existente (câmera/GPS continuam via API web dentro da webview nesta fase).
 
@@ -24,7 +24,7 @@
 
 **Interfaces:** N/A (task de setup).
 
-- [ ] **Step 1: Verificar se o Android Studio já está instalado**
+- [x] **Step 1: Verificar se o Android Studio já está instalado**
 
 Rodar no PowerShell:
 ```powershell
@@ -32,11 +32,11 @@ Test-Path "$env:LOCALAPPDATA\Android\Sdk"
 ```
 Expected: `True` se já instalado, `False` caso contrário.
 
-- [ ] **Step 2: Instalar Android Studio, se necessário**
+- [x] **Step 2: Instalar Android Studio, se necessário**
 
 Se o passo anterior deu `False`: baixar e instalar o Android Studio em https://developer.android.com/studio (inclui JDK embutido e Android SDK). Durante a instalação, aceitar a criação do SDK padrão (API mais recente).
 
-- [ ] **Step 3: Confirmar variável de ambiente ANDROID_HOME**
+- [x] **Step 3: Confirmar variável de ambiente ANDROID_HOME**
 
 Rodar:
 ```powershell
@@ -44,7 +44,7 @@ $env:ANDROID_HOME
 ```
 Expected: caminho tipo `C:\Users\<user>\AppData\Local\Android\Sdk`. Se vazio, configurar em "Editar variáveis de ambiente do sistema" apontando para a pasta do SDK (a mesma do Step 1).
 
-- [ ] **Step 4: Confirmar que existe pelo menos um emulador Android configurado**
+- [x] **Step 4: Confirmar que existe pelo menos um emulador Android configurado**
 
 Abrir Android Studio → Device Manager → criar um dispositivo virtual (ex.: Pixel 6, API 34), se ainda não existir nenhum.
 
@@ -61,7 +61,7 @@ Abrir Android Studio → Device Manager → criar um dispositivo virtual (ex.: P
 **Interfaces:**
 - Produces: pasta `app/` com projeto Node inicializado e Capacitor configurado, consumida pela Task 3 (que adiciona a plataforma Android).
 
-- [ ] **Step 1: Criar a pasta e inicializar o projeto Node**
+- [x] **Step 1: Criar a pasta e inicializar o projeto Node**
 
 ```powershell
 mkdir app
@@ -70,7 +70,7 @@ npm init -y
 ```
 Expected: `app/package.json` criado.
 
-- [ ] **Step 2: Instalar Capacitor core e CLI**
+- [x] **Step 2: Instalar Capacitor core e CLI**
 
 ```powershell
 npm install @capacitor/core
@@ -78,14 +78,14 @@ npm install -D @capacitor/cli
 ```
 Expected: `app/node_modules/@capacitor` existe; `app/package.json` lista as duas dependências.
 
-- [ ] **Step 3: Inicializar a config do Capacitor**
+- [x] **Step 3: Inicializar a config do Capacitor**
 
 ```powershell
 npx cap init "Promotor Cleantabaco" "com.cleantabaco.promotor" --web-dir www
 ```
 Expected: cria `app/capacitor.config.json` com `appId: "com.cleantabaco.promotor"`, `appName: "Promotor Cleantabaco"`, `webDir: "www"`.
 
-- [ ] **Step 4: Copiar o front atual para `app/www/`**
+- [x] **Step 4: Copiar o front atual para `app/www/`**
 
 ```powershell
 mkdir www
@@ -95,7 +95,7 @@ Copy-Item ..\index.html www\index.html
 
 Expected: `app/www/index.html` existe e é idêntico ao `index.html` da raiz.
 
-- [ ] **Step 5: Ignorar artefatos de build do Android no Git**
+- [x] **Step 5: Ignorar artefatos de build do Android no Git**
 
 Editar `.gitignore` na raiz do repo, adicionando ao final:
 ```
@@ -106,7 +106,7 @@ app/android/.gradle/
 app/node_modules/
 ```
 
-- [ ] **Step 6: Commit do scaffold**
+- [x] **Step 6: Commit do scaffold**
 
 ```powershell
 cd ..
@@ -126,7 +126,7 @@ Expected: commit criado, sem incluir `app/node_modules/`.
 - Consumes: `app/capacitor.config.json` e `app/www/index.html` da Task 2.
 - Produces: app instalável no emulador Android, ponto de partida para as fases seguintes (câmera nativa, GPS background, push, offline).
 
-- [ ] **Step 1: Instalar o pacote da plataforma Android**
+- [x] **Step 1: Instalar o pacote da plataforma Android**
 
 ```powershell
 cd app
@@ -134,21 +134,21 @@ npm install @capacitor/android
 ```
 Expected: `@capacitor/android` listado em `app/package.json`.
 
-- [ ] **Step 2: Adicionar a plataforma**
+- [x] **Step 2: Adicionar a plataforma**
 
 ```powershell
 npx cap add android
 ```
 Expected: pasta `app/android/` criada com projeto Gradle completo.
 
-- [ ] **Step 3: Sincronizar o web assets com o projeto Android**
+- [x] **Step 3: Sincronizar o web assets com o projeto Android**
 
 ```powershell
 npx cap sync android
 ```
 Expected: saída terminando em `Sync finished`, sem erros.
 
-- [ ] **Step 4: Abrir no Android Studio e rodar no emulador**
+- [x] **Step 4: Abrir no Android Studio e rodar no emulador**
 
 ```powershell
 npx cap open android
@@ -157,7 +157,7 @@ No Android Studio: selecionar o dispositivo virtual criado na Task 1 e clicar em
 
 Expected: o app abre no emulador mostrando a mesma tela de login/UI do `index.html` atual. Testar manualmente: login funciona, navegação entre telas funciona (mesmo comportamento do site hoje).
 
-- [ ] **Step 5: Commit do projeto Android gerado**
+- [x] **Step 5: Commit do projeto Android gerado**
 
 ```powershell
 cd ..
@@ -183,11 +183,11 @@ git commit -m "feat: adiciona plataforma Android ao projeto Capacitor"
 
 **Interfaces:** N/A.
 
-- [ ] **Step 1: Marcar todos os checkboxes concluídos neste arquivo**
+- [x] **Step 1: Marcar todos os checkboxes concluídos neste arquivo**
 
 Editar este arquivo marcando `- [x]` em cada step efetivamente executado e testado.
 
-- [ ] **Step 2: Adicionar uma seção "Status" ao final do arquivo**
+- [x] **Step 2: Adicionar uma seção "Status" ao final do arquivo**
 
 Adicionar ao final deste arquivo:
 ```markdown
@@ -198,9 +198,20 @@ Adicionar ao final deste arquivo:
 - Próxima fase: Fase 2 da spec (`@capacitor/camera` com EXIF nativo) — ver `docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`.
 ```
 
-- [ ] **Step 3: Commit da atualização de status**
+- [x] **Step 3: Commit da atualização de status**
 
 ```powershell
 git add docs/superpowers/plans/2026-07-13-app-android-promotor-fase1.md
 git commit -m "docs: marca fase 1 do app Android como concluida"
 ```
+
+## Status (atualizar a cada sessão)
+
+- Fase 1 concluída em: 2026-07-13.
+- App roda no emulador Android com o front atual. Testado manualmente: login (usuário `wil`), Carteira de clientes e Manual — todos funcionando.
+- Ajustes feitos além do scaffold original:
+  - `app/www/index.html` tem `const API` apontando para `https://promotor-cleantabaco.vercel.app` (no site em produção o valor continua `''`, já que front e API estão no mesmo domínio ali).
+  - Bug encontrado e corrigido em `index.html` (raiz, também vale pro site): fetch de `/api/clientes` na função de carteira não usava o prefixo `${API}` — era o único fetch do arquivo assim.
+  - `manual.html` precisou ser copiado manualmente para `app/www/manual.html` (não fazia parte do scaffold original da Task 2).
+- Fluxo para futuras atualizações do front dentro do app: copiar `index.html`/`manual.html`/outros assets atualizados para `app/www/`, reaplicar a troca do `const API` na cópia, rodar `npx cap sync android` e rebuildar no Android Studio.
+- Próxima fase: Fase 2 da spec (`@capacitor/camera` com EXIF nativo) — ver `docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`.
