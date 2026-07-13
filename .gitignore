@@ -2,3 +2,9 @@
 .env*
 node_modules
 *.log
+
+# Capacitor Android build artifacts
+app/android/build/
+app/android/app/build/
+app/android/.gradle/
+app/node_modules/
