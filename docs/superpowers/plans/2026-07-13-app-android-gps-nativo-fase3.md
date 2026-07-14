@@ -213,7 +213,14 @@ Expected: saída terminando em `Sync finished`, sem erros, e `@capacitor/geoloca
 ```powershell
 Get-Content android\app\src\main\AndroidManifest.xml | Select-String "LOCATION"
 ```
-Expected: `ACCESS_COARSE_LOCATION` e/ou `ACCESS_FINE_LOCATION` aparecem (o plugin `@capacitor/geolocation` mescla essas permissões automaticamente durante o `cap sync`; não é preciso editar o manifest manualmente). Se não aparecer nenhuma linha, reportar como bloqueio antes de continuar.
+Expected: `ACCESS_COARSE_LOCATION` e/ou `ACCESS_FINE_LOCATION` aparecem.
+
+**Correção pós-teste manual (2026-07-14):** ao testar no emulador, a captura falhava com "permissão negada" sem nunca exibir o diálogo nativo. Causa: `@capacitor/geolocation` declara a permissão via anotação Kotlin no plugin, mas isso não é suficiente — o Android só solicita/concede a permissão em runtime se ela também estiver declarada em `<uses-permission>` no `AndroidManifest.xml` do próprio app (`cap sync` não adiciona isso automaticamente). Corrigido adicionando manualmente em `app/android/app/src/main/AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+```
+Esse arquivo é código-fonte versionado (não é artefato de build), então a edição manual é definitiva e não é sobrescrita por `cap sync`.
 
 - [ ] **Step 5: Rodar no Android Studio e testar a captura de GPS** — pendente, requer humano
 
