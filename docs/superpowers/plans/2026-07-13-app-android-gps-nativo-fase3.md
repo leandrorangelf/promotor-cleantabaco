@@ -222,7 +222,7 @@ Expected: `ACCESS_COARSE_LOCATION` e/ou `ACCESS_FINE_LOCATION` aparecem.
 ```
 Esse arquivo é código-fonte versionado (não é artefato de build), então a edição manual é definitiva e não é sobrescrita por `cap sync`.
 
-- [ ] **Step 5: Rodar no Android Studio e testar a captura de GPS** — pendente, requer humano
+- [x] **Step 5: Rodar no Android Studio e testar a captura de GPS** — confirmado: pediu permissão nativa e capturou o GPS corretamente
 
 Abrir o Android Studio (`npx cap open android` se não estiver aberto), rodar no emulador/celular (Run ▶). No app: login → Nova visita → preencher e salvar (o app mostra "Capturando GPS... aguarde").
 
@@ -230,7 +230,7 @@ Expected: o Android pede permissão de localização (se ainda não concedida) v
 
 Se o emulador não tiver localização configurada, no Android Studio usar o painel "Extended Controls" (⋮) → Location → definir uma coordenada antes de testar.
 
-- [ ] **Step 6: Testar manualmente no navegador (site local ou já publicado)** — pendente, requer humano
+- [x] **Step 6: Testar manualmente no navegador (site local ou já publicado)** — confirmado: captura de GPS continua igual a antes
 
 Abrir o app do promotor no navegador, salvar uma visita normalmente. Confirmar que a captura de GPS continua idêntica a antes (usa `navigator.geolocation`, sem diferença perceptível).
 
@@ -258,10 +258,10 @@ git commit -m "feat: sincroniza GPS nativo com o projeto Android"
 ```markdown
 ## Status (atualizar a cada sessão)
 
-- Código implementado e commitado em 2026-07-13/14 (Tasks 1-2, cada uma revisada por subagente, ambas aprovadas sem findings Critical/Important). Testes automatizados passando, exceto a falha pré-existente e não relacionada em `salvamento-rascunho.test.js`.
-- **Pendente antes de considerar a Fase 3 realmente concluída:** teste manual real no Android Studio/emulador (abrir/salvar visita, confirmar diálogo nativo de permissão e também o caso de negar a permissão) e no navegador (confirmar que a captura via `navigator.geolocation` continua idêntica a antes).
+- Fase 3 concluída em: 2026-07-14. Código implementado, revisado por subagente (2 tasks aprovadas sem findings Critical/Important) e validado manualmente: no Android Studio/emulador, salvar visita agora pede a permissão nativa de localização e captura o GPS corretamente; no navegador, a captura continua idêntica a antes.
+- Bug encontrado e corrigido durante o teste manual (não pego pela revisão de código, só apareceu rodando de verdade no device): `@capacitor/geolocation` declara a permissão via anotação Kotlin no plugin, mas isso não bastava — o Android só concede a permissão em runtime se ela também estiver em `<uses-permission>` no `AndroidManifest.xml` do app. Sem isso, a captura falhava com "permissão negada" sem nunca exibir o diálogo. Corrigido adicionando `ACCESS_COARSE_LOCATION`/`ACCESS_FINE_LOCATION` manualmente em `app/android/app/src/main/AndroidManifest.xml` (arquivo versionado, não é sobrescrito por `cap sync`).
 - Escopo reduzido nesta fase (decidido com o usuário): sem rastreio contínuo em background durante o dia — só a captura pontual passou a ser nativa. Rastreio contínuo, se desejado no futuro, exigiria endpoint novo na API e um plugin de background location, avaliar como fase separada.
-- Próxima fase (depois da validação manual acima): Fase 4 da spec (`docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`) — push notifications (`@capacitor/push-notifications` + Firebase Cloud Messaging), incluindo endpoint novo em `api/` para registrar token do device.
+- Próxima fase: Fase 4 da spec (`docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`) — push notifications (`@capacitor/push-notifications` + Firebase Cloud Messaging), incluindo endpoint novo em `api/` para registrar token do device.
 ```
 
 - [x] **Step 3: Commit**
