@@ -2463,7 +2463,7 @@ function carimbarDataHora(ctx, w, h) {
   ctx.fillText(texto, x, y);
 }
 
-async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null) {
+async function prepararFotoProcessada(dataUrl, origem, exifDataExterna = null) {
   const img = new Image();
   await new Promise((resolve, reject) => {
     img.onload = resolve;
@@ -2478,7 +2478,11 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0, w, h);
   if (origem === 'camera') carimbarDataHora(ctx, w, h);
-  fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna));
+  return criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna);
+}
+
+async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null) {
+  fotos.push(await prepararFotoProcessada(dataUrl, origem, exifDataExterna));
   renderFotos();
 }
 
