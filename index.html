@@ -1109,7 +1109,7 @@ button:active { transform: translateY(1px); }
         <input type="file" id="fotoCameraInput" accept="image/*" capture="environment" onchange="processarFotos(event)">
         <input type="file" id="fotoInput" accept="image/*" multiple onchange="processarFotos(event)">
         <div class="camera-actions">
-          <button type="button" class="camera-btn primary" onclick="document.getElementById('fotoCameraInput').click()">Tirar foto</button>
+          <button type="button" class="camera-btn primary" onclick="acionarCaptura()">Tirar foto</button>
           <button type="button" class="camera-btn" onclick="document.getElementById('fotoInput').click()">Escolher da galeria</button>
         </div>
         <div class="foto-text" style="margin-top:10px;">No celular, permita o acesso à câmera quando o aparelho solicitar.</div>
@@ -2435,6 +2435,48 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
   if (origem === 'camera') carimbarDataHora(ctx, w, h);
   fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna));
   renderFotos();
+}
+
+let cameraBridgePromise = null;
+function garantirCameraBridgeCarregada() {
+  if (window.NativeCameraBridge) return Promise.resolve();
+  if (cameraBridgePromise) return cameraBridgePromise;
+  cameraBridgePromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'camera-bridge.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('camera-bridge.js indisponivel'));
+    document.head.appendChild(script);
+  });
+  return cameraBridgePromise;
+}
+
+function exifDataOriginalCamera(exif) {
+  const bruta = exif && (exif.DateTimeOriginal || exif.DateTime);
+  if (!bruta) return null;
+  const iso = String(bruta).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+  const data = new Date(iso);
+  return isNaN(data.getTime()) ? null : data;
+}
+
+async function tirarFotoNativa() {
+  await garantirCameraBridgeCarregada();
+  const { getPhoto, CameraResultType, CameraSource } = window.NativeCameraBridge;
+  const foto = await getPhoto({
+    quality: 80,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Camera,
+    saveToGallery: false
+  });
+  await processarImagemCapturada(foto.dataUrl, 'camera', exifDataOriginalCamera(foto.exif));
+}
+
+function acionarCaptura() {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    tirarFotoNativa().catch(e => toast('Erro ao acessar camera: ' + e.message));
+  } else {
+    document.getElementById('fotoCameraInput').click();
+  }
 }
 
 function processarFotos(event) {
