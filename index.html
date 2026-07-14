@@ -3211,6 +3211,43 @@ async function registrarValidacoesVisita(visitaId, dados, fotosDaVisita) {
   }
 }
 
+async function salvarProspeccao() {
+  const nome = document.getElementById('prospeccaoNome').value.trim();
+  if (!nome) { toast('⚠️ Informe o nome do local'); return; }
+  if (!fotoProspeccao) { toast('⚠️ Anexe uma foto'); return; }
+
+  const btn = document.getElementById('btnSalvarProspeccao');
+  btn.disabled = true;
+  btn.textContent = 'Capturando GPS... aguarde';
+
+  try {
+    const localizacao = await capturarLocalizacaoAtual();
+    btn.textContent = 'Salvando...';
+
+    const dados = { tipo: 'prospeccao', pdv: { nomeFantasia: nome }, localizacao };
+    const fotosParaSalvar = prepararFotosParaEnvio([fotoProspeccao]);
+
+    const res = await apiFetch(`${API}/api/salvar`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ promotor: usuarioAtual, dados, fotos: fotosParaSalvar })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast('✅ Prospecção registrada');
+      fecharModalProspeccao();
+      carregarVisitasPromotor(true);
+    } else {
+      toast('❌ ' + (data.erro || 'Erro ao salvar'));
+    }
+  } catch (e) {
+    toast('❌ Erro ao salvar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Salvar prospecção';
+  }
+}
+
 // SALVAR
 async function salvarVisita() {
   const nome = document.getElementById('nomeFantasia').value.trim();
