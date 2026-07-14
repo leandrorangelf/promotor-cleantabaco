@@ -9,3 +9,5 @@ app/android/app/build/
 app/android/.gradle/
 app/node_modules/
 app/android/.idea/
+
+.worktrees/
