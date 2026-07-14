@@ -104,7 +104,7 @@ for f in tests/*.test.js; do node "$f"; done
 ```
 Expected: todos os arquivos rodam sem lançar erro (o runner atual só imprime saída em caso de falha do `assert.ok`; sem saída de erro = passou).
 
-- [ ] **Step 3: Testar manualmente no navegador (site local ou já publicado)** — pendente, requer humano
+- [x] **Step 3: Testar manualmente no navegador (site local ou já publicado)** — confirmado: "Tirar foto" e "Escolher da galeria" continuam iguais a antes
 
 Abrir o app do promotor no navegador, ir em "Nova visita" → seção Fotos, clicar "Tirar foto" (câmera do notebook/celular via navegador) e "Escolher da galeria". Confirmar que as fotos aparecem no grid como antes (carimbo de data/hora nas de câmera, aviso "Foto antiga?" quando aplicável nas de galeria).
 
@@ -261,7 +261,7 @@ npx cap sync android
 ```
 Expected: saída terminando em `Sync finished`, sem erros, e `@capacitor/camera` listado entre os plugins encontrados.
 
-- [ ] **Step 4: Rodar no Android Studio e testar a câmera nativa** — pendente, requer humano
+- [x] **Step 4: Rodar no Android Studio e testar a câmera nativa** — confirmado: abre a câmera nativa do Android dentro do app
 
 Abrir o Android Studio (`npx cap open android` se não estiver aberto), rodar no emulador/celular (Run ▶). No app: login → Nova visita → seção Fotos → "Tirar foto".
 
@@ -307,6 +307,6 @@ git commit -m "docs: marca fase 2 do app Android (camera nativa) como concluida"
 
 ## Status (atualizar a cada sessão)
 
-- Código da Fase 2 implementado e commitado em 2026-07-13 (Tasks 1-3, cada uma revisada por subagente, todas aprovadas sem findings Critical/Important). Testes automatizados (`tests/*.test.js`) passando, exceto uma falha pré-existente e não relacionada em `salvamento-rascunho.test.js`.
-- **Pendente antes de considerar a Fase 2 realmente concluída:** teste manual real no Android Studio/emulador (Task 1 Step 3 e Task 3 Step 4) — nenhuma sessão de subagente teve acesso a navegador/emulador para validar visualmente. Alguém precisa: abrir o app no navegador e confirmar que "Tirar foto"/"Escolher da galeria" continuam idênticos a antes; depois rodar no Android Studio e confirmar que "Tirar foto" agora abre a câmera nativa do Android (não mais o seletor genérico do navegador) e que a foto capturada aparece no grid com o carimbo de data/hora.
-- Próxima fase (depois da validação manual acima): Fase 3 da spec (`docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`) — GPS em background durante a rota do dia.
+- Fase 2 concluída em: 2026-07-13. Código implementado, revisado por subagente (task a task + revisão final de branch, "Ready to merge", só 1 Minor de UX sem bloqueio: cancelar a foto no plugin nativo mostra o mesmo toast genérico de erro).
+- Validado manualmente: no navegador, "Tirar foto" e "Escolher da galeria" continuam idênticos a antes (sem regressão). No Android Studio/emulador, "Tirar foto" agora abre a câmera nativa do Android dentro do app.
+- Próxima fase: Fase 3 da spec (`docs/superpowers/specs/2026-07-13-app-android-promotor-design.md`) — GPS em background durante a rota do dia.
