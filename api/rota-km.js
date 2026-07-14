@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const sessao = autenticar(req);
   if (!sessao) return res.status(401).json({ erro: 'Sessao invalida ou expirada' });
 
-  let { promotor, de, ate } = req.query;
+  let { promotor, de, ate, incluirProspeccao } = req.query;
   if (!promotor) return res.status(400).json({ erro: 'Promotor obrigatorio' });
 
   if (sessao.tipo === 'promotor') {
@@ -36,8 +36,9 @@ export default async function handler(req, res) {
 
     const visitasComGps = rows
       .map(v => typeof v.dados === 'string' ? JSON.parse(v.dados) : v.dados)
-      .map(d => ({ nome: d?.pdv?.nomeFantasia || 'PDV não identificado', localizacao: d?.localizacao }))
-      .filter(v => v.localizacao?.ok && Number.isFinite(+v.localizacao.latitude) && Number.isFinite(+v.localizacao.longitude));
+      .map(d => ({ nome: d?.pdv?.nomeFantasia || 'PDV não identificado', localizacao: d?.localizacao, tipo: d?.tipo }))
+      .filter(v => v.localizacao?.ok && Number.isFinite(+v.localizacao.latitude) && Number.isFinite(+v.localizacao.longitude))
+      .filter(v => incluirProspeccao !== 'false' || v.tipo !== 'prospeccao');
 
     if (visitasComGps.length < 2) {
       return res.status(200).json({ km: null, motivo: 'Rota insuficiente (menos de 2 visitas com GPS no período)' });
