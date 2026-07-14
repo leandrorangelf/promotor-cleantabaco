@@ -32,7 +32,7 @@
 
 O código atual de `processarImagemCapturada` faz resize da imagem num canvas e empurra o resultado pra `fotos` (array do wizard). Vamos extrair a parte de resize+metadados pra uma função que apenas retorna o objeto, sem mexer em `fotos`/`renderFotos`, mantendo `processarImagemCapturada` funcionando exatamente igual.
 
-- [ ] **Step 1: Escrever o teste que verifica a extração**
+- [x] **Step 1: Escrever o teste que verifica a extração**
 
 Criar `tests/prospeccao-foto-refactor.test.js`:
 
@@ -49,12 +49,12 @@ assert.ok(/async function processarImagemCapturada\(dataUrl, origem, exifDataExt
 console.log('prospeccao-foto-refactor.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-foto-refactor.test.js`
 Expected: `AssertionError` (a função `prepararFotoProcessada` ainda não existe).
 
-- [ ] **Step 3: Fazer a extração em `index.html`**
+- [x] **Step 3: Fazer a extração em `index.html`**
 
 Substituir o bloco atual (linhas 2466-2483):
 
@@ -106,7 +106,7 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
 }
 ```
 
-- [ ] **Step 4: Rodar o teste novo e os testes de regressão**
+- [x] **Step 4: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -116,7 +116,7 @@ node tests/gps-captura.test.js
 ```
 Expected: as três saídas terminam com "passou", sem `AssertionError`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add index.html tests/prospeccao-foto-refactor.test.js
@@ -137,7 +137,7 @@ git commit -m "refactor: extrai prepararFotoProcessada para reaproveitar no flux
 - Consumes: `prepararFotoProcessada(dataUrl, origem, exifDataExterna)` (Task 1), `garantirCameraBridgeCarregada()`, `exifDataOriginalCamera(exif)`, `fotoSrc(foto)` — todas já existentes.
 - Produces: `let fotoProspeccao = null;`, `function renderFotoProspeccao()`, `function removerFotoProspeccao()`, `async function processarFotoProspeccao(dataUrl, origem, exifDataExterna)`, `function acionarCapturaProspeccao()`, `async function tirarFotoProspeccaoNativa()`, `function processarFotoProspeccaoInput(event)` — consumidos pela Task 3 (markup do modal) e Task 4 (`salvarProspeccao`).
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-captura-foto.test.js`:
 
@@ -160,12 +160,12 @@ assert.ok(html.includes("document.getElementById('fotoProspeccaoInput').click()"
 console.log('prospeccao-captura-foto.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-captura-foto.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Adicionar o estado global**
+- [x] **Step 3: Adicionar o estado global**
 
 Em `index.html:1590`, logo após `let fotos = [];`, adicionar:
 
@@ -174,7 +174,7 @@ let fotos = [];
 let fotoProspeccao = null;
 ```
 
-- [ ] **Step 4: Adicionar `renderFotoProspeccao` e `removerFotoProspeccao`**
+- [x] **Step 4: Adicionar `renderFotoProspeccao` e `removerFotoProspeccao`**
 
 Logo após a função `fotoMeta` (perto da linha 2373), adicionar:
 
@@ -193,7 +193,7 @@ function renderFotoProspeccao() {
 function removerFotoProspeccao() { fotoProspeccao = null; renderFotoProspeccao(); }
 ```
 
-- [ ] **Step 5: Adicionar as funções de captura**
+- [x] **Step 5: Adicionar as funções de captura**
 
 Logo após a função `tirarFotoNativa()` (perto da linha 2517), adicionar:
 
@@ -233,7 +233,7 @@ function processarFotoProspeccaoInput(event) {
 }
 ```
 
-- [ ] **Step 6: Rodar o teste novo e os testes de regressão**
+- [x] **Step 6: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -243,7 +243,7 @@ node tests/gps-captura.test.js
 ```
 Expected: as três terminam com "passou".
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html tests/prospeccao-captura-foto.test.js
@@ -264,7 +264,7 @@ git commit -m "feat: adiciona estado e captura de foto para registro de prospecc
 - Consumes: `acionarCapturaProspeccao()`, `processarFotoProspeccaoInput(event)`, `renderFotoProspeccao()` (Task 2).
 - Produces: `function abrirModalProspeccao()`, `function fecharModalProspeccao()`, elemento `id="modalProspeccao"`, campo `id="prospeccaoNome"`, botão `id="btnSalvarProspeccao"` — consumidos pela Task 4 (`salvarProspeccao`).
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-modal.test.js`:
 
@@ -288,12 +288,12 @@ assert.ok(/fecharModalProspeccao\(\)\s*\{\s*document\.getElementById\('modalPros
 console.log('prospeccao-modal.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-modal.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Adicionar o botão no nav/Painel**
+- [x] **Step 3: Adicionar o botão no nav/Painel**
 
 Em `index.html:761`, logo após o botão "＋ Nova", **não** mexer no nav (ele já está cheio) — em vez disso, adicionar o botão dentro do próprio `#pPainel`. Substituir o bloco (linhas 768-781):
 
@@ -334,7 +334,7 @@ por:
   </div>
 ```
 
-- [ ] **Step 4: Adicionar o modal**
+- [x] **Step 4: Adicionar o modal**
 
 Logo após o fechamento de `</div>` do `#modalDetalhe` (linha 1554), adicionar:
 
@@ -362,7 +362,7 @@ Logo após o fechamento de `</div>` do `#modalDetalhe` (linha 1554), adicionar:
 </div>
 ```
 
-- [ ] **Step 5: Adicionar `abrirModalProspeccao`/`fecharModalProspeccao` e o listener de clique fora**
+- [x] **Step 5: Adicionar `abrirModalProspeccao`/`fecharModalProspeccao` e o listener de clique fora**
 
 Logo após a função `fecharModal()` (perto da linha 5513), adicionar:
 
@@ -377,7 +377,7 @@ function fecharModalProspeccao() { document.getElementById('modalProspeccao').cl
 document.getElementById('modalProspeccao').addEventListener('click', function(e) { if(e.target===this) fecharModalProspeccao(); });
 ```
 
-- [ ] **Step 6: Rodar o teste novo e os testes de regressão**
+- [x] **Step 6: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -387,7 +387,7 @@ node tests/gps-captura.test.js
 ```
 Expected: as três terminam com "passou".
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html tests/prospeccao-modal.test.js
@@ -406,7 +406,7 @@ git commit -m "feat: adiciona modal e botao de entrada para registro de prospecc
 - Consumes: `capturarLocalizacaoAtual()`, `prepararFotosParaEnvio(lista)`, `apiFetch(url, opts)`, `headers()`, `toast(msg)`, `fecharModalProspeccao()` (Task 3), `carregarVisitasPromotor(force)` — todos já existentes.
 - Produces: `async function salvarProspeccao()`, chamada pelo botão `#btnSalvarProspeccao` (Task 3).
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-salvar.test.js`:
 
@@ -426,12 +426,12 @@ assert.ok(/await apiFetch\(`\$\{API\}\/api\/salvar`/.test(html), 'prospeccao dev
 console.log('prospeccao-salvar.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-salvar.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Implementar `salvarProspeccao`**
+- [x] **Step 3: Implementar `salvarProspeccao`**
 
 Logo antes da função `async function salvarVisita() {` (linha 3141), adicionar:
 
@@ -475,7 +475,7 @@ async function salvarProspeccao() {
 
 ```
 
-- [ ] **Step 4: Rodar o teste novo e os testes de regressão**
+- [x] **Step 4: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -486,7 +486,7 @@ node tests/salvamento-rascunho.test.js
 ```
 Expected: as quatro terminam com "passou".
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add index.html tests/prospeccao-salvar.test.js
@@ -505,7 +505,7 @@ git commit -m "feat: implementa salvarProspeccao reaproveitando api/salvar exist
 - Consumes: nenhuma nova — só lê `v.dados.tipo` das visitas já carregadas por `carregarVisitasPromotor`.
 - Produces: nenhuma função nova — só o branch dentro de `renderHistorico()`.
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-historico.test.js`:
 
@@ -521,12 +521,12 @@ assert.ok(html.includes('🔍 Prospecção'), 'deve existir badge visual identif
 console.log('prospeccao-historico.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-historico.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Adicionar o branch em `renderHistorico`**
+- [x] **Step 3: Adicionar o branch em `renderHistorico`**
 
 Substituir o corpo do `.map` (linhas 3438-3464):
 
@@ -606,7 +606,7 @@ por:
   }).join('');
 ```
 
-- [ ] **Step 4: Rodar o teste novo e os testes de regressão**
+- [x] **Step 4: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -615,7 +615,7 @@ node tests/filtros-periodo.test.js
 ```
 Expected: as duas terminam com "passou".
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add index.html tests/prospeccao-historico.test.js
@@ -634,7 +634,7 @@ git commit -m "feat: mostra badge de prospeccao no historico de visitas do promo
 - Consumes: nenhuma — só o `dados.tipo` já gravado pela Task 4.
 - Produces: query param `incluirProspeccao` (string `'false'` exclui prospecção; qualquer outro valor ou ausência mantém o comportamento atual de incluir tudo), consumido pela Task 7 (checkbox do gestor).
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-rota-km.test.js`:
 
@@ -651,12 +651,12 @@ assert.ok(/incluirProspeccao !== 'false' \|\| v\.tipo !== 'prospeccao'/.test(src
 console.log('prospeccao-rota-km.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-rota-km.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Atualizar `api/rota-km.js`**
+- [x] **Step 3: Atualizar `api/rota-km.js`**
 
 Na linha 15, substituir:
 
@@ -689,12 +689,12 @@ por:
       .filter(v => incluirProspeccao !== 'false' || v.tipo !== 'prospeccao');
 ```
 
-- [ ] **Step 4: Rodar o teste novo**
+- [x] **Step 4: Rodar o teste novo**
 
 Run: `node tests/prospeccao-rota-km.test.js`
 Expected: "prospeccao-rota-km.test.js passou".
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/rota-km.js tests/prospeccao-rota-km.test.js
@@ -714,7 +714,7 @@ git commit -m "feat: permite excluir prospeccao do calculo de km via parametro i
 - Consumes: parâmetro `incluirProspeccao` da API (Task 6).
 - Produces: elemento `id="mapaIncluirProspeccao"`, usado só dentro de `carregarKmRota`.
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Criar `tests/prospeccao-mapa-checkbox.test.js`:
 
@@ -732,12 +732,12 @@ assert.ok(html.includes(`onclick="aplicarFiltrosMapa()"`), 'aplicarFiltrosMapa c
 console.log('prospeccao-mapa-checkbox.test.js passou');
 ```
 
-- [ ] **Step 2: Rodar o teste e confirmar que falha**
+- [x] **Step 2: Rodar o teste e confirmar que falha**
 
 Run: `node tests/prospeccao-mapa-checkbox.test.js`
 Expected: `AssertionError`.
 
-- [ ] **Step 3: Adicionar o checkbox nos filtros do mapa**
+- [x] **Step 3: Adicionar o checkbox nos filtros do mapa**
 
 Em `index.html:1479-1480`, logo após:
 
@@ -751,7 +751,7 @@ adicionar:
           <div class="filtro-group"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" id="mapaIncluirProspeccao" checked onchange="aplicarFiltrosMapa()"> Incluir prospecção no km</label></div>
 ```
 
-- [ ] **Step 4: Repassar o parâmetro em `carregarKmRota`**
+- [x] **Step 4: Repassar o parâmetro em `carregarKmRota`**
 
 Em `index.html:4108-4121`, substituir:
 
@@ -790,7 +790,7 @@ async function carregarKmRota(promotor, de, ate) {
     if (ate) url += `ate=${ate}T23:59:59Z&`;
 ```
 
-- [ ] **Step 5: Rodar o teste novo e os testes de regressão**
+- [x] **Step 5: Rodar o teste novo e os testes de regressão**
 
 Run:
 ```
@@ -799,7 +799,7 @@ node tests/mapa-timeline.test.js
 ```
 Expected: as duas terminam com "passou".
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add index.html tests/prospeccao-mapa-checkbox.test.js
@@ -815,7 +815,7 @@ git commit -m "feat: adiciona checkbox de incluir/excluir prospeccao no km do ma
 
 **Interfaces:** N/A — task de validação manual e propagação, sem código novo.
 
-- [ ] **Step 1: Rodar a suíte completa de testes**
+- [x] **Step 1: Rodar a suíte completa de testes**
 
 Run (bash):
 ```bash
@@ -823,13 +823,13 @@ for f in tests/*.test.js; do node "$f" || echo "FALHOU: $f"; done
 ```
 Expected: nenhuma linha "FALHOU".
 
-- [ ] **Step 2: Testar manualmente no navegador**
+- [ ] **Step 2: Testar manualmente no navegador** (pulado nesta sessão — ver "Status" abaixo)
 
 Abrir `index.html` localmente (ou no ambiente de dev), logar como promotor, clicar em "📍 Registrar prospecção", preencher nome, tirar/escolher foto, salvar. Confirmar: toast de sucesso, item aparece no Histórico com badge "🔍 Prospecção", e o nome aparece na Carteira de clientes.
 
 Como gestor, abrir a aba Mapa, filtrar pelo promotor usado no teste, conferir que o card de km aparece e que desmarcar "Incluir prospecção no km" muda o valor calculado (ou o texto de motivo, se ficar com menos de 2 pontos).
 
-- [ ] **Step 3: Propagar para o app Android**
+- [x] **Step 3: Propagar para o app Android**
 
 ```powershell
 Copy-Item index.html app\www\index.html
@@ -843,7 +843,7 @@ npx cap sync android
 ```
 Expected: saída terminando em "Sync finished".
 
-- [ ] **Step 4: Atualizar o plano com o status desta sessão**
+- [x] **Step 4: Atualizar o plano com o status desta sessão**
 
 Editar este arquivo marcando os checkboxes concluídos e adicionar ao final:
 
@@ -854,9 +854,17 @@ Editar este arquivo marcando os checkboxes concluídos e adicionar ao final:
 - Testado manualmente: registro salva, aparece no histórico com badge, entra na carteira, km reflete o checkbox de incluir/excluir prospecção.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/www/index.html docs/superpowers/plans/2026-07-14-registro-prospeccao.md
 git commit -m "docs: marca registro de prospeccao como concluido e propaga para o app Android"
 ```
+
+## Status (atualizar a cada sessão)
+
+- Tasks 1-7 concluídas em: 2026-07-14. Toda a suíte automatizada passa (`node tests/<arquivo>.test.js` para cada arquivo), exceto `tests/salvamento-rascunho.test.js`, que já falhava antes desta feature por um problema pré-existente de line-ending (CRLF no `index.html` vs `\n` literal esperado pelo teste) — não relacionado a este trabalho, não corrigido aqui.
+- Teste manual no navegador (Step 2) e validação via API (curl contra `vercel dev`) foram **pulados nesta sessão** por decisão do usuário — não há tooling de automação de navegador disponível e o usuário preferiu não expor credenciais de promotor. **Pendente**: testar manualmente no navegador — registrar uma prospecção, confirmar badge no histórico, confirmar entrada na carteira, e testar o checkbox de km no mapa do gestor.
+- `app/www/index.html` sincronizado com a versão nova do `index.html` (Step 3), `const API` trocado para produção, `npx cap sync android` rodado com sucesso ("Sync finished").
+- Trabalho feito na branch `feature/registro-prospeccao` (não a `main`), pendente de merge após o teste manual acima.
+- Próximo passo: usuário validar manualmente no navegador; depois, seguir o fluxo de `finishing-a-development-branch` para decidir merge/PR.

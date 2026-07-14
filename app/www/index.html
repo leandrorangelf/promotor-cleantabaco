@@ -771,6 +771,7 @@ button:active { transform: translateY(1px); }
       <p>Acompanhe suas metas do mes e veja o que falta para bater.</p>
     </div>
     <div class="gestor-wrap">
+      <button type="button" class="camera-btn primary" style="margin-bottom:14px;" onclick="abrirModalProspeccao()">📍 Registrar prospecção (visita sem venda)</button>
       <div class="card" id="pResumoMesCard" style="margin-bottom:14px;"></div>
       <div class="resumo-grid" id="pPerformanceCards"></div>
       <div class="card">
@@ -1475,6 +1476,7 @@ button:active { transform: translateY(1px); }
         </div>
         <div class="filtro-row">
           <div class="filtro-group"><label>Até</label><input type="date" id="mapaFiltroAte"></div>
+          <div class="filtro-group"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" id="mapaIncluirProspeccao" checked onchange="aplicarFiltrosMapa()"> Incluir prospecção no km</label></div>
           <div class="filter-actions">
             <button class="btn-filtrar" type="button" onclick="aplicarFiltrosMapa()">Aplicar no mapa</button>
             <button class="btn-limpar-filtros" type="button" onclick="limparFiltrosMapa()">Limpar</button>
@@ -1553,6 +1555,27 @@ button:active { transform: translateY(1px); }
   </div>
 </div>
 
+<div class="modal-overlay" id="modalProspeccao">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Registrar prospecção</h3>
+      <button class="modal-close" onclick="fecharModalProspeccao()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Nome do local *</label><input type="text" id="prospeccaoNome" placeholder="Ex: Mercadinho do Zé"></div>
+      <input type="file" id="fotoProspeccaoInput" accept="image/*" capture="environment" onchange="processarFotoProspeccaoInput(event)">
+      <div class="camera-actions">
+        <button type="button" class="camera-btn primary" onclick="acionarCapturaProspeccao()">Tirar foto</button>
+      </div>
+      <div class="foto-text" style="margin-top:10px;">Registre o local mesmo sem venda — a foto e o GPS comprovam a visita.</div>
+      <div class="foto-grid" id="prospeccaoFotoGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-salvar" id="btnSalvarProspeccao" onclick="salvarProspeccao()">✓ Salvar prospecção</button>
+    </div>
+  </div>
+</div>
+
 <div class="foto-lightbox" id="fotoLightbox" role="dialog" aria-modal="true" aria-label="Visualização da foto">
   <button class="foto-lightbox-download" type="button" onclick="baixarFotoAtual()">Baixar foto</button>
   <button class="foto-lightbox-close" type="button" onclick="fecharFoto()" aria-label="Fechar foto">×</button>
@@ -1588,6 +1611,7 @@ let secaoAtual = 0;
 let skusSelecionados = [];
 let concSelecionados = [];
 let fotos = [];
+let fotoProspeccao = null;
 let iaFotoSelecionada = null;
 let editandoId = null;
 let editandoPromotor = null;
@@ -2371,6 +2395,19 @@ function fotoMeta(foto) {
   return typeof foto === 'string' ? { imagem: foto, origem: 'legado' } : (foto || {});
 }
 
+function renderFotoProspeccao() {
+  const grid = document.getElementById('prospeccaoFotoGrid');
+  if (!grid) return;
+  if (!fotoProspeccao) { grid.innerHTML = ''; return; }
+  grid.innerHTML = `
+    <div class="foto-thumb">
+      <img src="${fotoSrc(fotoProspeccao)}" alt="Foto da prospeccao">
+      <button class="foto-del" onclick="removerFotoProspeccao()" aria-label="Remover foto">×</button>
+    </div>
+  `;
+}
+function removerFotoProspeccao() { fotoProspeccao = null; renderFotoProspeccao(); }
+
 async function calcularHashFoto(dataUrl) {
   if (!window.crypto?.subtle || !dataUrl) return '';
   const texto = String(dataUrl).split(',').pop() || String(dataUrl);
@@ -2463,7 +2500,7 @@ function carimbarDataHora(ctx, w, h) {
   ctx.fillText(texto, x, y);
 }
 
-async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null) {
+async function prepararFotoProcessada(dataUrl, origem, exifDataExterna = null) {
   const img = new Image();
   await new Promise((resolve, reject) => {
     img.onload = resolve;
@@ -2478,7 +2515,11 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0, w, h);
   if (origem === 'camera') carimbarDataHora(ctx, w, h);
-  fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna));
+  return criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna);
+}
+
+async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null) {
+  fotos.push(await prepararFotoProcessada(dataUrl, origem, exifDataExterna));
   renderFotos();
 }
 
@@ -2514,6 +2555,40 @@ async function tirarFotoNativa() {
     saveToGallery: false
   });
   await processarImagemCapturada(foto.dataUrl, 'camera', exifDataOriginalCamera(foto.exif));
+}
+
+async function processarFotoProspeccao(dataUrl, origem, exifDataExterna = null) {
+  fotoProspeccao = await prepararFotoProcessada(dataUrl, origem, exifDataExterna);
+  renderFotoProspeccao();
+}
+
+async function tirarFotoProspeccaoNativa() {
+  await garantirCameraBridgeCarregada();
+  const { getPhoto, CameraResultType, CameraSource } = window.NativeCameraBridge;
+  const foto = await getPhoto({
+    quality: 80,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Camera,
+    saveToGallery: false
+  });
+  await processarFotoProspeccao(foto.dataUrl, 'camera', exifDataOriginalCamera(foto.exif));
+}
+
+function acionarCapturaProspeccao() {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    tirarFotoProspeccaoNativa().catch(e => toast('Erro ao acessar camera: ' + e.message));
+  } else {
+    document.getElementById('fotoProspeccaoInput').click();
+  }
+}
+
+function processarFotoProspeccaoInput(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => { await processarFotoProspeccao(e.target.result, 'camera', null); };
+  reader.readAsDataURL(file);
 }
 
 function acionarCaptura() {
@@ -3137,6 +3212,43 @@ async function registrarValidacoesVisita(visitaId, dados, fotosDaVisita) {
   }
 }
 
+async function salvarProspeccao() {
+  const nome = document.getElementById('prospeccaoNome').value.trim();
+  if (!nome) { toast('⚠️ Informe o nome do local'); return; }
+  if (!fotoProspeccao) { toast('⚠️ Anexe uma foto'); return; }
+
+  const btn = document.getElementById('btnSalvarProspeccao');
+  btn.disabled = true;
+  btn.textContent = 'Capturando GPS... aguarde';
+
+  try {
+    const localizacao = await capturarLocalizacaoAtual();
+    btn.textContent = 'Salvando...';
+
+    const dados = { tipo: 'prospeccao', pdv: { nomeFantasia: nome }, localizacao };
+    const fotosParaSalvar = prepararFotosParaEnvio([fotoProspeccao]);
+
+    const res = await apiFetch(`${API}/api/salvar`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ promotor: usuarioAtual, dados, fotos: fotosParaSalvar })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast('✅ Prospecção registrada');
+      fecharModalProspeccao();
+      carregarVisitasPromotor(true);
+    } else {
+      toast('❌ ' + (data.erro || 'Erro ao salvar'));
+    }
+  } catch (e) {
+    toast('❌ Erro ao salvar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Salvar prospecção';
+  }
+}
+
 // SALVAR
 async function salvarVisita() {
   const nome = document.getElementById('nomeFantasia').value.trim();
@@ -3439,6 +3551,20 @@ function renderHistorico() {
     const d = v.dados || {};
     const data = new Date(v.criado_em);
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    if (d.tipo === 'prospeccao') {
+      return `
+        <div class="visita-card">
+          <div class="visita-header">
+            <div class="visita-nome">${d.pdv?.nomeFantasia||'—'}</div>
+            <div class="visita-data">${dataStr}</div>
+          </div>
+          <div><span class="badge badge-purple">🔍 Prospecção</span></div>
+          <div class="visita-actions">
+            <button class="btn-detalhes" onclick="abrirDetalhePromotor('${v.id}')">Ver detalhes</button>
+          </div>
+        </div>
+      `;
+    }
     const skus = (d.presenca?.skusPresentes||[]).length;
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
     const status = statusDaVisita(v);
@@ -4115,7 +4241,8 @@ async function carregarKmRota(promotor, de, ate) {
   valor.textContent = 'Calculando...';
   if (trechosEl) trechosEl.innerHTML = '';
   try {
-    let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&`;
+    const incluirProspeccao = document.getElementById('mapaIncluirProspeccao')?.checked !== false;
+    let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&incluirProspeccao=${incluirProspeccao}&`;
     if (de) url += `de=${de}T00:00:00Z&`;
     if (ate) url += `ate=${ate}T23:59:59Z&`;
     const res = await apiFetch(url, { headers: headers() });
@@ -5511,6 +5638,15 @@ async function excluirVisitaGestor(id) {
 }
 
 function fecharModal() { document.getElementById('modalDetalhe').classList.remove('open'); }
+
+function abrirModalProspeccao() {
+  document.getElementById('prospeccaoNome').value = '';
+  fotoProspeccao = null;
+  renderFotoProspeccao();
+  document.getElementById('modalProspeccao').classList.add('open');
+}
+function fecharModalProspeccao() { document.getElementById('modalProspeccao').classList.remove('open'); }
+document.getElementById('modalProspeccao').addEventListener('click', function(e) { if(e.target===this) fecharModalProspeccao(); });
 document.getElementById('modalDetalhe').addEventListener('click', function(e) { if(e.target===this) fecharModal(); });
 document.getElementById('senhaOverlay').addEventListener('click', function(e) { if(e.target===this) fecharSenha(); });
 document.getElementById('fotoLightbox').addEventListener('click', function(e) { if(e.target===this) fecharFoto(); });
