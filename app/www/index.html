@@ -1650,7 +1650,52 @@ function montarErroLocalizacao(err, capturadoEm, tentativa) {
   };
 }
 
+let geoBridgePromise = null;
+function garantirGeoBridgeCarregada() {
+  if (window.NativeGeoBridge) return Promise.resolve();
+  if (geoBridgePromise) return geoBridgePromise;
+  geoBridgePromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'geo-bridge.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('geo-bridge.js indisponivel'));
+    document.head.appendChild(script);
+  });
+  return geoBridgePromise;
+}
+
+async function obterPosicaoNativa(opcoes, tentativa) {
+  const capturadoEm = new Date().toISOString();
+  try {
+    await garantirGeoBridgeCarregada();
+    const pos = await window.NativeGeoBridge.getCurrentPosition({
+      enableHighAccuracy: opcoes.enableHighAccuracy,
+      timeout: opcoes.timeout,
+      maximumAge: opcoes.maximumAge
+    });
+    return {
+      ok: true,
+      tentado: true,
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      precisao: pos.coords.accuracy,
+      altitude: pos.coords.altitude,
+      velocidade: pos.coords.speed,
+      direcao: pos.coords.heading,
+      tentativa,
+      capturadoEm: new Date(pos.timestamp || Date.now()).toISOString()
+    };
+  } catch (err) {
+    const mensagem = err?.message || '';
+    const codigo = /denied|permiss/i.test(mensagem) ? 1 : /timeout/i.test(mensagem) ? 3 : 2;
+    return montarErroLocalizacao({ message: mensagem, code: codigo }, capturadoEm, tentativa);
+  }
+}
+
 function obterPosicaoAtual(opcoes, tentativa) {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    return obterPosicaoNativa(opcoes, tentativa);
+  }
   const capturadoEm = new Date().toISOString();
   return new Promise(resolve => {
     navigator.geolocation.getCurrentPosition(
