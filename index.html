@@ -1588,6 +1588,7 @@ let secaoAtual = 0;
 let skusSelecionados = [];
 let concSelecionados = [];
 let fotos = [];
+let fotoProspeccao = null;
 let iaFotoSelecionada = null;
 let editandoId = null;
 let editandoPromotor = null;
@@ -2371,6 +2372,19 @@ function fotoMeta(foto) {
   return typeof foto === 'string' ? { imagem: foto, origem: 'legado' } : (foto || {});
 }
 
+function renderFotoProspeccao() {
+  const grid = document.getElementById('prospeccaoFotoGrid');
+  if (!grid) return;
+  if (!fotoProspeccao) { grid.innerHTML = ''; return; }
+  grid.innerHTML = `
+    <div class="foto-thumb">
+      <img src="${fotoSrc(fotoProspeccao)}" alt="Foto da prospeccao">
+      <button class="foto-del" onclick="removerFotoProspeccao()" aria-label="Remover foto">×</button>
+    </div>
+  `;
+}
+function removerFotoProspeccao() { fotoProspeccao = null; renderFotoProspeccao(); }
+
 async function calcularHashFoto(dataUrl) {
   if (!window.crypto?.subtle || !dataUrl) return '';
   const texto = String(dataUrl).split(',').pop() || String(dataUrl);
@@ -2518,6 +2532,40 @@ async function tirarFotoNativa() {
     saveToGallery: false
   });
   await processarImagemCapturada(foto.dataUrl, 'camera', exifDataOriginalCamera(foto.exif));
+}
+
+async function processarFotoProspeccao(dataUrl, origem, exifDataExterna = null) {
+  fotoProspeccao = await prepararFotoProcessada(dataUrl, origem, exifDataExterna);
+  renderFotoProspeccao();
+}
+
+async function tirarFotoProspeccaoNativa() {
+  await garantirCameraBridgeCarregada();
+  const { getPhoto, CameraResultType, CameraSource } = window.NativeCameraBridge;
+  const foto = await getPhoto({
+    quality: 80,
+    resultType: CameraResultType.DataUrl,
+    source: CameraSource.Camera,
+    saveToGallery: false
+  });
+  await processarFotoProspeccao(foto.dataUrl, 'camera', exifDataOriginalCamera(foto.exif));
+}
+
+function acionarCapturaProspeccao() {
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    tirarFotoProspeccaoNativa().catch(e => toast('Erro ao acessar camera: ' + e.message));
+  } else {
+    document.getElementById('fotoProspeccaoInput').click();
+  }
+}
+
+function processarFotoProspeccaoInput(event) {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => { await processarFotoProspeccao(e.target.result, 'camera', null); };
+  reader.readAsDataURL(file);
 }
 
 function acionarCaptura() {
