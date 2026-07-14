@@ -771,6 +771,7 @@ button:active { transform: translateY(1px); }
       <p>Acompanhe suas metas do mes e veja o que falta para bater.</p>
     </div>
     <div class="gestor-wrap">
+      <button type="button" class="camera-btn primary" style="margin-bottom:14px;" onclick="abrirModalProspeccao()">📍 Registrar prospecção (visita sem venda)</button>
       <div class="card" id="pResumoMesCard" style="margin-bottom:14px;"></div>
       <div class="resumo-grid" id="pPerformanceCards"></div>
       <div class="card">
@@ -1550,6 +1551,27 @@ button:active { transform: translateY(1px); }
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalProspeccao">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Registrar prospecção</h3>
+      <button class="modal-close" onclick="fecharModalProspeccao()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Nome do local *</label><input type="text" id="prospeccaoNome" placeholder="Ex: Mercadinho do Zé"></div>
+      <input type="file" id="fotoProspeccaoInput" accept="image/*" capture="environment" onchange="processarFotoProspeccaoInput(event)">
+      <div class="camera-actions">
+        <button type="button" class="camera-btn primary" onclick="acionarCapturaProspeccao()">Tirar foto</button>
+      </div>
+      <div class="foto-text" style="margin-top:10px;">Registre o local mesmo sem venda — a foto e o GPS comprovam a visita.</div>
+      <div class="foto-grid" id="prospeccaoFotoGrid"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-salvar" id="btnSalvarProspeccao" onclick="salvarProspeccao()">✓ Salvar prospecção</button>
+    </div>
   </div>
 </div>
 
@@ -5563,6 +5585,15 @@ async function excluirVisitaGestor(id) {
 }
 
 function fecharModal() { document.getElementById('modalDetalhe').classList.remove('open'); }
+
+function abrirModalProspeccao() {
+  document.getElementById('prospeccaoNome').value = '';
+  fotoProspeccao = null;
+  renderFotoProspeccao();
+  document.getElementById('modalProspeccao').classList.add('open');
+}
+function fecharModalProspeccao() { document.getElementById('modalProspeccao').classList.remove('open'); }
+document.getElementById('modalProspeccao').addEventListener('click', function(e) { if(e.target===this) fecharModalProspeccao(); });
 document.getElementById('modalDetalhe').addEventListener('click', function(e) { if(e.target===this) fecharModal(); });
 document.getElementById('senhaOverlay').addEventListener('click', function(e) { if(e.target===this) fecharSenha(); });
 document.getElementById('fotoLightbox').addEventListener('click', function(e) { if(e.target===this) fecharFoto(); });
