@@ -2418,27 +2418,33 @@ function carimbarDataHora(ctx, w, h) {
   ctx.fillText(texto, x, y);
 }
 
+async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null) {
+  const img = new Image();
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error('Nao foi possivel carregar a foto'));
+    img.src = dataUrl;
+  });
+  const canvas = document.createElement('canvas');
+  const max = 800;
+  let w = img.width, h = img.height;
+  if (w > max || h > max) { if (w > h) { h = h*max/w; w = max; } else { w = w*max/h; h = max; } }
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  if (origem === 'camera') carimbarDataHora(ctx, w, h);
+  fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifDataExterna));
+  renderFotos();
+}
+
 function processarFotos(event) {
   const origem = event.target.id === 'fotoCameraInput' ? 'camera' : 'galeria';
   Array.from(event.target.files).forEach(file => {
     const leituraExif = origem === 'galeria' ? file.arrayBuffer().then(lerExifDataOriginal).catch(() => null) : Promise.resolve(null);
     const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const max = 800;
-        let w = img.width, h = img.height;
-        if (w > max || h > max) { if (w > h) { h = h*max/w; w = max; } else { w = w*max/h; h = max; } }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        if (origem === 'camera') carimbarDataHora(ctx, w, h);
-        const exifData = await leituraExif;
-        fotos.push(await criarFotoComMetadados(canvas.toDataURL('image/jpeg', 0.7), origem, exifData));
-        renderFotos();
-      };
-      img.src = e.target.result;
+    reader.onload = async e => {
+      const exifData = await leituraExif;
+      await processarImagemCapturada(e.target.result, origem, exifData);
     };
     reader.readAsDataURL(file);
   });
