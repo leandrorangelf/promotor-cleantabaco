@@ -1476,6 +1476,7 @@ button:active { transform: translateY(1px); }
         </div>
         <div class="filtro-row">
           <div class="filtro-group"><label>Até</label><input type="date" id="mapaFiltroAte"></div>
+          <div class="filtro-group"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:6px;font-weight:400;"><input type="checkbox" id="mapaIncluirProspeccao" checked onchange="aplicarFiltrosMapa()"> Incluir prospecção no km</label></div>
           <div class="filter-actions">
             <button class="btn-filtrar" type="button" onclick="aplicarFiltrosMapa()">Aplicar no mapa</button>
             <button class="btn-limpar-filtros" type="button" onclick="limparFiltrosMapa()">Limpar</button>
@@ -4240,7 +4241,8 @@ async function carregarKmRota(promotor, de, ate) {
   valor.textContent = 'Calculando...';
   if (trechosEl) trechosEl.innerHTML = '';
   try {
-    let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&`;
+    const incluirProspeccao = document.getElementById('mapaIncluirProspeccao')?.checked !== false;
+    let url = `${API}/api/rota-km?promotor=${encodeURIComponent(promotor)}&incluirProspeccao=${incluirProspeccao}&`;
     if (de) url += `de=${de}T00:00:00Z&`;
     if (ate) url += `ate=${ate}T23:59:59Z&`;
     const res = await apiFetch(url, { headers: headers() });
