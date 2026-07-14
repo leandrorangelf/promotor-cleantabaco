@@ -3550,6 +3550,20 @@ function renderHistorico() {
     const d = v.dados || {};
     const data = new Date(v.criado_em);
     const dataStr = data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    if (d.tipo === 'prospeccao') {
+      return `
+        <div class="visita-card">
+          <div class="visita-header">
+            <div class="visita-nome">${d.pdv?.nomeFantasia||'—'}</div>
+            <div class="visita-data">${dataStr}</div>
+          </div>
+          <div><span class="badge badge-purple">🔍 Prospecção</span></div>
+          <div class="visita-actions">
+            <button class="btn-detalhes" onclick="abrirDetalhePromotor('${v.id}')">Ver detalhes</button>
+          </div>
+        </div>
+      `;
+    }
     const skus = (d.presenca?.skusPresentes||[]).length;
     const temPedido = d.comercial?.pedidoFeito === 'Sim';
     const status = statusDaVisita(v);
