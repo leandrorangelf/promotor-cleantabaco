@@ -138,10 +138,10 @@ const resultadoConfigurado = calcularBonificacaoPromotores(
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.alvo, 2);
 assert.strictEqual(resultadoConfigurado.Geo.metas.baseDuzentosPdvs.atingida, true);
 
-// Meta 2 (Iara): revisao manual tem prioridade sobre a decisao automatica da IA
+// Meta 2 (Iara): qualquer aprovacao manual ou automatica da IA conta
 // Loja 1: IA aprovou, sem revisao -> conta
 // Loja 2: IA reprovou, gestor aprovou manualmente -> conta
-// Loja 3: IA aprovou, gestor reprovou manualmente -> nao conta
+// Loja 3: IA aprovou, gestor reprovou manualmente -> conta pela aprovacao da IA
 // Loja 4: sem nenhuma foto avaliada -> nao conta
 const resultadoRevisao = calcularBonificacaoPromotores(
   [
@@ -154,7 +154,7 @@ const resultadoRevisao = calcularBonificacaoPromotores(
   periodo,
   { Iara: { tabela_percentual: 50, base_clientes: 4 } }
 );
-assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atual, 50);
+assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atual, 75);
 assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atingida, true);
 
 console.log('bonus.test.js passou');

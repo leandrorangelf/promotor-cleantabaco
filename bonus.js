@@ -35,13 +35,19 @@
     return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
   }
 
-  function statusValidacaoFoto(validacao) {
-    return validacao?.status_manual || validacao?.status_ia || 'pendente';
-  }
-
   function tabelaConfirmadaNaVisita(visita) {
     const validacoes = visita?.dados?.presenca?.tabelaValidacoesFotos || [];
-    return validacoes.some(v => statusValidacaoFoto(v) === 'aprovado');
+    return validacoes.some(v => v?.status_manual === 'aprovado' || v?.status_ia === 'aprovado');
+  }
+
+  function clientesDistintos(clientes) {
+    const vistos = new Set();
+    return clientes.filter(cliente => {
+      const chave = chavePdvCliente(cliente);
+      if (!chave || vistos.has(chave)) return false;
+      vistos.add(chave);
+      return true;
+    });
   }
 
   function dentroDoPeriodo(data, de, ate) {
@@ -100,7 +106,9 @@
       const visitasNoPeriodo = visitasDoPromotor.filter(v => dentroDoPeriodo(v.criado_em, de, ate));
 
       // Meta 1: R$15 por cliente novo (cadastrado no periodo) positivado (>=1 SKU vendido no periodo), teto R$500
-      const clientesNovos = clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate));
+      const clientesNovos = clientesDistintos(
+        clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate))
+      );
       const chavesPositivadas = new Set(
         visitasNoPeriodo.filter(positivadaComSku).map(chavePdvVisita).filter(Boolean)
       );
@@ -108,6 +116,9 @@
       resumo.metas.clienteNovoPositivado.atual = clientesNovosPositivados;
       resumo.metas.clienteNovoPositivado.valor = Math.min(clientesNovosPositivados * valorClienteNovo, tetoClienteNovo);
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
+      resumo.metas.clienteNovoPositivado.valorUnitario = valorClienteNovo;
+      resumo.metas.clienteNovoPositivado.teto = tetoClienteNovo;
+      resumo.metas.clienteNovoPositivado.clientesNovos = clientesNovosPositivados;
 
       // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (manualmente) em qualquer visita ate hoje
       // (nao restringe ao periodo do mes: uma tabela ja confirmada continua valendo nos meses seguintes)
@@ -116,20 +127,24 @@
       const chavesTabelaVisivel = new Set(
         visitasDoPromotor.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );
-      const totalBase = clientesDoPromotor.length;
-      const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
+      const carteira = clientesDistintos(clientesDoPromotor);
+      const totalBase = carteira.length;
+      const comTabelaVisivel = carteira.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
       const baseParaPercentual = Math.max(totalBase, resumo.metas.baseDuzentosPdvs.alvo);
       const percentualTabela = baseParaPercentual ? Math.round((comTabelaVisivel / baseParaPercentual) * 100) : 0;
       resumo.metas.tabelaVisivelBase.atual = percentualTabela;
       resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= resumo.metas.tabelaVisivelBase.alvo;
       resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;
+      resumo.metas.tabelaVisivelBase.carteira = totalBase;
+      resumo.metas.tabelaVisivelBase.comTabela = comTabelaVisivel;
 
       // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo
       const chavesVisitadas = new Set(visitasNoPeriodo.map(chavePdvVisita).filter(Boolean));
-      const cadastradosEVisitados = clientesDoPromotor.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
+      const cadastradosEVisitados = carteira.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
       resumo.metas.baseDuzentosPdvs.atual = cadastradosEVisitados;
       resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= resumo.metas.baseDuzentosPdvs.alvo;
       resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
+      resumo.metas.baseDuzentosPdvs.visitados = cadastradosEVisitados;
 
       resumo.totalBonus =
         resumo.metas.clienteNovoPositivado.valor +

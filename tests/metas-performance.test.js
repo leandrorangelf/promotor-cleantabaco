@@ -1,12 +1,13 @@
 const assert = require('assert');
 const { calcularPerformancePromotor, metasPadrao, resolverMetasPromotor } = require('../performance.js');
+const { calcularBonificacaoPromotores } = require('../bonus.js');
 
-function visita({ pdv, data, pedido = false, tabela = false }) {
+function visita({ promotor = 'Ana', pdv, cnpj, data, pedido = false, tabela = false }) {
   return {
-    promotor: 'Ana',
+    promotor,
     criado_em: data,
     dados: {
-      pdv: { nomeFantasia: pdv, uf: 'SP' },
+      pdv: { nomeFantasia: pdv, ...(cnpj ? { cnpj } : {}), uf: 'SP' },
       presenca: { tabelaValidacoesFotos: tabela ? [{ status_ia: 'aprovado' }] : [] },
       comercial: {
         pedidoFeito: pedido ? 'Sim' : 'Nao',
@@ -62,5 +63,70 @@ assert.strictEqual(perfCobertura.cards.base_ou_cobertura.atual, 140);
 assert.strictEqual(perfCobertura.cards.base_ou_cobertura.faltam, 40);
 
 assert.ok(perf.proximosPassos.length > 0);
+
+const periodoJulho = { de: '2026-07-01T00:00:00Z', ate: '2026-07-31T23:59:59Z' };
+const bonusWil = calcularBonificacaoPromotores(
+  [
+    visita({ promotor: 'Wil', pdv: 'Wil 1', data: '2026-07-03T10:00:00Z', pedido: true }),
+    visita({ promotor: 'Wil', pdv: 'Wil 2', data: '2026-07-03T10:00:00Z', pedido: true })
+  ],
+  [
+    { promotor: 'Wil', nome_fantasia: 'Wil 1', criado_em: '2026-07-02T10:00:00Z' },
+    { promotor: 'Wil', nome_fantasia: 'Wil 2', criado_em: '2026-07-02T10:00:00Z' }
+  ],
+  periodoJulho,
+  { Wil: { bonus_pdv_venda_valor: 15, bonus_pdv_venda_teto: 500, base_clientes: 200, tabela_percentual: 50 } }
+).Wil;
+assert.strictEqual(bonusWil.metas.clienteNovoPositivado.atual, 2);
+assert.strictEqual(bonusWil.metas.clienteNovoPositivado.valor, 30);
+assert.strictEqual(bonusWil.metas.clienteNovoPositivado.valorUnitario, 15);
+assert.strictEqual(bonusWil.metas.clienteNovoPositivado.teto, 500);
+assert.strictEqual(bonusWil.metas.clienteNovoPositivado.clientesNovos, 2);
+
+const aprovacaoIa = visita({ promotor: 'Ana', pdv: 'Tabela IA', data: '2026-07-03T10:00:00Z' });
+aprovacaoIa.dados.presenca.tabelaValidacoesFotos = [{ status_manual: 'pendente', status_ia: 'aprovado' }];
+const tabelaResumo = calcularBonificacaoPromotores(
+  [aprovacaoIa],
+  [{ promotor: 'Ana', nome_fantasia: 'Tabela IA', criado_em: '2026-06-01T10:00:00Z' }],
+  periodoJulho
+).Ana;
+assert.strictEqual(tabelaResumo.metas.tabelaVisivelBase.comTabela, 1);
+assert.strictEqual(tabelaResumo.metas.tabelaVisivelBase.carteira, 1);
+
+const visitasDuplicadas = [
+  visita({ promotor: 'Ana', pdv: 'Cobertura 1', cnpj: '11.111.111/0001-11', data: '2026-07-03T10:00:00Z' }),
+  visita({ promotor: 'Ana', pdv: 'Cobertura 1', cnpj: '11.111.111/0001-11', data: '2026-07-04T10:00:00Z' })
+];
+const coberturaResumo = calcularBonificacaoPromotores(
+  visitasDuplicadas,
+  [{ promotor: 'Ana', cnpj: '11.111.111/0001-11', nome_fantasia: 'Cobertura 1', criado_em: '2026-06-01T10:00:00Z' }],
+  periodoJulho
+).Ana;
+assert.strictEqual(coberturaResumo.metas.baseDuzentosPdvs.atual, 1);
+assert.strictEqual(coberturaResumo.metas.baseDuzentosPdvs.visitados, 1);
+
+const visitasSemAprovacao = [
+  visita({ promotor: 'Ana', pdv: 'Reprovada', data: '2026-07-03T10:00:00Z' }),
+  visita({ promotor: 'Ana', pdv: 'Pendente', data: '2026-07-03T10:00:00Z' })
+];
+visitasSemAprovacao[0].dados.presenca.tabelaValidacoesFotos = [{ status_manual: 'reprovado', status_ia: 'pendente' }];
+visitasSemAprovacao[1].dados.presenca.tabelaValidacoesFotos = [{ status_manual: 'pendente', status_ia: 'pendente' }];
+const semAprovacao = calcularBonificacaoPromotores(
+  visitasSemAprovacao,
+  [
+    { promotor: 'Ana', nome_fantasia: 'Reprovada', criado_em: '2026-06-01T10:00:00Z' },
+    { promotor: 'Ana', nome_fantasia: 'Pendente', criado_em: '2026-06-01T10:00:00Z' }
+  ],
+  periodoJulho
+).Ana;
+assert.strictEqual(semAprovacao.metas.tabelaVisivelBase.comTabela, 0);
+
+const semIdentificador = calcularBonificacaoPromotores(
+  [visita({ promotor: 'Ana', pdv: 'Sem chave', data: '2026-07-03T10:00:00Z', pedido: true })],
+  [{ promotor: 'Ana', criado_em: '2026-07-02T10:00:00Z' }],
+  periodoJulho
+).Ana;
+assert.strictEqual(semIdentificador.metas.clienteNovoPositivado.atual, 0);
+assert.strictEqual(semIdentificador.metas.baseDuzentosPdvs.atual, 0);
 
 console.log('metas-performance.test.js passou');
