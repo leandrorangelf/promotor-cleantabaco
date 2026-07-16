@@ -118,6 +118,7 @@
       resumo.metas.clienteNovoPositivado.atingida = resumo.metas.clienteNovoPositivado.valor > 0;
       resumo.metas.clienteNovoPositivado.valorUnitario = valorClienteNovo;
       resumo.metas.clienteNovoPositivado.teto = tetoClienteNovo;
+      resumo.metas.clienteNovoPositivado.alvoUnidades = Math.ceil(tetoClienteNovo / valorClienteNovo);
       resumo.metas.clienteNovoPositivado.clientesNovos = clientesNovosPositivados;
 
       // Meta 2: R$500 quando 50% da base de clientes tem foto aprovada (manualmente) em qualquer visita ate hoje
@@ -148,6 +149,8 @@
       resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= resumo.metas.baseDuzentosPdvs.alvo;
       resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
       resumo.metas.baseDuzentosPdvs.visitados = cadastradosEVisitados;
+      resumo.metas.baseDuzentosPdvs.baseCadastrada = totalBase;
+      resumo.metas.baseDuzentosPdvs.baseCadastradaAtingida = totalBase >= resumo.metas.baseDuzentosPdvs.alvo;
 
       resumo.totalBonus =
         resumo.metas.clienteNovoPositivado.valor +

@@ -49,6 +49,7 @@ assert.strictEqual(perf.cards.bonus_pdv_venda.clientesPositivados, 30);
 assert.strictEqual(perf.cards.bonus_pdv_venda.valorAtual, 450);
 assert.strictEqual(perf.cards.bonus_pdv_venda.valorAlvo, 500);
 assert.strictEqual(perf.cards.bonus_pdv_venda.faltam, 4);
+assert.strictEqual(perf.resumoBonus.metas.clienteNovoPositivado.alvoUnidades, 34);
 
 assert.strictEqual(perf.cards.tabela_percentual.atual, 28);
 assert.strictEqual(perf.cards.tabela_percentual.alvo, 50);
@@ -61,6 +62,8 @@ assert.strictEqual(perf.cards.base_ou_cobertura.clientesVisitados, 40);
 assert.strictEqual(perf.cards.base_ou_cobertura.atual, 40);
 assert.strictEqual(perf.cards.base_ou_cobertura.alvo, 180);
 assert.strictEqual(perf.cards.base_ou_cobertura.faltam, 140);
+assert.strictEqual(perf.resumoBonus.metas.baseDuzentosPdvs.baseCadastrada, 180);
+assert.strictEqual(perf.resumoBonus.metas.baseDuzentosPdvs.baseCadastradaAtingida, true);
 assert.ok(perf.resumoBonus);
 
 const clientes200 = Array.from({ length: 200 }, (_, i) => ({ ...clientes[0], nome_fantasia: `Base ${i + 1}` }));

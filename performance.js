@@ -77,8 +77,8 @@
     const bonusPdvVenda = metasBonus.clienteNovoPositivado || { atual: 0, valor: 0 };
     const tabelaVisivel = metasBonus.tabelaVisivelBase || { atual: 0, alvo: metasResolvidas.tabela_percentual };
     const baseVisitada = metasBonus.baseDuzentosPdvs || { atual: 0, alvo: metasResolvidas.base_clientes };
-    const pdvsParaTeto = Math.ceil(metasResolvidas.bonus_pdv_venda_teto / metasResolvidas.bonus_pdv_venda_valor);
-    const baseBatida = clientesDoPromotor.length >= metasResolvidas.base_clientes;
+    const pdvsParaTeto = bonusPdvVenda.alvoUnidades;
+    const baseBatida = baseVisitada.baseCadastradaAtingida;
 
     const cards = {
       bonus_pdv_venda: {
