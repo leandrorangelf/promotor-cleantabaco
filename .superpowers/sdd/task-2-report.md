@@ -2,7 +2,7 @@
 
 Status: concluída — correção da revisão aplicada.
 
-Commit: `fix: centraliza alvos da performance`
+Commit: `fix: projeta base cadastrada da performance`
 
 ## Alterações
 
@@ -14,7 +14,7 @@ Commit: `fix: centraliza alvos da performance`
 
 ## Testes
 
-- `node tests\\metas-performance.test.js` — PASS
+- `node tests\\metas-performance.test.js` — FAIL (o teste espera `40`, mas `baseCadastrada` retorna `200`)
 - `node tests\\bonus.test.js` — PASS
 
 ## Preocupações

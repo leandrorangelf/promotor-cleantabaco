@@ -100,7 +100,7 @@
           clientesVisitados: baseVisitada.visitados
         }
         : {
-          ...card('Base cadastrada', clientesDoPromotor.length, metasResolvidas.base_clientes),
+          ...card('Base cadastrada', baseVisitada.baseCadastrada, metasResolvidas.base_clientes),
           clientesVisitados: baseVisitada.visitados
         }
     };
