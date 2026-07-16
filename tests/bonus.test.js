@@ -74,7 +74,7 @@ for (let i = 0; i < 200; i++) {
   visitasLeo.push(visita({ promotor: 'Leo', data: '2026-07-10T10:00:00Z', pdv: nome, statusIa: i < 100 ? 'aprovado' : 'reprovado' }));
 }
 
-// Meta 3 (Ivo): 200 PDVs cadastrados e visitados no periodo
+// Meta 3 (Ivo): clientes cadastrados em janeiro, visitados em julho nao entram na cobertura mensal
 const clientesIvo = [];
 const visitasIvo = [];
 for (let i = 0; i < 200; i++) {
@@ -109,10 +109,10 @@ assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.atual, 50);
 assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.atingida, true);
 assert.strictEqual(resultado.Leo.metas.tabelaVisivelBase.valor, 500);
 
-assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atual, 200);
-assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atingida, true);
-assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.valor, 500);
-assert.strictEqual(resultado.Ivo.totalBonus, 500);
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atual, 0);
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.atingida, false);
+assert.strictEqual(resultado.Ivo.metas.baseDuzentosPdvs.valor, 0);
+assert.strictEqual(resultado.Ivo.totalBonus, 0);
 
 // Fora do periodo filtrado nao conta para cliente novo
 const resultadoForaPeriodo = calcularBonificacaoPromotores(
@@ -129,8 +129,8 @@ const resultadoConfigurado = calcularBonificacaoPromotores(
     visita({ promotor: 'Geo', data: '2026-07-10T10:00:00Z', pdv: 'G2' })
   ],
   [
-    cliente({ promotor: 'Geo', nome_fantasia: 'G1', criado_em: '2026-01-01T10:00:00Z' }),
-    cliente({ promotor: 'Geo', nome_fantasia: 'G2', criado_em: '2026-01-01T10:00:00Z' })
+    cliente({ promotor: 'Geo', nome_fantasia: 'G1', criado_em: '2026-07-01T10:00:00Z' }),
+    cliente({ promotor: 'Geo', nome_fantasia: 'G2', criado_em: '2026-07-01T10:00:00Z' })
   ],
   periodo,
   { Geo: { base_clientes: 2, tabela_percentual: 50, bonus_pdv_venda_valor: 15, bonus_pdv_venda_teto: 500 } }
