@@ -25,5 +25,10 @@ assert.ok(html.includes('base_clientes'), 'painel deve usar meta de base de clie
 assert.ok(!html.includes('pedidos_mes">Pedidos no mês'), 'editor nao deve manter meta errada de pedidos no mes');
 assert.ok(!html.includes('cliente_novo_positivado">Cliente novo positivado'), 'editor nao deve manter meta errada de cliente novo simples');
 assert.ok(performance.includes('calcularBonificacaoPromotores'), 'performance deve reaproveitar bonus.js como fonte das regras');
+assert.ok(html.includes('clientesNovos'), 'painel deve mostrar quantidade de clientes que geraram bonus');
+assert.ok(html.includes('valorUnitario'), 'painel deve mostrar valor unitario do bonus');
+assert.ok(html.includes('comTabela'), 'gestao deve mostrar clientes com tabela aprovada');
+assert.ok(html.includes('visitados'), 'gestao deve mostrar cobertura distinta');
+assert.ok(html.includes('manualmente ou automaticamente'), 'interface deve explicar regra de aprovacao');
 
 console.log('metas-integracao.test.js passou');

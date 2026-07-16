@@ -4188,7 +4188,7 @@ function renderPainelPromotor() {
     });
     const clientesDoPromotor = todosClientes.filter(c => c.promotor === usuarioAtual);
     const metasResolvidas = resolverMetasPromotor({ promotor: usuarioAtual, uf: perf.uf, metas: metasSistema });
-    const resultadoBonus = calcularBonificacaoPromotores(visitasDoMes, clientesDoPromotor, periodo, { [usuarioAtual]: metasResolvidas });
+    const resultadoBonus = calcularBonificacaoPromotores(visitasPromotor, clientesDoPromotor, periodo, { [usuarioAtual]: metasResolvidas });
     const bonus = resultadoBonus[usuarioAtual] || bonusVazio();
     const stats = statsVisitasPromotor(visitasDoMes);
     resumoEl.innerHTML = `<div class="card-title">Resumo do mês</div>${resumoBonusStatsHTML(stats, bonus)}`;
@@ -4724,9 +4724,9 @@ function bonusVazio() {
   return {
     totalBonus: 0,
     metas: {
-      clienteNovoPositivado: { atingida: false, atual: 0, alvo: 1 },
-      tabelaVisivelBase: { atingida: false, atual: 0, alvo: 50 },
-      baseDuzentosPdvs: { atingida: false, atual: 0, alvo: 200 }
+      clienteNovoPositivado: { atingida: false, atual: 0, alvo: 1, valorUnitario: 15, teto: 500, clientesNovos: 0, alvoUnidades: 34 },
+      tabelaVisivelBase: { atingida: false, atual: 0, alvo: 50, carteira: 0, comTabela: 0 },
+      baseDuzentosPdvs: { atingida: false, atual: 0, alvo: 200, visitados: 0, baseCadastrada: 0, baseCadastradaAtingida: false }
     }
   };
 }
@@ -4756,15 +4756,19 @@ function statsVisitasPromotor(visitas) {
 function resumoBonusStatsHTML(d, bonus) {
   const conv = d.visitas ? Math.round(d.pedidos/d.visitas*100) : 0;
   const ok = conv >= 50;
+  const novo = bonus.metas.clienteNovoPositivado;
+  const tabela = bonus.metas.tabelaVisivelBase;
+  const cobertura = bonus.metas.baseDuzentosPdvs;
   return `
     <div style="margin-bottom:12px;padding:10px;border:1px solid ${bonus.totalBonus>=1500?'var(--mint)':'#F1EFE8'};border-radius:10px;background:${bonus.totalBonus>=1500?'var(--mint-light)':'#FAFBFE'};">
       <div style="color:var(--text-muted);font-size:10px;font-weight:800;">BÔNUS ESTIMADO</div>
       <div style="font-weight:900;font-size:20px;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)} <span style="font-size:11px;color:var(--text-muted);font-weight:700;">/ R$ 1.500,00</span></div>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">
-        ${metaChipHTML(`Cliente novo +15/un (${bonus.metas.clienteNovoPositivado.atual}/${bonus.metas.clienteNovoPositivado.alvo || 1})`, bonus.metas.clienteNovoPositivado)}
-        ${metaChipHTML(`Base c/ tabela (${bonus.metas.tabelaVisivelBase.atual}%/${bonus.metas.tabelaVisivelBase.alvo}%)`, bonus.metas.tabelaVisivelBase)}
-        ${metaChipHTML(`PDVs no mês (${bonus.metas.baseDuzentosPdvs.atual}/${bonus.metas.baseDuzentosPdvs.alvo})`, bonus.metas.baseDuzentosPdvs)}
+        ${metaChipHTML(`${novo.clientesNovos || novo.atual} clientes × ${dinheiroBonus(novo.valorUnitario || 15)} = ${dinheiroBonus(novo.valor)}`, novo)}
+        ${metaChipHTML(`Tabela aprovada: ${tabela.comTabela || 0}/${tabela.carteira || 0} (${tabela.atual}%/${tabela.alvo}%)`, tabela)}
+        ${metaChipHTML(`Clientes distintos no mês: ${cobertura.visitados || cobertura.atual}/${cobertura.alvo}`, cobertura)}
       </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Tabela: qualquer foto aprovada manualmente ou automaticamente conta; pendente/reprovada não conta.</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
       <div><div style="color:var(--text-muted);font-size:10px;">VISITAS</div><div style="font-weight:800;font-size:16px;">${d.visitas}</div></div>
@@ -4838,7 +4842,7 @@ function renderPerformance() {
         return `<tr style="border-bottom:1px solid #F1EFE8;">
           <td style="padding:9px 8px;font-weight:700;">${nome}</td>
           <td style="text-align:right;padding:9px 8px;font-weight:900;color:${bonus.totalBonus>0?'var(--mint)':'var(--text)'};">${dinheiroBonus(bonus.totalBonus)}</td>
-          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChipHTML('Cliente novo', bonus.metas.clienteNovoPositivado)}${metaChipHTML('50% tabela', bonus.metas.tabelaVisivelBase)}${metaChipHTML('200 PDVs', bonus.metas.baseDuzentosPdvs)}</div></td>
+          <td style="padding:9px 8px;"><div style="display:flex;gap:5px;flex-wrap:wrap;">${metaChipHTML(`${bonus.metas.clienteNovoPositivado.clientesNovos || 0} novos × ${dinheiroBonus(bonus.metas.clienteNovoPositivado.valorUnitario || 15)} = ${dinheiroBonus(bonus.metas.clienteNovoPositivado.valor)}`, bonus.metas.clienteNovoPositivado)}${metaChipHTML(`Tabela aprovada ${bonus.metas.tabelaVisivelBase.comTabela || 0}/${bonus.metas.tabelaVisivelBase.carteira || 0}`, bonus.metas.tabelaVisivelBase)}${metaChipHTML(`Visitados no mês ${bonus.metas.baseDuzentosPdvs.visitados || 0}/${bonus.metas.baseDuzentosPdvs.alvo}`, bonus.metas.baseDuzentosPdvs)}</div></td>
           <td style="text-align:center;padding:9px 8px;font-weight:700;">${d.visitas}</td>
           <td style="text-align:center;padding:9px 8px;">${d.pedidos}</td>
           <td style="text-align:center;padding:9px 8px;"><span style="background:${ok?'var(--mint-light)':'var(--orange-light)'};color:${ok?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">${d.visitas?conv+'%':'—'}</span></td>
