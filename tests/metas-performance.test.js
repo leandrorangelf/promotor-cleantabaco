@@ -52,8 +52,8 @@ assert.strictEqual(perf.cards.tabela_percentual.atual, 28);
 assert.strictEqual(perf.cards.tabela_percentual.alvo, 50);
 
 assert.strictEqual(perf.cards.base_ou_cobertura.label, 'Cobertura mensal da base');
-assert.strictEqual(perf.cards.base_ou_cobertura.atual, 90);
-assert.strictEqual(perf.cards.base_ou_cobertura.faltam, 90);
+assert.strictEqual(perf.cards.base_ou_cobertura.atual, 40);
+assert.strictEqual(perf.cards.base_ou_cobertura.faltam, 140);
 
 const clientes200 = Array.from({ length: 200 }, (_, i) => ({ ...clientes[0], nome_fantasia: `Base ${i + 1}` }));
 const visitasCobertura = Array.from({ length: 140 }, (_, i) => visita({ pdv: `Base ${i + 1}`, data: '2026-07-05T10:00:00Z' }));
@@ -99,11 +99,25 @@ const visitasDuplicadas = [
 ];
 const coberturaResumo = calcularBonificacaoPromotores(
   visitasDuplicadas,
-  [{ promotor: 'Ana', cnpj: '11.111.111/0001-11', nome_fantasia: 'Cobertura 1', criado_em: '2026-06-01T10:00:00Z' }],
+  [{ promotor: 'Ana', cnpj: '11.111.111/0001-11', nome_fantasia: 'Cobertura 1', criado_em: '2026-07-02T10:00:00Z' }],
   periodoJulho
 ).Ana;
 assert.strictEqual(coberturaResumo.metas.baseDuzentosPdvs.atual, 1);
 assert.strictEqual(coberturaResumo.metas.baseDuzentosPdvs.visitados, 1);
+
+const coberturaIgnoraClienteAntigo = calcularBonificacaoPromotores(
+  [
+    visita({ promotor: 'Ana', pdv: 'Cliente antigo', cnpj: '22.222.222/0001-22', data: '2026-07-03T10:00:00Z' }),
+    visita({ promotor: 'Ana', pdv: 'Cliente vigente', cnpj: '33.333.333/0001-33', data: '2026-07-03T10:00:00Z' })
+  ],
+  [
+    { promotor: 'Ana', cnpj: '22.222.222/0001-22', nome_fantasia: 'Cliente antigo', criado_em: '2026-06-01T10:00:00Z' },
+    { promotor: 'Ana', cnpj: '33.333.333/0001-33', nome_fantasia: 'Cliente vigente', criado_em: '2026-07-02T10:00:00Z' }
+  ],
+  periodoJulho
+).Ana;
+assert.strictEqual(coberturaIgnoraClienteAntigo.metas.baseDuzentosPdvs.atual, 1);
+assert.strictEqual(coberturaIgnoraClienteAntigo.metas.baseDuzentosPdvs.visitados, 1);
 
 const visitasSemAprovacao = [
   visita({ promotor: 'Ana', pdv: 'Reprovada', data: '2026-07-03T10:00:00Z' }),

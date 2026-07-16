@@ -140,7 +140,10 @@
 
       // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo
       const chavesVisitadas = new Set(visitasNoPeriodo.map(chavePdvVisita).filter(Boolean));
-      const cadastradosEVisitados = carteira.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
+      const clientesCadastradosNoPeriodo = clientesDistintos(
+        clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate))
+      );
+      const cadastradosEVisitados = clientesCadastradosNoPeriodo.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
       resumo.metas.baseDuzentosPdvs.atual = cadastradosEVisitados;
       resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= resumo.metas.baseDuzentosPdvs.alvo;
       resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
