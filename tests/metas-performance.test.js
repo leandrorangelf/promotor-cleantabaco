@@ -44,16 +44,24 @@ assert.strictEqual(resolvidas.bonus_pdv_venda_valor, metasPadrao.bonus_pdv_venda
 const perf = calcularPerformancePromotor({ promotor: 'Ana', visitas, clientes, metas, hoje: new Date('2026-07-07T12:00:00Z') });
 
 assert.strictEqual(perf.cards.bonus_pdv_venda.atual, 30);
+assert.strictEqual(perf.cards.bonus_pdv_venda.valorUnitario, 15);
+assert.strictEqual(perf.cards.bonus_pdv_venda.clientesPositivados, 30);
 assert.strictEqual(perf.cards.bonus_pdv_venda.valorAtual, 450);
 assert.strictEqual(perf.cards.bonus_pdv_venda.valorAlvo, 500);
 assert.strictEqual(perf.cards.bonus_pdv_venda.faltam, 4);
 
 assert.strictEqual(perf.cards.tabela_percentual.atual, 28);
 assert.strictEqual(perf.cards.tabela_percentual.alvo, 50);
+assert.strictEqual(perf.cards.tabela_percentual.carteira, 180);
+assert.strictEqual(perf.cards.tabela_percentual.comTabela, 50);
+assert.strictEqual(perf.cards.tabela_percentual.faltam, 22);
 
 assert.strictEqual(perf.cards.base_ou_cobertura.label, 'Cobertura mensal da base');
+assert.strictEqual(perf.cards.base_ou_cobertura.clientesVisitados, 40);
 assert.strictEqual(perf.cards.base_ou_cobertura.atual, 40);
+assert.strictEqual(perf.cards.base_ou_cobertura.alvo, 180);
 assert.strictEqual(perf.cards.base_ou_cobertura.faltam, 140);
+assert.ok(perf.resumoBonus);
 
 const clientes200 = Array.from({ length: 200 }, (_, i) => ({ ...clientes[0], nome_fantasia: `Base ${i + 1}` }));
 const visitasCobertura = Array.from({ length: 140 }, (_, i) => visita({ pdv: `Base ${i + 1}`, data: '2026-07-05T10:00:00Z' }));

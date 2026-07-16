@@ -83,14 +83,26 @@
     const cards = {
       bonus_pdv_venda: {
         ...card('PDVs abertos com venda', bonusPdvVenda.atual, pdvsParaTeto),
+        valorUnitario: bonusPdvVenda.valorUnitario,
+        clientesPositivados: bonusPdvVenda.clientesNovos,
         valorAtual: bonusPdvVenda.valor,
         valorAlvo: metasResolvidas.bonus_pdv_venda_teto,
         moeda: true
       },
-      tabela_percentual: card('Base com tabela visivel', tabelaVisivel.atual, tabelaVisivel.alvo, '%'),
+      tabela_percentual: {
+        ...card('Base com tabela visivel', tabelaVisivel.atual, tabelaVisivel.alvo, '%'),
+        carteira: tabelaVisivel.carteira,
+        comTabela: tabelaVisivel.comTabela
+      },
       base_ou_cobertura: baseBatida
-        ? card('Cobertura mensal da base', baseVisitada.atual, baseVisitada.alvo)
-        : card('Base cadastrada', clientesDoPromotor.length, metasResolvidas.base_clientes)
+        ? {
+          ...card('Cobertura mensal da base', baseVisitada.atual, baseVisitada.alvo),
+          clientesVisitados: baseVisitada.visitados
+        }
+        : {
+          ...card('Base cadastrada', clientesDoPromotor.length, metasResolvidas.base_clientes),
+          clientesVisitados: baseVisitada.visitados
+        }
     };
 
     const proximosPassos = Object.values(cards)
@@ -101,7 +113,7 @@
         ? `Abrir mais ${c.faltam} PDVs com venda para chegar ao teto desse bonus`
         : c.sufixo === '%' ? `Aumentar ${c.label.toLowerCase()} em ${c.faltam} pontos` : `Faltam ${c.faltam} para ${c.label.toLowerCase()}`);
 
-    return { promotor, uf, metas: metasResolvidas, cards, proximosPassos };
+    return { promotor, uf, metas: metasResolvidas, cards, proximosPassos, resumoBonus: resultadoBonus[promotor] };
   }
 
   return { metasPadrao, resolverMetasPromotor, calcularPerformancePromotor };
