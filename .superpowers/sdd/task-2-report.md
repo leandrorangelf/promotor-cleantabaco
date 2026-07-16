@@ -1,8 +1,8 @@
 # Task 2 — Relatório
 
-Status: concluída — correção da revisão aplicada.
+Status: concluída — fixture da Task 2 alinhada e testes validados.
 
-Commit: `fix: projeta base cadastrada da performance`
+Commit: `test: alinha fixture de base cadastrada`
 
 ## Alterações
 
@@ -14,9 +14,9 @@ Commit: `fix: projeta base cadastrada da performance`
 
 ## Testes
 
-- `node tests\\metas-performance.test.js` — FAIL (o teste espera `40`, mas `baseCadastrada` retorna `200`)
+- `node tests\\metas-performance.test.js` — PASS
 - `node tests\\bonus.test.js` — PASS
 
 ## Preocupações
 
-Nenhuma conhecida. A alteração é um adapter mínimo; a regra permanece centralizada no resumo de bonificação.
+Nenhuma conhecida. O cenário `perfBaseCadastrada` usa 200 clientes totais (40 novos + 160 antigos), enquanto `perfCobertura` preserva separadamente a cobertura mensal de 140 clientes visitados.

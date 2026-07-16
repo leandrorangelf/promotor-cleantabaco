@@ -73,6 +73,18 @@ assert.strictEqual(perfCobertura.cards.base_ou_cobertura.label, 'Cobertura mensa
 assert.strictEqual(perfCobertura.cards.base_ou_cobertura.atual, 140);
 assert.strictEqual(perfCobertura.cards.base_ou_cobertura.faltam, 40);
 
+const perfBaseCadastrada = calcularPerformancePromotor({
+  promotor: 'Ana',
+  visitas: [],
+  clientes: [...clientes, ...Array.from({ length: 20 }, (_, i) => ({ ...clientes[0], nome_fantasia: `Base antiga ${i + 1}`, criado_em: '2026-06-01T10:00:00Z' }))],
+  metas: [...metas, { tipo_meta: 'base_clientes', escopo_tipo: 'promotor', escopo_valor: 'Ana', valor: 200 }],
+  hoje: new Date('2026-07-07T12:00:00Z')
+});
+assert.strictEqual(perfBaseCadastrada.resumoBonus.metas.baseDuzentosPdvs.baseCadastrada, 200);
+assert.strictEqual(perfBaseCadastrada.cards.base_ou_cobertura.label, 'Cobertura mensal da base');
+assert.strictEqual(perfBaseCadastrada.cards.base_ou_cobertura.atual, 0);
+assert.strictEqual(perfBaseCadastrada.cards.base_ou_cobertura.alvo, 200);
+
 assert.ok(perf.proximosPassos.length > 0);
 
 const periodoJulho = { de: '2026-07-01T00:00:00Z', ate: '2026-07-31T23:59:59Z' };
