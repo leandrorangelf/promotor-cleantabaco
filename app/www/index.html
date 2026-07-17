@@ -2403,16 +2403,16 @@ function verificarAcompanhamentoPedido() {
 }
 
 function atualizarStatusPedido(status) {
+  if (status === 'Pedido confirmado' || status === 'Pedido entregue') {
+    document.querySelectorAll('#pedidoFeito .radio-pill').forEach(p => p.classList.toggle('active', p.textContent.trim() === 'Sim'));
+    document.getElementById('bloquePedidos').style.display = 'block';
+  }
   if (['Pedido confirmado', 'Pedido entregue'].includes(status) && valorPedidoFormulario() <= 0) {
     document.getElementById('statusPedido').value = 'Em negociação';
     toast('⚠️ Pedido confirmado ou entregue exige valor. Informe o preço por pacote.');
     return;
   }
   document.getElementById('statusPedido').value = status;
-  if (status === 'Pedido confirmado' || status === 'Pedido entregue') {
-    document.querySelectorAll('#pedidoFeito .radio-pill').forEach(p => p.classList.toggle('active', p.textContent.trim() === 'Sim'));
-    document.getElementById('bloquePedidos').style.display = 'block';
-  }
   if (acompanhamentoVisitaId && document.getElementById('followupPedido').classList.contains('open')) {
     document.getElementById('followupActions').innerHTML = `<span class="status-chip ${statusClass(status)}">Nesta visita: ${status}</span>`;
   }
