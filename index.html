@@ -2374,9 +2374,11 @@ function validarValorPedidoConfirmado(dados) {
   const c = dados?.comercial || {};
   const exigeValor = ['Pedido confirmado', 'Pedido entregue'].includes(c.statusPedido);
   if (exigeValor && c.pedidoFeito === 'Sim' && valorPedidoDosDados(dados) <= 0) {
-    toast('⚠️ Pedido confirmado ou entregue exige valor. Informe o preço por pacote.');
-    document.getElementById('statusPedido')?.focus();
-    return false;
+    dados.comercial.statusPedido = 'Em negociação';
+    dados.comercial.pedidoEntregue = false;
+    const statusEl = document.getElementById('statusPedido');
+    if (statusEl) statusEl.value = 'Em negociação';
+    toast('⚠️ Visita salva em negociação. Informe o preço por pacote para confirmar o pedido.');
   }
   return true;
 }
