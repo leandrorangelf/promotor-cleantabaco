@@ -2130,19 +2130,23 @@ async function inicializarJornada() {
 }
 
 async function abrirConfigPermissao() {
-  await window.NativeJornadaBridge.openSettings();
-  // Quando voltar das configurações, recheck após 1s
-  setTimeout(async () => {
-    const status = await window.NativeJornadaBridge.getStatus().catch(() => null);
-    if (status?.permissaoSegundoPlano) {
-      document.getElementById('jornadaPermissaoGuia').style.display = 'none';
-      document.getElementById('jornadaStatus').style.display = 'block';
-      document.getElementById('jornadaUltimoPonto').style.display = '';
-      document.getElementById('jornadaPendentes').style.display = '';
-      await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
-      await atualizarStatusJornada();
-    }
-  }, 1000);
+  try {
+    if (!window.NativeJornadaBridge) { toast('Plugin de jornada não disponível: ' + JSON.stringify(Object.keys(window).filter(k => k.startsWith('Native'))), 6000); return; }
+    await window.NativeJornadaBridge.openSettings();
+    setTimeout(async () => {
+      const status = await window.NativeJornadaBridge.getStatus().catch(() => null);
+      if (status?.permissaoSegundoPlano) {
+        document.getElementById('jornadaPermissaoGuia').style.display = 'none';
+        document.getElementById('jornadaStatus').style.display = 'block';
+        document.getElementById('jornadaUltimoPonto').style.display = '';
+        document.getElementById('jornadaPendentes').style.display = '';
+        await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+        await atualizarStatusJornada();
+      }
+    }, 1000);
+  } catch(e) {
+    toast('Erro ao abrir configurações: ' + (e?.message || e), 6000);
+  }
 }
 
 async function iniciarJornadaManual() {

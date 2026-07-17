@@ -100,7 +100,7 @@
       const visitasNoPeriodo = visitasDoPromotor.filter(v => dentroDoPeriodo(v.criado_em, de, ate));
 
       // Meta 1: R$15 por cliente novo (cadastrado no periodo) positivado (>=1 SKU vendido no periodo), teto R$500
-      const clientesNovos = clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate));
+      const clientesNovos = clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate) && !c.suspeito_duplicata);
       const chavesPositivadas = new Set(
         visitasNoPeriodo.filter(positivadaComSku).map(chavePdvVisita).filter(Boolean)
       );
@@ -121,7 +121,7 @@
       const baseParaPercentual = Math.max(totalBase, resumo.metas.baseDuzentosPdvs.alvo);
       const percentualTabela = baseParaPercentual ? Math.round((comTabelaVisivel / baseParaPercentual) * 100) : 0;
       resumo.metas.tabelaVisivelBase.atual = percentualTabela;
-      resumo.metas.tabelaVisivelBase.atingida = totalBase > 0 && percentualTabela >= resumo.metas.tabelaVisivelBase.alvo;
+      resumo.metas.tabelaVisivelBase.atingida = totalBase >= resumo.metas.baseDuzentosPdvs.alvo && percentualTabela >= resumo.metas.tabelaVisivelBase.alvo;
       resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;
 
       // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo

@@ -154,6 +154,15 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedido-resumo-card strong { display: block; font-size: 22px; color: var(--purple); }
 .pedido-resumo-card span { color: var(--text-muted); font-size: 11px; }
 .pedidos-tabela-wrap { max-width: 1180px; overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); }
+.pedidos-cards { display: none; flex-direction: column; gap: 10px; }
+.pedido-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.pedido-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.pedido-card-nome { font-weight: 700; font-size: 14px; }
+.pedido-card-local { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pedido-card-body { font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.pedido-card-body span strong { color: var(--text); }
+.pedido-card-footer { display: flex; justify-content: space-between; align-items: center; }
+.pedido-card-valor { font-weight: 700; font-size: 15px; color: var(--purple); }
 .pedidos-tabela { width: 100%; min-width: 840px; border-collapse: collapse; font-size: 13px; }
 .pedidos-tabela th, .pedidos-tabela td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #F1EFE8; vertical-align: top; }
 .pedidos-tabela th { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
@@ -171,6 +180,8 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 }
 @media (max-width: 520px) {
   .pedidos-filtros { grid-template-columns: repeat(2, 1fr); }
+  .pedidos-tabela-wrap { display: none; }
+  .pedidos-cards { display: flex !important; }
   .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .pedido-sku { font-size: 14px; font-weight: 700; }
@@ -834,12 +845,27 @@ button:active { transform: translateY(1px); }
       <section id="jornadaStatus" class="card" style="display:none;margin-bottom:14px;">
         <div class="card-title">📍 Jornada GPS</div>
         <div id="jornadaStatusTexto" style="font-weight:700;color:var(--purple);">Verificando...</div>
-        <div id="jornadaUltimoPonto" class="empty" style="padding:8px 0;text-align:left;">Último ponto: aguardando</div>
-        <div id="jornadaPendentes" class="empty" style="padding:0 0 8px;text-align:left;">Fila offline: 0</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="jornadaIniciar" type="button" class="camera-btn primary" onclick="iniciarJornadaManual()">Iniciar agora</button>
-          <button id="jornadaParar" type="button" class="camera-btn" onclick="pararJornadaManual()" style="display:none;">Parar rastreamento</button>
+        <div id="jornadaUltimoPonto" class="empty" style="padding:8px 0;text-align:left;display:none;">Último ponto: aguardando</div>
+        <div id="jornadaPendentes" class="empty" style="padding:0 0 8px;text-align:left;display:none;">Fila offline: 0</div>
+      </section>
+      <section id="jornadaPermissaoGuia" class="card" style="display:none;margin-bottom:14px;border:2px solid var(--amber);">
+        <div class="card-title" style="color:var(--amber);">⚠️ Permissão necessária</div>
+        <p style="font-size:13px;margin:0 0 12px;">Para registrar sua rota automaticamente, o app precisa acessar a localização <strong>sempre</strong>, mesmo em segundo plano.</p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#FFF7ED;border-radius:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;">1</div>
+            <span style="font-size:13px;">Na próxima tela, toque em <strong>Permissões</strong></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#FFF7ED;border-radius:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;">2</div>
+            <span style="font-size:13px;">Toque em <strong>Localização</strong></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px;background:#FFF7ED;border-radius:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;">3</div>
+            <span style="font-size:13px;">Selecione <strong>"Permitir o tempo todo"</strong></span>
+          </div>
         </div>
+        <button type="button" onclick="abrirConfigPermissao()" style="width:100%;padding:14px;background:var(--amber);color:#fff;border:none;border-radius:10px;font-weight:800;font-size:15px;cursor:pointer;">Abrir configurações agora</button>
       </section>
       <div class="card" id="pResumoMesCard" style="margin-bottom:14px;"></div>
       <div class="card" id="pPacotesMesCard" style="margin-bottom:14px;"></div>
@@ -1238,9 +1264,7 @@ button:active { transform: translateY(1px); }
       <div id="pFotosLista" style="margin-top:12px;"></div>
     </div>
   </div>
-</div>
 
-<!-- APP GESTOR -->
   <div class="page pedidos-page" id="pPedidos">
     <div class="page-intro"><h1>Pedidos</h1><p>Consulte seus pedidos registrados nas visitas.</p></div>
     <div class="pedido-somente-leitura">Somente consulta, sem edição. Para alterar dados, use o fluxo de edição da visita.</div>
@@ -1254,7 +1278,9 @@ button:active { transform: translateY(1px); }
     </div>
     <div id="pPedidosResumo" class="pedidos-resumo"></div>
     <div id="pPedidosLista" class="pedidos-tabela-wrap"></div>
+    <div id="pPedidosCards" class="pedidos-cards"></div>
   </div>
+</div>
 
 <div id="appGestor" style="display:none;">
   <div class="header">
@@ -1446,6 +1472,7 @@ button:active { transform: translateY(1px); }
     </div>
     <div id="gPedidosResumo" class="pedidos-resumo"></div>
     <div id="gPedidosLista" class="pedidos-tabela-wrap"></div>
+    <div id="gPedidosCards" class="pedidos-cards"></div>
   </div>
 
   <div class="page" id="gVisitas">
@@ -1717,6 +1744,9 @@ button:active { transform: translateY(1px); }
 
 <script src="bonus.js"></script>
 <script src="performance.js"></script>
+<script src="geo-bridge.js"></script>
+<script src="jornada-bridge.js"></script>
+<script src="camera-bridge.js"></script>
 <script>
 const API = 'https://promotor-cleantabaco.vercel.app';
 
@@ -1795,18 +1825,9 @@ function montarErroLocalizacao(err, capturadoEm, tentativa) {
   };
 }
 
-let geoBridgePromise = null;
 function garantirGeoBridgeCarregada() {
-  if (window.NativeGeoBridge) return Promise.resolve();
-  if (geoBridgePromise) return geoBridgePromise;
-  geoBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'geo-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('geo-bridge.js indisponivel'));
-    document.head.appendChild(script);
-  });
-  return geoBridgePromise;
+  if (!window.NativeGeoBridge) return Promise.reject(new Error('geo-bridge.js indisponivel'));
+  return Promise.resolve();
 }
 
 async function obterPosicaoNativa(opcoes, tentativa) {
@@ -2032,16 +2053,8 @@ function jornadaNativaDisponivel() {
 }
 
 function garantirJornadaBridgeCarregada() {
-  if (window.NativeJornadaBridge) return Promise.resolve();
-  if (jornadaBridgePromise) return jornadaBridgePromise;
-  jornadaBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'jornada-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('jornada-bridge.js indisponível'));
-    document.head.appendChild(script);
-  });
-  return jornadaBridgePromise;
+  if (!window.NativeJornadaBridge) return Promise.reject(new Error('jornada-bridge.js indisponível'));
+  return Promise.resolve();
 }
 
 async function pedirPermissaoNotificacao() {
@@ -2098,21 +2111,54 @@ async function inicializarJornada() {
   card.style.display = 'block';
   try {
     await garantirGeoBridgeCarregada();
-    await solicitarPermissoesJornada();
+    if (window.NativeGeoBridge?.requestPermissions) await window.NativeGeoBridge.requestPermissions();
     await garantirJornadaBridgeCarregada();
     await window.NativeJornadaBridge.schedule({ token: authToken, apiBase: API, dispositivoId: navigator.userAgent.slice(0, 120) });
-    await atualizarStatusJornada();
+    await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+    const status = await window.NativeJornadaBridge.getStatus();
+    if (status.permissaoSegundoPlano === false) {
+      document.getElementById('jornadaStatus').style.display = 'none';
+      document.getElementById('jornadaPermissaoGuia').style.display = 'block';
+    } else {
+      await atualizarStatusJornada();
+    }
     if (!jornadaStatusTimer) jornadaStatusTimer = setInterval(atualizarStatusJornada, 60000);
   } catch (e) {
-    document.getElementById('jornadaStatusTexto').textContent = 'Permita localização para ativar a jornada';
+    const texto = document.getElementById('jornadaStatusTexto');
+    if (texto) texto.textContent = 'Permita localização nas configurações do app para ativar o rastreamento';
   }
 }
 
+async function abrirConfigPermissao() {
+  await window.NativeJornadaBridge.openSettings();
+  // Quando voltar das configurações, recheck após 1s
+  setTimeout(async () => {
+    const status = await window.NativeJornadaBridge.getStatus().catch(() => null);
+    if (status?.permissaoSegundoPlano) {
+      document.getElementById('jornadaPermissaoGuia').style.display = 'none';
+      document.getElementById('jornadaStatus').style.display = 'block';
+      document.getElementById('jornadaUltimoPonto').style.display = '';
+      document.getElementById('jornadaPendentes').style.display = '';
+      await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+      await atualizarStatusJornada();
+    }
+  }, 1000);
+}
+
 async function iniciarJornadaManual() {
-  await garantirJornadaBridgeCarregada();
-  await solicitarPermissoesJornada();
-  await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
-  await atualizarStatusJornada();
+  const btn = document.getElementById('jornadaIniciar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Iniciando...'; }
+  try {
+    await garantirJornadaBridgeCarregada();
+    await solicitarPermissoesJornada();
+    await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+    await atualizarStatusJornada();
+  } catch (e) {
+    toast('Erro ao iniciar jornada: ' + (e?.message || e), 5000);
+    console.error('iniciarJornadaManual', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Iniciar agora'; }
+  }
 }
 
 async function pararJornadaManual() {
@@ -2139,6 +2185,7 @@ function sincronizarMenuMobile(tipo) {
 }
 
 function mudarAbaP(aba) {
+  window.scrollTo(0, 0);
   document.querySelectorAll('#appPromotor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
@@ -2174,6 +2221,7 @@ function atualizarAbaGestorAtual() {
 }
 
 function mudarAbaG(aba) {
+  window.scrollTo(0, 0);
   document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
@@ -2280,8 +2328,11 @@ function renderPedidos(tipo) {
   const valor = lista.reduce((sum, v) => sum + valorPedido(v), 0);
   const dinheiro = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   resumo.innerHTML = `<div class="pedido-resumo-card"><strong>${lista.length}</strong><span>Pedidos</span></div><div class="pedido-resumo-card"><strong>${confirmados}</strong><span>Confirmados</span></div><div class="pedido-resumo-card"><strong>${entregues}</strong><span>Entregues</span></div><div class="pedido-resumo-card"><strong>${pacotes.toLocaleString('pt-BR')}</strong><span>Pacotes</span></div><div class="pedido-resumo-card"><strong>${dinheiro}</strong><span>Valor informado</span></div>`;
+  const cards = document.getElementById(prefixo + 'PedidosCards');
   if (!lista.length) {
-    tabela.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div><p>Ajuste ou limpe os filtros.</p></div>';
+    const vazio = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div><p>Ajuste ou limpe os filtros.</p></div>';
+    tabela.innerHTML = vazio;
+    if (cards) cards.innerHTML = vazio;
     return;
   }
   tabela.innerHTML = `<table class="pedidos-tabela"><thead><tr><th>Data</th><th>Cliente/PDV</th>${tipo === 'G' ? '<th>Promotor</th><th>Coordenador</th>' : ''}<th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th><th></th></tr></thead><tbody>${lista.map(v => {
@@ -2291,6 +2342,28 @@ function renderPedidos(tipo) {
     const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
     return `<tr><td>${data}</td><td><strong>${d.pdv?.nomeFantasia || 'PDV sem nome'}</strong><br><span class="pedido-produtos">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</span></td>${tipo === 'G' ? `<td>${v.promotor || '—'}</td><td>${nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor))}</td>` : ''}<td><span class="status-chip ${statusClass(status)}">${status}</span></td><td class="pedido-produtos">${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${valorPedido(v) ? valorPedido(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td><td><button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button></td></tr>`;
   }).join('')}</tbody></table>`;
+  if (cards) cards.innerHTML = lista.map(v => {
+    const d = v.dados || {};
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+    const status = statusDaVisita(v);
+    const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
+    const val = valorPedido(v);
+    return `<div class="pedido-card">
+      <div class="pedido-card-header">
+        <div><div class="pedido-card-nome">${d.pdv?.nomeFantasia || 'PDV sem nome'}</div><div class="pedido-card-local">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</div></div>
+        <span class="status-chip ${statusClass(status)}">${status}</span>
+      </div>
+      <div class="pedido-card-body">
+        <span>${textoProdutosPedido(v)}</span>
+        <span><strong>${pacotesPedido(v).toLocaleString('pt-BR')} pac</strong> · ${data}</span>
+        ${tipo === 'G' ? `<span>Promotor: <strong>${v.promotor || '—'}</strong></span>` : ''}
+      </div>
+      <div class="pedido-card-footer">
+        <span class="pedido-card-valor">${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span>
+        <button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function limparFiltrosPedidos(tipo) {
@@ -2932,18 +3005,9 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
   renderFotos();
 }
 
-let cameraBridgePromise = null;
 function garantirCameraBridgeCarregada() {
-  if (window.NativeCameraBridge) return Promise.resolve();
-  if (cameraBridgePromise) return cameraBridgePromise;
-  cameraBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'camera-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('camera-bridge.js indisponivel'));
-    document.head.appendChild(script);
-  });
-  return cameraBridgePromise;
+  if (!window.NativeCameraBridge) return Promise.reject(new Error('camera-bridge.js indisponivel'));
+  return Promise.resolve();
 }
 
 function exifDataOriginalCamera(exif) {
@@ -5209,9 +5273,11 @@ function metaChipHTML(texto, meta) {
 }
 
 function statsVisitasPromotor(visitas) {
-  const d = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0 };
+  const d = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0, diasComVisita:0 };
+  const dias = new Set();
   visitas.forEach(v => {
     d.visitas++;
+    dias.add(String(v.criado_em || '').slice(0, 10));
     const pedidoFechado = ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v));
     if (pedidoFechado) d.pedidos++;
     if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) d.parceiros++;
@@ -5220,6 +5286,7 @@ function statsVisitasPromotor(visitas) {
     const preco = v.dados?.comercial?.pedidoPreco||{};
     if (pedidoFechado) ['GR','GM','CM','CC'].forEach(s => { d.valor += (qty[s]||0)*(preco[s]||0); d.pacotes += (qty[s]||0); });
   });
+  d.diasComVisita = dias.size;
   return d;
 }
 
@@ -5251,6 +5318,26 @@ function resumoBonusStatsHTML(d, bonus) {
         ${metaChipHTML(`PDVs no mês (${bonus.metas.baseDuzentosPdvs.atual}/${bonus.metas.baseDuzentosPdvs.alvo})`, bonus.metas.baseDuzentosPdvs)}
       </div>
     </div>
+    ${(()=>{
+      const mediaDia = d.diasComVisita ? d.visitas / d.diasComVisita : null;
+      const abaixo = mediaDia !== null && mediaDia < 25;
+      const cor = mediaDia === null ? 'var(--text-muted)' : mediaDia >= 25 ? 'var(--mint)' : mediaDia >= 20 ? 'var(--amber)' : 'var(--red,#e53e3e)';
+      const mediaStr = mediaDia !== null ? mediaDia.toFixed(1).replace('.',',') : '—';
+      return `<div style="margin-bottom:10px;padding:8px 10px;border-radius:8px;background:${abaixo?'#FFF7ED':'#F7FBF8'};border:1px solid ${abaixo?'#FDE68A':'#C6F6D5'};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:700;">VISITAS/DIA (${d.diasComVisita} dia${d.diasComVisita===1?'':'s'})</div>
+          <div style="font-size:22px;font-weight:900;color:${cor};line-height:1.2;">${mediaStr}<span style="font-size:11px;color:var(--text-muted);font-weight:600;"> / dia</span></div>
+          ${abaixo?`<div style="font-size:10px;color:var(--amber);font-weight:700;margin-top:2px;">⚠ abaixo da média (25–30/dia)</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          ${[30,25,20,15,10].map(ref=>{
+            const atingiu = mediaDia !== null && mediaDia >= ref;
+            return `<div style="width:28px;height:5px;border-radius:3px;background:${atingiu?(ref>=25?'var(--mint)':'var(--amber)'):'#E2E8F0'};"></div>`;
+          }).join('')}
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">meta 25</div>
+        </div>
+      </div>`;
+    })()}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
       <div><div style="color:var(--text-muted);font-size:10px;">VISITAS</div><div style="font-weight:800;font-size:16px;">${d.visitas}</div></div>
       <div><div style="color:var(--text-muted);font-size:10px;">PEDIDOS</div><div style="font-weight:800;font-size:16px;">${d.pedidos}</div></div>
@@ -6168,6 +6255,15 @@ window.addEventListener('pagehide', salvarRascunhoVisita);
 
 // INIT
 window.onload = function() {
+  if (jornadaNativaDisponivel()) {
+    if (window.NativeGeoBridge?.requestPermissions) window.NativeGeoBridge.requestPermissions().catch(() => {});
+    if (window.NativeCameraBridge?.checkPermissions) window.NativeCameraBridge.checkPermissions().then(s => {
+      const falta = [];
+      if (s?.camera !== 'granted') falta.push('camera');
+      if (s?.photos !== 'granted') falta.push('photos');
+      if (falta.length) window.NativeCameraBridge.requestPermissions({ permissions: falta }).catch(() => {});
+    }).catch(() => {});
+  }
   const saved = localStorage.getItem('ct_user');
   if (saved) {
     const u = JSON.parse(saved);

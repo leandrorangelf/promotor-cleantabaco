@@ -1,5 +1,9 @@
 {
   "appId": "com.cleantabaco.promotor",
   "appName": "Promotor Cleantabaco",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "url": "https://promotor-cleantabaco.vercel.app",
+    "cleartext": false
+  }
 }
