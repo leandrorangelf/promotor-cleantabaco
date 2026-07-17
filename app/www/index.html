@@ -1531,6 +1531,7 @@ button:active { transform: translateY(1px); }
         </div>
       </div>
       <div id="mapaStatus" class="mapa-status"></div>
+      <div id="jornadaMapaStatus" class="mapa-status"></div>
       <div id="mapaKmCard" class="card" style="display:none;margin-bottom:12px;">
         <div class="card-title">Km da rota do dia</div>
         <div id="mapaKmValor" style="font-size:28px;font-weight:800;color:var(--purple);">—</div>
@@ -4357,7 +4358,9 @@ function renderPainelPromotor() {
 
 let mapaLeaflet = null;
 let mapaCamadaPontos = null;
+let jornadaPolyline = null;
 let visitasMapa = [];
+let jornadasMapa = [];
 
 function resetarFiltrosMapa() {
   const agora = new Date();
@@ -4383,7 +4386,76 @@ async function carregarMapa() {
     toast('Erro ao carregar dados do mapa');
   }
   renderMapa();
+  carregarJornadasMapa(promotor, de, ate);
   carregarKmRota(promotor, de, ate);
+}
+
+async function carregarJornadasMapa(promotor = '', de = '', ate = '') {
+  let url = `${API}/api/jornadas?`;
+  if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+  if (de) url += `inicio=${encodeURIComponent(de)}&`;
+  if (ate) url += `fim=${encodeURIComponent(ate)}&`;
+  try {
+    const res = await apiFetch(url, { headers: headers() });
+    const data = await res.json();
+    jornadasMapa = data.jornadas || [];
+  } catch (e) {
+    jornadasMapa = [];
+  }
+  renderJornadasMapa();
+}
+
+function garantirMapaLeaflet() {
+  if (!mapaLeaflet) {
+    mapaLeaflet = L.map('mapaLeafletEl');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+    }).addTo(mapaLeaflet);
+  }
+  if (!mapaCamadaPontos) mapaCamadaPontos = L.layerGroup().addTo(mapaLeaflet);
+  if (!jornadaPolyline) jornadaPolyline = L.layerGroup().addTo(mapaLeaflet);
+}
+
+function renderJornadasMapa() {
+  const statusEl = document.getElementById('jornadaMapaStatus');
+  const box = document.getElementById('mapaLeafletEl');
+  if (!statusEl || !box || typeof L === 'undefined') return;
+  const pontos = jornadasMapa.flatMap(j => (j.pontos || []).map(p => ({ ...p, promotor: j.promotor, jornadaId: j.id })));
+  if (!pontos.length) {
+    statusEl.textContent = 'Não há pontos contínuos no período selecionado.';
+    if (jornadaPolyline) jornadaPolyline.clearLayers();
+    return;
+  }
+  box.style.display = 'block';
+  garantirMapaLeaflet();
+  jornadaPolyline.clearLayers();
+  const bounds = [];
+  const porJornada = new Map();
+  pontos.sort((a, b) => new Date(a.capturado_em) - new Date(b.capturado_em));
+  for (const ponto of pontos) {
+    if (!porJornada.has(String(ponto.jornadaId))) porJornada.set(String(ponto.jornadaId), []);
+    porJornada.get(String(ponto.jornadaId)).push(ponto);
+  }
+  for (const grupo of porJornada.values()) {
+    let segmento = [];
+    const desenhar = () => {
+      if (segmento.length > 1) {
+        const latlngs = segmento.map(p => [+p.latitude, +p.longitude]);
+        L.polyline(latlngs, { color: '#7C3AED', weight: 4, opacity: 0.78, dashArray: '8 5' }).addTo(jornadaPolyline);
+        bounds.push(...latlngs);
+      }
+      segmento = [];
+    };
+    grupo.forEach((ponto, index) => {
+      const anterior = grupo[index - 1];
+      if (anterior && new Date(ponto.capturado_em) - new Date(anterior.capturado_em) > 15 * 60 * 1000) desenhar();
+      segmento.push(ponto);
+    });
+    desenhar();
+  }
+  statusEl.textContent = `${pontos.length} pontos contínuos registrados · linha roxa tracejada`;
+  if (bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [30, 30] });
+  setTimeout(() => mapaLeaflet.invalidateSize(), 0);
 }
 
 async function carregarKmRota(promotor, de, ate) {
@@ -4450,14 +4522,7 @@ function renderMapa() {
   vazio.style.display = 'none';
   box.style.display = 'block';
 
-  if (!mapaLeaflet) {
-    mapaLeaflet = L.map('mapaLeafletEl');
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(mapaLeaflet);
-    mapaCamadaPontos = L.layerGroup().addTo(mapaLeaflet);
-  }
+  garantirMapaLeaflet();
 
   mapaCamadaPontos.clearLayers();
 
