@@ -3,6 +3,8 @@ package com.cleantabaco.promotor;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 
 import androidx.core.content.ContextCompat;
 
@@ -49,6 +51,15 @@ public class JornadaPlugin extends Plugin {
     @PluginMethod
     public void flush(PluginCall call) {
         getContext().startService(new Intent(getContext(), JornadaForegroundService.class).setAction(JornadaForegroundService.ACTION_FLUSH));
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void openSettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.fromParts("package", getContext().getPackageName(), null));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
         call.resolve();
     }
 
