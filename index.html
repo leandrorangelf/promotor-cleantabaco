@@ -139,7 +139,15 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedido-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1EFE8; }
 .pedido-row:last-child { border-bottom: none; }
 .pedidos-page .page-intro { max-width: 1180px; }
-.pedidos-filtros { max-width: 1180px; }
+.pedidos-page { padding-bottom: 48px; }
+.pedidos-page > .page-intro,
+.pedidos-page > .pedido-somente-leitura,
+.pedidos-page > .pedidos-filtros,
+.pedidos-page > .pedidos-resumo,
+.pedidos-page > .pedidos-tabela-wrap { width: min(calc(100% - 48px), 1180px); margin-left: auto; margin-right: auto; }
+.pedidos-page > .page-intro { padding-left: 0; padding-right: 0; }
+.pedidos-page > .pedido-somente-leitura { margin-top: 8px; }
+.pedidos-filtros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; max-width: 1180px; }
 .pedidos-filtros .filtro-group input, .pedidos-filtros .filtro-group select { width: 100%; }
 .pedidos-resumo { max-width: 1180px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
 .pedido-resumo-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
@@ -152,7 +160,19 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedido-produtos { color: var(--text-muted); line-height: 1.45; }
 .pedido-produtos strong { color: var(--text); }
 .pedido-somente-leitura { color: var(--text-muted); font-size: 12px; margin: 8px 0 14px; }
-@media (max-width: 720px) { .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 899px) {
+  .pedidos-page > .page-intro,
+  .pedidos-page > .pedido-somente-leitura,
+  .pedidos-page > .pedidos-filtros,
+  .pedidos-page > .pedidos-resumo,
+  .pedidos-page > .pedidos-tabela-wrap { width: calc(100% - 28px); }
+  .pedidos-page > .page-intro { padding-top: 20px; }
+  .pedidos-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .pedidos-filtros { grid-template-columns: 1fr; }
+  .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .pedido-sku { font-size: 14px; font-weight: 700; }
 .pedido-qty { display: flex; align-items: center; gap: 10px; }
 .qty-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
