@@ -5209,6 +5209,13 @@ function pacotesProduzidosNoMes(visitas) {
     .reduce((total, v) => total + pacotesPedido(v), 0);
 }
 
+function fotosAprovadasDoPromotor(visitas) {
+  return visitas.reduce((total, v) => {
+    const validacoes = v.dados?.presenca?.tabelaValidacoesFotos || [];
+    return total + validacoes.filter(item => (item.status_manual || item.status_ia) === 'aprovado').length;
+  }, 0);
+}
+
 // Bloco de bonus estimado + estatisticas do mes, reutilizado no card do gestor (por promotor)
 // e no painel do proprio promotor ("Minha performance")
 function resumoBonusStatsHTML(d, bonus) {
@@ -5493,16 +5500,20 @@ function renderPainel() {
   const prom = {};
   visitasGestor.forEach(v => {
     const n = v.promotor;
-    if (!prom[n]) prom[n] = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0 };
+    if (!prom[n]) prom[n] = { visitas:0, pedidos:0, pacotes:0, fotosAprovadas:0, parceiros:0, valor:0, ruptura:0, dias:new Set() };
     prom[n].visitas++;
+    prom[n].dias.add(String(v.criado_em || '').slice(0, 10));
     if (v.dados?.comercial?.pedidoFeito === 'Sim') prom[n].pedidos++;
     if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) prom[n].parceiros++;
     if (v.dados?.presenca?.ruptura) prom[n].ruptura++;
     const qty = v.dados?.comercial?.pedidoPac||v.dados?.comercial?.pedidoQty||{};
     const preco = v.dados?.comercial?.pedidoPreco||{};
-    ['GR','GM','CM','CC'].forEach(s => { prom[n].valor += (qty[s]||0)*(preco[s]||0); });
+    if (['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v))) {
+      ['GR','GM','CM','CC'].forEach(s => { prom[n].pacotes += qty[s]||0; prom[n].valor += (qty[s]||0)*(preco[s]||0); });
+    }
+    prom[n].fotosAprovadas += fotosAprovadasDoPromotor([v]);
   });
-  const sortedProm = Object.entries(prom).sort((a,b)=>b[1].visitas-a[1].visitas);
+  const sortedProm = Object.entries(prom).sort((a,b)=>b[1].fotosAprovadas-a[1].fotosAprovadas || b[1].pacotes-a[1].pacotes || b[1].visitas-a[1].visitas);
   const maxV = sortedProm[0]?.[1].visitas||1;
   document.getElementById('gRanking').innerHTML = sortedProm.length ? `
     <div style="overflow-x:auto;">
@@ -5510,9 +5521,12 @@ function renderPainel() {
       <tr style="border-bottom:2px solid var(--border);">
         <th style="text-align:left;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Promotor</th>
         <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Visitas</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Dias</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Visitas/dia</th>
         <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Pedidos</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Pacotes vendidos</th>
+        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Fotos aprovadas</th>
         <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Conv.</th>
-        <th style="text-align:center;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Parceiros</th>
         <th style="text-align:right;padding:6px 8px;font-size:11px;color:var(--text-muted);font-weight:700;">Valor</th>
       </tr>
       ${sortedProm.map(([nome,d]) => `
@@ -5527,13 +5541,16 @@ function renderPainel() {
             </div>
           </td>
           <td style="text-align:center;padding:8px;font-weight:700;">${d.visitas}</td>
+          <td style="text-align:center;padding:8px;">${d.dias.size}</td>
+          <td style="text-align:center;padding:8px;font-weight:700;">${(d.visitas/d.dias.size).toFixed(1).replace('.',',')}</td>
           <td style="text-align:center;padding:8px;">${d.pedidos}</td>
+          <td style="text-align:center;padding:8px;font-weight:700;">${d.pacotes.toLocaleString('pt-BR')}</td>
+          <td style="text-align:center;padding:8px;font-weight:800;color:var(--mint);">${d.fotosAprovadas}</td>
           <td style="text-align:center;padding:8px;">
             <span style="background:${d.visitas>0&&Math.round(d.pedidos/d.visitas*100)>=50?'var(--mint-light)':'var(--orange-light)'};color:${d.visitas>0&&Math.round(d.pedidos/d.visitas*100)>=50?'var(--mint)':'var(--amber)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;">
               ${d.visitas > 0 ? Math.round(d.pedidos/d.visitas*100)+'%' : '—'}
             </span>
           </td>
-          <td style="text-align:center;padding:8px;">${d.parceiros}</td>
           <td style="text-align:right;padding:8px;font-weight:700;font-size:12px;">${d.valor>0?'R$ '+d.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>
         </tr>
       `).join('')}
