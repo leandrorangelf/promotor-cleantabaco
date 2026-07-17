@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "sync:web": "powershell -ExecutionPolicy Bypass -File sync-web.ps1",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:camera-bridge": "esbuild src/camera-bridge.js --bundle --format=iife --outfile=www/camera-bridge.js",
-    "build:geo-bridge": "esbuild src/geo-bridge.js --bundle --format=iife --outfile=www/geo-bridge.js"
+    "build:geo-bridge": "esbuild src/geo-bridge.js --bundle --format=iife --outfile=www/geo-bridge.js",
+    "build:jornada-bridge": "esbuild src/jornada-bridge.js --bundle --format=iife --outfile=www/jornada-bridge.js"
   },
   "keywords": [],
   "author": "",
