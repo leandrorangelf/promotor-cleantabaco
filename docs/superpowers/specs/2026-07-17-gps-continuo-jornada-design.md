@@ -80,4 +80,5 @@ O painel exibirá um cartão com “Rastreamento ativo”, último ponto captura
 - Implementado em 2026-07-17 na branch `main`.
 - API de jornadas, serviço foreground, fila SQLite offline, scheduler de dias úteis, restauração após boot, ponte Capacitor, cartão do promotor e trilha no mapa foram adicionados.
 - Verificado com testes de contrato Node, `npx cap copy android` e `assembleDebug`.
+- A suíte Node completa passou após normalizar finais de linha do teste de rascunho no Windows.
 - Ainda requer teste manual em aparelho/emulador para confirmar permissões de segundo plano, economia de bateria, tela apagada, perda de rede e o disparo real dos alarmes às 08h/18h.

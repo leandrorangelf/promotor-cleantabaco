@@ -1,7 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 
-const html = fs.readFileSync('index.html', 'utf8');
+const html = fs.readFileSync('index.html', 'utf8').replace(/\r\n/g, '\n');
 
 assert.ok(html.includes("salvarRascunhoVisita();\n    logout(true);"), 'sessao expirada deve salvar o rascunho antes de sair');
 assert.ok(html.includes('function logout(preservarFormulario = false)'), 'logout deve aceitar preservar o formulario');
