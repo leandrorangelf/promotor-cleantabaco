@@ -13,6 +13,10 @@ public final class JornadaScheduler {
     public static final String ACTION_START = "com.cleantabaco.promotor.JORNADA_SCHEDULE_START";
     public static final String ACTION_STOP = "com.cleantabaco.promotor.JORNADA_SCHEDULE_STOP";
     public static final String TIME_ZONE = "America/Sao_Paulo";
+    public static final String START_HOUR = "08";
+    public static final String STOP_HOUR = "18";
+    public static final String FIRST_WORK_DAY = "MONDAY";
+    public static final String LAST_WORK_DAY = "FRIDAY";
     private static final int START_CODE = 801;
     private static final int STOP_CODE = 802;
 
@@ -23,8 +27,8 @@ public final class JornadaScheduler {
         context.getSharedPreferences("jornada_config", Context.MODE_PRIVATE).edit()
                 .putString(JornadaForegroundService.EXTRA_API, apiBase).putString("dispositivoId", dispositivoId).apply();
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        agendar(alarms, context, ACTION_START, proximaOcorrencia(8), START_CODE);
-        agendar(alarms, context, ACTION_STOP, proximaOcorrencia(18), STOP_CODE);
+        agendar(alarms, context, ACTION_START, proximaOcorrencia(Integer.parseInt(START_HOUR)), START_CODE);
+        agendar(alarms, context, ACTION_STOP, proximaOcorrencia(Integer.parseInt(STOP_HOUR)), STOP_CODE);
     }
 
     public static void scheduleFromStored(Context context) {
