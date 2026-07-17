@@ -1,6 +1,15 @@
 import { neon } from '@neondatabase/serverless';
 import { autenticar } from './_auth.js';
 
+function pedidoConfirmadoSemValor(dados = {}) {
+  const comercial = dados?.comercial || {};
+  if (!['Pedido confirmado', 'Pedido entregue'].includes(comercial.statusPedido) || comercial.pedidoFeito !== 'Sim') return false;
+  const qty = comercial.pedidoPac || comercial.pedidoQty || {};
+  const preco = comercial.pedidoPreco || {};
+  const total = ['GR', 'GM', 'CM', 'CC'].reduce((sum, sku) => sum + (Number(qty[sku]) || 0) * (Number(preco[sku]) || 0), 0);
+  return total <= 0;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -10,6 +19,10 @@ export default async function handler(req, res) {
 
   const sessao = autenticar(req);
   if (!sessao) return res.status(401).json({ erro: 'Sessao invalida ou expirada' });
+
+  if (pedidoConfirmadoSemValor(req.body?.dados)) {
+    return res.status(422).json({ erro: 'Pedido confirmado ou entregue exige valor' });
+  }
 
   try {
     const sql = neon(process.env.DATABASE_URL);

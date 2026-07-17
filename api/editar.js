@@ -15,6 +15,15 @@ function mesclarDadosVisita(atuais = {}, alteracoes = {}) {
   return resultado;
 }
 
+function pedidoConfirmadoSemValor(dados = {}) {
+  const comercial = dados?.comercial || {};
+  if (!['Pedido confirmado', 'Pedido entregue'].includes(comercial.statusPedido) || comercial.pedidoFeito !== 'Sim') return false;
+  const qty = comercial.pedidoPac || comercial.pedidoQty || {};
+  const preco = comercial.pedidoPreco || {};
+  const total = ['GR', 'GM', 'CM', 'CC'].reduce((sum, sku) => sum + (Number(qty[sku]) || 0) * (Number(preco[sku]) || 0), 0);
+  return total <= 0;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
@@ -40,6 +49,9 @@ export default async function handler(req, res) {
     const dadosAtuais = atual[0].dados;
     const dadosNormalizados = typeof dadosAtuais === 'string' ? JSON.parse(dadosAtuais) : dadosAtuais;
     const dadosParaSalvar = mesclarDadosVisita(dadosNormalizados, dados);
+    if (pedidoConfirmadoSemValor(dadosParaSalvar)) {
+      return res.status(422).json({ erro: 'Pedido confirmado ou entregue exige valor' });
+    }
     const fotosAtuais = atual[0].fotos || [];
     const fotosAtualizadas = fotos === undefined ? fotosAtuais : fotos;
     await sql`update visitas set dados = ${JSON.stringify(dadosParaSalvar)}, fotos = ${fotosAtualizadas} where id = ${id} and promotor = ${promotor}`;

@@ -2362,6 +2362,24 @@ function statusClass(status) {
   return 'status-sem';
 }
 
+function valorPedidoDosDados(dados = {}) {
+  const c = dados.comercial || {};
+  const qty = c.pedidoPac || c.pedidoQty || {};
+  const preco = c.pedidoPreco || {};
+  return ['GR','GM','CM','CC'].reduce((total, sku) => total + (Number(qty[sku]) || 0) * (Number(preco[sku]) || 0), 0);
+}
+
+function validarValorPedidoConfirmado(dados) {
+  const c = dados?.comercial || {};
+  const exigeValor = ['Pedido confirmado', 'Pedido entregue'].includes(c.statusPedido);
+  if (exigeValor && c.pedidoFeito === 'Sim' && valorPedidoDosDados(dados) <= 0) {
+    toast('⚠️ Pedido confirmado ou entregue exige valor. Informe o preço por pacote.');
+    document.getElementById('statusPedido')?.focus();
+    return false;
+  }
+  return true;
+}
+
 function verificarAcompanhamentoPedido() {
   const nome = normalizarTexto(document.getElementById('nomeFantasia').value);
   const box = document.getElementById('followupPedido');
@@ -2382,6 +2400,11 @@ function verificarAcompanhamentoPedido() {
 }
 
 function atualizarStatusPedido(status) {
+  if (['Pedido confirmado', 'Pedido entregue'].includes(status) && valorPedidoFormulario() <= 0) {
+    document.getElementById('statusPedido').value = 'Em negociação';
+    toast('⚠️ Pedido confirmado ou entregue exige valor. Informe o preço por pacote.');
+    return;
+  }
   document.getElementById('statusPedido').value = status;
   if (status === 'Pedido confirmado' || status === 'Pedido entregue') {
     document.querySelectorAll('#pedidoFeito .radio-pill').forEach(p => p.classList.toggle('active', p.textContent.trim() === 'Sim'));
@@ -2478,6 +2501,14 @@ function alterarQty(id, delta) {
 }
 
 const PACOTES = { GR:48, GM:48, CM:50, CC:50 };
+
+function valorPedidoFormulario() {
+  return ['GR','GM','CM','CC'].reduce((total, sku) => {
+    const pac = lerQtyPac('qty' + sku);
+    const preco = parseFloat(document.getElementById('preco' + sku)?.value || '0');
+    return total + pac * preco;
+  }, 0);
+}
 
 function calcularTotalPedido() {
   let total = 0;
@@ -3674,6 +3705,12 @@ async function salvarVisita() {
     },
     observacoes: document.getElementById('observacoes').value,
   };
+
+    if (!validarValorPedidoConfirmado(dados)) {
+      btn.disabled = false;
+      btn.textContent = '✓ Salvar Visita';
+      return;
+    }
 
     const fotosParaSalvar = prepararFotosParaEnvio(fotos);
     if (!editandoId) {
