@@ -43,11 +43,46 @@ public class JornadaApiClient {
         finally { if (connection != null) connection.disconnect(); }
     }
 
+    public String iniciarJornada(String dispositivoId) {
+        HttpURLConnection connection = null;
+        try {
+            JSONObject body = new JSONObject().put("dispositivoId", dispositivoId == null ? "" : dispositivoId)
+                    .put("iniciadoEm", java.time.Instant.now().toString()).put("origem", "android-alarm");
+            connection = abrir("/api/jornada-iniciar", "POST");
+            try (OutputStream output = connection.getOutputStream()) { output.write(body.toString().getBytes(StandardCharsets.UTF_8)); }
+            if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 300) return "";
+            JSONObject response = new JSONObject(lerResposta(connection));
+            return response.optString("jornadaId", "");
+        } catch (Exception ignored) { return ""; }
+        finally { if (connection != null) connection.disconnect(); }
+    }
+
+    public boolean encerrarJornada(String jornadaId, String motivo) {
+        HttpURLConnection connection = null;
+        try {
+            JSONObject body = new JSONObject().put("jornadaId", Long.parseLong(jornadaId))
+                    .put("encerradoEm", java.time.Instant.now().toString()).put("motivo", motivo);
+            connection = abrir("/api/jornada-encerrar", "POST");
+            try (OutputStream output = connection.getOutputStream()) { output.write(body.toString().getBytes(StandardCharsets.UTF_8)); }
+            int code = connection.getResponseCode();
+            return code >= 200 && code < 300;
+        } catch (Exception ignored) { return false; }
+        finally { if (connection != null) connection.disconnect(); }
+    }
+
     private HttpURLConnection abrir(String path, String method) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(baseUrl + path).openConnection();
         connection.setRequestMethod(method); connection.setConnectTimeout(15000); connection.setReadTimeout(15000);
         connection.setDoOutput(true); connection.setRequestProperty("Content-Type", "application/json");
         connection.setRequestProperty("Authorization", "Bearer " + token); return connection;
+    }
+
+    private static String lerResposta(HttpURLConnection connection) throws Exception {
+        try (InputStream input = connection.getInputStream(); BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
+            StringBuilder result = new StringBuilder(); String line;
+            while ((line = reader.readLine()) != null) result.append(line);
+            return result.toString();
+        }
     }
 
     private static void putNullable(JSONObject object, String key, Double value) throws Exception { if (value != null) object.put(key, value); }

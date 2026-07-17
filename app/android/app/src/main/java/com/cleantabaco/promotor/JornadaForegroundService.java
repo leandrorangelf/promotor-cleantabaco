@@ -81,10 +81,25 @@ public class JornadaForegroundService extends Service {
         startForeground(NOTIFICATION_ID, notificacao("Rastreamento de jornada ativo"));
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
+        executor.execute(() -> {
+            String token = JornadaSecureStore.readToken(this);
+            String api = getSharedPreferences("jornada_config", MODE_PRIVATE).getString(EXTRA_API, "https://promotor-cleantabaco.vercel.app");
+            apiClient = new JornadaApiClient(api, token);
+            if (jornadaId == null || jornadaId.isEmpty()) jornadaId = apiClient.iniciarJornada(getPreferencesName());
+            if (!jornadaId.isEmpty()) runOnMainThread(this::solicitarLocalizacao);
+        });
+    }
+
+    private void solicitarLocalizacao() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
         LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000L)
                 .setMinUpdateIntervalMillis(30000L).setMinUpdateDistanceMeters(50f).build();
         locationClient.requestLocationUpdates(request, callback, Looper.getMainLooper());
     }
+
+    private String getPreferencesName() { return getSharedPreferences("jornada_config", MODE_PRIVATE).getString("dispositivoId", android.os.Build.MODEL); }
+    private void runOnMainThread(Runnable action) { new android.os.Handler(Looper.getMainLooper()).post(action); }
 
     private void guardar(Location location) {
         if (jornadaId == null || jornadaId.isEmpty()) return;
