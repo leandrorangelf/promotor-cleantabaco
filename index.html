@@ -2095,13 +2095,15 @@ async function inicializarJornada() {
   card.style.display = 'block';
   try {
     await garantirGeoBridgeCarregada();
-    await solicitarPermissoesJornada();
+    if (window.NativeGeoBridge?.requestPermissions) await window.NativeGeoBridge.requestPermissions();
     await garantirJornadaBridgeCarregada();
     await window.NativeJornadaBridge.schedule({ token: authToken, apiBase: API, dispositivoId: navigator.userAgent.slice(0, 120) });
+    await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
     await atualizarStatusJornada();
     if (!jornadaStatusTimer) jornadaStatusTimer = setInterval(atualizarStatusJornada, 60000);
   } catch (e) {
-    document.getElementById('jornadaStatusTexto').textContent = 'Permita localização para ativar a jornada';
+    const texto = document.getElementById('jornadaStatusTexto');
+    if (texto) texto.textContent = 'Permita localização nas configurações do app para ativar o rastreamento';
   }
 }
 

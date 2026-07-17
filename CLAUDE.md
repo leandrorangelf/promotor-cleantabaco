@@ -80,19 +80,19 @@ Sistema de gestão de promotores de PDV (pontos de venda). Duas frentes: app do 
 ### Android / Capacitor
 
 - Fonte de verdade da interface: `index.html`, `manual.html`, `bonus.js` e `performance.js` na raiz do projeto.
-- O app Android usa a cópia em `app/www`; alterar apenas a raiz não atualiza o APK automaticamente.
-- Após qualquer alteração web, executar na raiz do projeto: `powershell -ExecutionPolicy Bypass -File app\sync-web.ps1`.
-- O script de sincronização deve preservar UTF-8; não substituir esse fluxo por `Get-Content`/`Set-Content` padrão, pois caracteres do HTML podem corromper o JavaScript.
-- Depois, executar na pasta `app`: `npx cap copy android`. Esse passo é obrigatório: ele gera os assets efetivos em `app/android/app/src/main/assets/public`.
-- Para as pontes nativas, executar na pasta `app`: `npm run build:geo-bridge` e `npm run build:jornada-bridge` antes de `npx cap copy android`.
+- O app carrega HTML/JS **da Vercel** em runtime (`capacitor.config.json` → `server.url`). Isso significa que alterações no HTML/JS chegam ao app via deploy na Vercel, **sem reinstalar o APK**. Reinstalar o APK só é necessário quando muda código Java nativo (`app/android/`).
+- O WebView cache pode segurar versões antigas — orientar usuário a fechar o app completamente e reabrir, ou limpar cache do app nas configurações do Android.
+- `geo-bridge.js` e `jornada-bridge.js` são gerados por build em `app/www/` e **precisam estar na raiz do projeto** para a Vercel servir. O `sync-web.ps1` já copia de volta automaticamente após o build. Não carregar esses arquivos dinamicamente com `document.createElement('script')` — falha no WebView do Capacitor; usar `<script src>` estático no HTML.
+- Após qualquer alteração web, executar na raiz do projeto via PowerShell nativo (não Bash): `powershell -ExecutionPolicy Bypass -File app\sync-web.ps1`. O script preserva UTF-8 e copia bridges de `app/www` de volta à raiz.
+- Depois, executar na pasta `app`: `npm run build:geo-bridge && npm run build:jornada-bridge && npx cap copy android`. O `cap copy` é obrigatório para atualizar `app/android/app/src/main/assets/public` (usado quando não há conexão).
 - O rastreamento contínuo usa `JornadaForegroundService`: segunda a sexta, 08:00–18:00 em `America/Sao_Paulo`, com pontos a cada 60s/50m, fila offline de até 24h e notificação foreground.
+- A jornada é iniciada **automaticamente no login** do promotor via `inicializarJornada()` → chama `requestPermissions`, `schedule` e `start` em sequência. O Android exibe o diálogo de permissão de localização na hora; "Sempre permitir" (background location no Android 11+) ainda exige navegação manual em Configurações.
 - A coleta contínua exige `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` e notificações permitidas no aparelho.
 - Endpoints da jornada: `POST /api/jornada-iniciar`, `POST /api/jornada-pontos`, `POST /api/jornada-encerrar` e `GET /api/jornadas`.
 - A trilha contínua é exibida no mapa do gestor separada dos marcadores de visitas; lacunas maiores que 15 minutos não são interpoladas.
 - Abrir no Android Studio somente a pasta `app/android`.
-- Para compilar pelo terminal, executar em `app/android`: `./gradlew.bat clean assembleDebug`.
+- Para compilar pelo terminal, executar em `app/android`: `./gradlew.bat assembleDebug` (usar `clean` só se necessário — sem ele é muito mais rápido).
 - APK de debug: `app/android/app/build/outputs/apk/debug/app-debug.apk`.
-- O botão **Sync Project with Gradle Files** atualiza a configuração Gradle, mas não substitui `npx cap copy android`.
 
 ### Arquitetura
 
