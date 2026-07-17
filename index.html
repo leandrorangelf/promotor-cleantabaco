@@ -1729,6 +1729,8 @@ button:active { transform: translateY(1px); }
 
 <script src="bonus.js"></script>
 <script src="performance.js"></script>
+<script src="geo-bridge.js"></script>
+<script src="jornada-bridge.js"></script>
 <script>
 const API = '';
 
@@ -1807,18 +1809,9 @@ function montarErroLocalizacao(err, capturadoEm, tentativa) {
   };
 }
 
-let geoBridgePromise = null;
 function garantirGeoBridgeCarregada() {
-  if (window.NativeGeoBridge) return Promise.resolve();
-  if (geoBridgePromise) return geoBridgePromise;
-  geoBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'geo-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('geo-bridge.js indisponivel'));
-    document.head.appendChild(script);
-  });
-  return geoBridgePromise;
+  if (!window.NativeGeoBridge) return Promise.reject(new Error('geo-bridge.js indisponivel'));
+  return Promise.resolve();
 }
 
 async function obterPosicaoNativa(opcoes, tentativa) {
@@ -2044,16 +2037,8 @@ function jornadaNativaDisponivel() {
 }
 
 function garantirJornadaBridgeCarregada() {
-  if (window.NativeJornadaBridge) return Promise.resolve();
-  if (jornadaBridgePromise) return jornadaBridgePromise;
-  jornadaBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'jornada-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('jornada-bridge.js indisponível'));
-    document.head.appendChild(script);
-  });
-  return jornadaBridgePromise;
+  if (!window.NativeJornadaBridge) return Promise.reject(new Error('jornada-bridge.js indisponível'));
+  return Promise.resolve();
 }
 
 async function pedirPermissaoNotificacao() {
