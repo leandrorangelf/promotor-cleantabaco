@@ -19,7 +19,8 @@ public class JornadaPlugin extends Plugin {
         JSObject result = new JSObject();
         boolean location = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
         boolean background = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        result.put("status", location && background ? "pronto" : "permissao_ausente");
+        boolean ativa = getContext().getSharedPreferences("jornada_config", 0).getBoolean("jornada_ativa", false);
+        result.put("status", !location || !background ? "permissao_ausente" : (ativa ? "ativo" : "pronto"));
         result.put("permissaoLocalizacao", location); result.put("permissaoSegundoPlano", background);
         result.put("pendentes", new JornadaStorage(getContext()).contarPendentes());
         result.put("jornadaId", getContext().getSharedPreferences("jornada_config", 0).getString(JornadaForegroundService.EXTRA_JORNADA_ID, ""));

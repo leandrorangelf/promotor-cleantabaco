@@ -359,6 +359,17 @@ button:active { transform: translateY(1px); }
 .header-title { font-size: 17px; letter-spacing: -.15px; }
 .header-sub { color: #AAB4CA; font-size: 12px; opacity: 1; }
 .header-badge { background: var(--purple-mid); min-width: 34px; text-align: center; }
+.mobile-menu-toggle { display: none; border: 0; background: transparent; color: #fff; font-size: 26px; line-height: 1; padding: 6px; cursor: pointer; }
+.mobile-menu-backdrop { display: none; position: fixed; inset: 0; background: rgba(7,13,28,.52); z-index: 190; }
+.mobile-menu-drawer { position: fixed; top: 0; bottom: 0; left: 0; width: min(82vw, 320px); padding: 78px 14px 18px; background: var(--navy); box-shadow: 12px 0 30px rgba(0,0,0,.22); transform: translateX(-105%); transition: transform .22s ease; z-index: 200; overflow-y: auto; }
+.mobile-menu-drawer.open { transform: translateX(0); }
+.mobile-menu-backdrop.open { display: block; }
+.mobile-menu-drawer .nav-btn { display: flex; width: 100%; justify-content: flex-start; align-items: center; min-height: 48px; padding: 12px 14px; border: 0; border-radius: 10px; color: #C8D1E5; text-align: left; }
+.mobile-menu-drawer .nav-btn.active, .mobile-menu-drawer .nav-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+@media (max-width: 720px) {
+  .mobile-menu-toggle { display: block; }
+  #appPromotor .nav, #appGestor .nav { display: none; }
+}
 .btn-sair { color: #D6DCEA; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 8px 12px; }
 .btn-sair:hover { background: rgba(255,255,255,.08); color: #fff; }
 
@@ -748,6 +759,7 @@ button:active { transform: translateY(1px); }
 <!-- APP PROMOTOR -->
 <div id="appPromotor" style="display:none;">
   <div class="header">
+    <button class="mobile-menu-toggle" id="mobileMenuToggleP" type="button" aria-label="Abrir menu" onclick="alternarMenuMobile('P', true)">☰</button>
     <div>
       <div class="header-title">Cleantabaco · PDV</div>
       <div class="header-sub" id="headerNomeP"></div>
@@ -757,6 +769,15 @@ button:active { transform: translateY(1px); }
       <button class="btn-sair" onclick="logout()">Sair</button>
     </div>
   </div>
+  <div class="mobile-menu-backdrop" id="mobileMenuBackdropP" onclick="alternarMenuMobile('P', false)"></div>
+  <aside class="mobile-menu-drawer" id="mobileMenuDrawerP" aria-label="Menu do promotor">
+    <button class="nav-btn active" data-p-page="painel" onclick="mudarAbaP('painel'); alternarMenuMobile('P', false)">Painel</button>
+    <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova'); alternarMenuMobile('P', false)">＋ Nova</button>
+    <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes'); alternarMenuMobile('P', false)">Carteira</button>
+    <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico'); alternarMenuMobile('P', false)">Histórico</button>
+    <button class="nav-btn" data-p-page="fotos" onclick="mudarAbaP('fotos'); alternarMenuMobile('P', false)">Minhas fotos</button>
+    <a class="nav-btn" href="manual.html" style="text-decoration:none;" onclick="alternarMenuMobile('P', false)">📘 Manual</a>
+  </aside>
   <div class="nav">
     <button class="nav-btn active" data-p-page="painel" onclick="mudarAbaP('painel')">Painel</button>
     <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
@@ -773,6 +794,16 @@ button:active { transform: translateY(1px); }
     </div>
     <div class="gestor-wrap">
       <button type="button" class="camera-btn primary" style="margin-bottom:14px;" onclick="abrirModalProspeccao()">📍 Registrar prospecção (visita sem venda)</button>
+      <section id="jornadaStatus" class="card" style="display:none;margin-bottom:14px;">
+        <div class="card-title">📍 Jornada GPS</div>
+        <div id="jornadaStatusTexto" style="font-weight:700;color:var(--purple);">Verificando...</div>
+        <div id="jornadaUltimoPonto" class="empty" style="padding:8px 0;text-align:left;">Último ponto: aguardando</div>
+        <div id="jornadaPendentes" class="empty" style="padding:0 0 8px;text-align:left;">Fila offline: 0</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="jornadaIniciar" type="button" class="camera-btn primary" onclick="iniciarJornadaManual()">Iniciar agora</button>
+          <button id="jornadaParar" type="button" class="camera-btn" onclick="pararJornadaManual()" style="display:none;">Parar rastreamento</button>
+        </div>
+      </section>
       <div class="card" id="pResumoMesCard" style="margin-bottom:14px;"></div>
       <div class="resumo-grid" id="pPerformanceCards"></div>
       <div class="card">
@@ -1174,6 +1205,7 @@ button:active { transform: translateY(1px); }
 <!-- APP GESTOR -->
 <div id="appGestor" style="display:none;">
   <div class="header">
+    <button class="mobile-menu-toggle" id="mobileMenuToggleG" type="button" aria-label="Abrir menu" onclick="alternarMenuMobile('G', true)">☰</button>
     <div>
       <div class="header-title">Cleantabaco · Gestor</div>
       <div class="header-sub" id="headerNomeG">Leandro</div>
@@ -1183,6 +1215,20 @@ button:active { transform: translateY(1px); }
       <button class="btn-sair" onclick="logout()">Sair</button>
     </div>
   </div>
+  <div class="mobile-menu-backdrop" id="mobileMenuBackdropG" onclick="alternarMenuMobile('G', false)"></div>
+  <aside class="mobile-menu-drawer" id="mobileMenuDrawerG" aria-label="Menu do gestor">
+    <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
+    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria'); alternarMenuMobile('G', false)">Diretoria</button>
+    <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
+    <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
+    <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance'); alternarMenuMobile('G', false)">Performance</button>
+    <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises'); alternarMenuMobile('G', false)">Análises</button>
+    <button class="nav-btn" data-gestor-page="sugestoes" onclick="mudarAbaG('sugestoes'); alternarMenuMobile('G', false)">Sugestões</button>
+    <button class="nav-btn" data-gestor-page="mapa" onclick="mudarAbaG('mapa'); alternarMenuMobile('G', false)">🗺️ Mapa</button>
+    <button class="nav-btn only-gestor" data-gestor-page="metas" onclick="mudarAbaG('metas'); alternarMenuMobile('G', false)">Metas</button>
+    <button class="nav-btn only-gestor" data-gestor-page="promotores" onclick="mudarAbaG('promotores'); alternarMenuMobile('G', false)">Promotores</button>
+    <a class="nav-btn" href="manual.html" style="text-decoration:none;" onclick="alternarMenuMobile('G', false)">📘 Manual</a>
+  </aside>
   <div class="nav">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
     <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
@@ -1885,6 +1931,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
     if (restaurarRascunhoVisita(nome)) {
       toast('📋 Rascunho da visita restaurado. Confira o formulário antes de salvar.');
     }
+    inicializarJornada();
     carregarMetas().then(() => Promise.all([carregarVisitasPromotor(), carregarClientes(false, true)])).then(() => renderPainelPromotor());
   }
 }
@@ -1902,12 +1949,109 @@ function logout(preservarFormulario = false) {
   if (!preservarFormulario) limparFormulario();
 }
 
+let jornadaBridgePromise = null;
+let jornadaStatusTimer = null;
+
+function jornadaNativaDisponivel() {
+  return Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+
+function garantirJornadaBridgeCarregada() {
+  if (window.NativeJornadaBridge) return Promise.resolve();
+  if (jornadaBridgePromise) return jornadaBridgePromise;
+  jornadaBridgePromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'jornada-bridge.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('jornada-bridge.js indisponível'));
+    document.head.appendChild(script);
+  });
+  return jornadaBridgePromise;
+}
+
+async function solicitarPermissoesJornada() {
+  if (window.NativeGeoBridge?.requestPermissions) await window.NativeGeoBridge.requestPermissions();
+}
+
+function textoStatusJornada(status) {
+  return {
+    pronto: 'Pronto para rastrear',
+    ativo: 'Rastreamento ativo',
+    permissao_ausente: 'Permissão de localização necessária',
+    sem_rede: 'Sem rede — pontos ficam na fila offline',
+    parado_manual: 'Rastreamento parado manualmente'
+  }[status] || 'Fora do horário — próxima janela: 08h às 18h';
+}
+
+async function atualizarStatusJornada() {
+  const card = document.getElementById('jornadaStatus');
+  if (!card || !jornadaNativaDisponivel()) return;
+  try {
+    await garantirJornadaBridgeCarregada();
+    const status = await window.NativeJornadaBridge.getStatus();
+    document.getElementById('jornadaStatusTexto').textContent = textoStatusJornada(status.status);
+    document.getElementById('jornadaUltimoPonto').textContent = status.ultimoPontoEm ? `Último ponto: ${new Date(status.ultimoPontoEm).toLocaleString()}` : 'Último ponto: aguardando';
+    document.getElementById('jornadaPendentes').textContent = `Fila offline: ${status.pendentes || 0}`;
+    document.getElementById('jornadaIniciar').style.display = status.status === 'ativo' ? 'none' : '';
+    document.getElementById('jornadaParar').style.display = status.status === 'ativo' ? '' : 'none';
+  } catch (e) {
+    document.getElementById('jornadaStatusTexto').textContent = 'Não foi possível consultar o rastreamento';
+  }
+}
+
+async function inicializarJornada() {
+  const card = document.getElementById('jornadaStatus');
+  if (!card) return;
+  if (!jornadaNativaDisponivel()) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  try {
+    await garantirGeoBridgeCarregada();
+    await solicitarPermissoesJornada();
+    await garantirJornadaBridgeCarregada();
+    await window.NativeJornadaBridge.schedule({ token: authToken, apiBase: API, dispositivoId: navigator.userAgent.slice(0, 120) });
+    await atualizarStatusJornada();
+    if (!jornadaStatusTimer) jornadaStatusTimer = setInterval(atualizarStatusJornada, 60000);
+  } catch (e) {
+    document.getElementById('jornadaStatusTexto').textContent = 'Permita localização para ativar a jornada';
+  }
+}
+
+async function iniciarJornadaManual() {
+  await garantirJornadaBridgeCarregada();
+  await solicitarPermissoesJornada();
+  await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+  await atualizarStatusJornada();
+}
+
+async function pararJornadaManual() {
+  await garantirJornadaBridgeCarregada();
+  await window.NativeJornadaBridge.stop();
+  await atualizarStatusJornada();
+}
+
 // NAVEGAÇÃO PROMOTOR
+function alternarMenuMobile(tipo, aberto) {
+  const sufixo = tipo === 'G' ? 'G' : 'P';
+  document.getElementById('mobileMenuDrawer' + sufixo)?.classList.toggle('open', aberto);
+  document.getElementById('mobileMenuBackdrop' + sufixo)?.classList.toggle('open', aberto);
+}
+
+function sincronizarMenuMobile(tipo) {
+  const root = tipo === 'G' ? '#appGestor' : '#appPromotor';
+  const drawer = document.getElementById(tipo === 'G' ? 'mobileMenuDrawerG' : 'mobileMenuDrawerP');
+  if (!drawer) return;
+  drawer.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  const active = document.querySelector(root + ' .nav-btn.active');
+  const page = active?.dataset?.[tipo === 'G' ? 'gestorPage' : 'pPage'];
+  if (page) drawer.querySelector(`[data-${tipo === 'G' ? 'gestor' : 'p'}-page="${page}"]`)?.classList.add('active');
+}
+
 function mudarAbaP(aba) {
   document.querySelectorAll('#appPromotor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appPromotor .nav-btn[data-p-page="${aba}"]`)?.classList.add('active');
+  sincronizarMenuMobile('P');
   if (aba === 'painel') {
     Promise.all([carregarVisitasPromotor(), carregarClientes(false, true)]).then(() => renderPainelPromotor());
   }
@@ -1937,6 +2081,7 @@ function mudarAbaG(aba) {
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
+  sincronizarMenuMobile('G');
   if (aba === 'diretoria') renderDiretoria();
   if (aba === 'visitas') { definirPeriodoVisitasHoje(); renderListaGestor(); }
   if (aba === 'galeria') carregarGaleria();

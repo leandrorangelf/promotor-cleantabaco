@@ -29,6 +29,8 @@ public final class JornadaScheduler {
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         agendar(alarms, context, ACTION_START, proximaOcorrencia(Integer.parseInt(START_HOUR)), START_CODE);
         agendar(alarms, context, ACTION_STOP, proximaOcorrencia(Integer.parseInt(STOP_HOUR)), STOP_CODE);
+        ZonedDateTime agora = ZonedDateTime.now(ZoneId.of(TIME_ZONE));
+        if (diaUtil(agora) && agora.getHour() >= Integer.parseInt(START_HOUR) && agora.getHour() < Integer.parseInt(STOP_HOUR)) iniciarAgora(context);
     }
 
     public static void scheduleFromStored(Context context) {
@@ -38,8 +40,6 @@ public final class JornadaScheduler {
                 .getString(JornadaForegroundService.EXTRA_API, "https://promotor-cleantabaco.vercel.app");
         String dispositivo = context.getSharedPreferences("jornada_config", Context.MODE_PRIVATE).getString("dispositivoId", android.os.Build.MODEL);
         schedule(context, token, api, dispositivo);
-        ZonedDateTime agora = ZonedDateTime.now(ZoneId.of(TIME_ZONE));
-        if (diaUtil(agora) && agora.getHour() >= 8 && agora.getHour() < 18) iniciarAgora(context);
     }
 
     public static void iniciarAgora(Context context) {

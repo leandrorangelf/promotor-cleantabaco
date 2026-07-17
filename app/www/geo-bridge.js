@@ -701,7 +701,8 @@
     "src/geo-bridge.js"() {
       init_esm();
       window.NativeGeoBridge = {
-        getCurrentPosition: (opts) => Geolocation2.getCurrentPosition(opts)
+        getCurrentPosition: (opts) => Geolocation2.getCurrentPosition(opts),
+        requestPermissions: () => Geolocation2.requestPermissions()
       };
     }
   });

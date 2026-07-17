@@ -79,6 +79,7 @@ public class JornadaForegroundService extends Service {
 
     private void iniciar() {
         startForeground(NOTIFICATION_ID, notificacao("Rastreamento de jornada ativo"));
+        getSharedPreferences("jornada_config", MODE_PRIVATE).edit().putBoolean("jornada_ativa", true).apply();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
         executor.execute(() -> {
@@ -129,6 +130,7 @@ public class JornadaForegroundService extends Service {
     private void parar() {
         locationClient.removeLocationUpdates(callback);
         flushAsync();
+        getSharedPreferences("jornada_config", MODE_PRIVATE).edit().putBoolean("jornada_ativa", false).apply();
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
