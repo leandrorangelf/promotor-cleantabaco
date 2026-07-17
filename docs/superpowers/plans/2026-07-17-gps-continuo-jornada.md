@@ -344,3 +344,10 @@ git commit -m "docs: registra verificacao do GPS continuo da jornada"
 - Placeholders: não há `TBD`, `TODO` ou passos sem comando/critério de saída.
 - Consistência: `jornadaId`, `pontoId`, `NativeJornadaBridge` e os quatro endpoints mantêm os mesmos nomes em todas as tarefas.
 - Escopo: o navegador não recebe rastreamento contínuo; o mapa usa pontos reais e preserva lacunas.
+
+## Status
+
+- Implementado na `main` em 2026-07-17.
+- Tasks 1–6 concluídas com commits separados; Task 7 validada com testes Node, sincronização Capacitor e `assembleDebug`.
+- APK gerado em `app/android/app/build/outputs/apk/debug/app-debug.apk`.
+- Falta somente o teste manual em aparelho/emulador; a suíte completa ainda contém a falha pré-existente de `tests/salvamento-rascunho.test.js`.

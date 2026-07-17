@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const SECRET = process.env.AUTH_SECRET || process.env.DATABASE_URL;
-const EXPIRACAO_MS = 24 * 60 * 60 * 1000;
+const EXPIRACAO_MS = 30 * 24 * 60 * 60 * 1000;
 
 function assinar(payloadB64) {
   return createHmac('sha256', SECRET).update(payloadB64).digest('base64url');

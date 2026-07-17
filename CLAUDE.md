@@ -77,10 +77,27 @@ Sistema de gestão de promotores de PDV (pontos de venda). Duas frentes: app do 
 - Testes: scripts Node simples (sem Jest/Mocha), cada um roda com `node tests/<arquivo>.test.js`. Não usam DOM real nem chamadas HTTP reais — a maioria lê `index.html`/`gestor.html`/`api/*.js` como texto e faz `assert.ok(html.includes(...))`. Para rodar tudo: `for f in tests/*.test.js; do node "$f"; done` (não há script `npm test`).
 - Ao adicionar/alterar uma feature no front, o teste correspondente provavelmente falha se você renomear um `id`, atributo `data-*` ou nome de função usado nesses `assert.ok`.
 
+### Android / Capacitor
+
+- Fonte de verdade da interface: `index.html`, `manual.html`, `bonus.js` e `performance.js` na raiz do projeto.
+- O app Android usa a cópia em `app/www`; alterar apenas a raiz não atualiza o APK automaticamente.
+- Após qualquer alteração web, executar na raiz do projeto: `powershell -ExecutionPolicy Bypass -File app\sync-web.ps1`.
+- O script de sincronização deve preservar UTF-8; não substituir esse fluxo por `Get-Content`/`Set-Content` padrão, pois caracteres do HTML podem corromper o JavaScript.
+- Depois, executar na pasta `app`: `npx cap copy android`. Esse passo é obrigatório: ele gera os assets efetivos em `app/android/app/src/main/assets/public`.
+- Para as pontes nativas, executar na pasta `app`: `npm run build:geo-bridge` e `npm run build:jornada-bridge` antes de `npx cap copy android`.
+- O rastreamento contínuo usa `JornadaForegroundService`: segunda a sexta, 08:00–18:00 em `America/Sao_Paulo`, com pontos a cada 60s/50m, fila offline de até 24h e notificação foreground.
+- A coleta contínua exige `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` e notificações permitidas no aparelho.
+- Endpoints da jornada: `POST /api/jornada-iniciar`, `POST /api/jornada-pontos`, `POST /api/jornada-encerrar` e `GET /api/jornadas`.
+- A trilha contínua é exibida no mapa do gestor separada dos marcadores de visitas; lacunas maiores que 15 minutos não são interpoladas.
+- Abrir no Android Studio somente a pasta `app/android`.
+- Para compilar pelo terminal, executar em `app/android`: `./gradlew.bat clean assembleDebug`.
+- APK de debug: `app/android/app/build/outputs/apk/debug/app-debug.apk`.
+- O botão **Sync Project with Gradle Files** atualiza a configuração Gradle, mas não substitui `npx cap copy android`.
+
 ### Arquitetura
 
 - `api/*.js`: um handler por arquivo (padrão Vercel: `export default async function handler(req, res)`), cada um cria sua própria tabela com `CREATE TABLE IF NOT EXISTS` no início do handler (não há migrations separadas).
-- `api/_auth.js`: autenticação própria via HMAC (não é JWT de biblioteca). Token = `payloadB64.assinaturaHMAC`, expira em 24h. `autenticar(req)` lê o header `Authorization: Bearer <token>`.
+- `api/_auth.js`: autenticação própria via HMAC (não é JWT de biblioteca). Token = `payloadB64.assinaturaHMAC`, expira em 30 dias. `autenticar(req)` lê o header `Authorization: Bearer <token>`.
 - `bonus.js` e `performance.js` (raiz): lógica de negócio compartilhada entre frontend (carregados como `<script>` no HTML, expõem função no `window`) e backend (via `require`/`import`, padrão UMD). Regras de bonificação/metas vivem aqui — não duplicar essa lógica dentro de `api/*.js` ou dentro do HTML.
 - Banco: Neon Postgres serverless (`@neondatabase/serverless`), acessado com `neon(process.env.DATABASE_URL)` e template literals SQL tag.
 
