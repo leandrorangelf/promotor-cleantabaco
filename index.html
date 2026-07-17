@@ -147,7 +147,7 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedidos-page > .pedidos-tabela-wrap { width: min(calc(100% - 48px), 1180px); margin-left: auto; margin-right: auto; }
 .pedidos-page > .page-intro { padding-left: 0; padding-right: 0; }
 .pedidos-page > .pedido-somente-leitura { margin-top: 8px; }
-.pedidos-filtros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; max-width: 1180px; }
+.pedidos-filtros { display: grid !important; flex-direction: unset; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; max-width: 1180px; }
 .pedidos-filtros .filtro-group input, .pedidos-filtros .filtro-group select { width: 100%; }
 .pedidos-resumo { max-width: 1180px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
 .pedido-resumo-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
@@ -170,7 +170,9 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
   .pedidos-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
-  .pedidos-filtros { grid-template-columns: 1fr; }
+  .pedidos-filtros { grid-template-columns: repeat(2, 1fr); }
+  .pedidos-tabela { min-width: 480px; }
+  .pedidos-tabela th:nth-child(1), .pedidos-tabela td:nth-child(1) { display: none; }
   .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .pedido-sku { font-size: 14px; font-weight: 700; }
@@ -1978,6 +1980,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
   authToken = token;
   localStorage.setItem('ct_user', JSON.stringify({ nome, tipo, usuario, token }));
   document.getElementById('loginScreen').style.display = 'none';
+  setTimeout(pedirPermissaoNotificacao, 1000);
 
   if (tipo === 'gestor' || tipo === 'diretoria' || tipo === 'coordenador') {
     document.getElementById('appGestor').style.display = 'block';
@@ -2043,8 +2046,25 @@ function garantirJornadaBridgeCarregada() {
   return jornadaBridgePromise;
 }
 
+async function pedirPermissaoNotificacao() {
+  if (localStorage.getItem('ct_notif_pedida')) return;
+  localStorage.setItem('ct_notif_pedida', '1');
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
 async function solicitarPermissoesJornada() {
   if (window.NativeGeoBridge?.requestPermissions) await window.NativeGeoBridge.requestPermissions();
+  // checar se background location foi concedida (Android 11+ exige "Sempre permitir" manualmente)
+  try {
+    if (window.NativeJornadaBridge) {
+      const s = await window.NativeJornadaBridge.getStatus();
+      if (s.permissaoSegundoPlano === false) {
+        alert('Para rastrear sua rota em segundo plano, vá em:\nConfigurações > Aplicativos > Promotor > Permissões > Localização\ne selecione "Sempre permitir".');
+      }
+    }
+  } catch (_) {}
 }
 
 function textoStatusJornada(status) {
@@ -2121,6 +2141,7 @@ function sincronizarMenuMobile(tipo) {
 }
 
 function mudarAbaP(aba) {
+  window.scrollTo(0, 0);
   document.querySelectorAll('#appPromotor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appPromotor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('p' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
@@ -2156,6 +2177,7 @@ function atualizarAbaGestorAtual() {
 }
 
 function mudarAbaG(aba) {
+  window.scrollTo(0, 0);
   document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
@@ -6154,6 +6176,7 @@ window.onload = function() {
   if (saved) {
     const u = JSON.parse(saved);
     if (u.token) fazerLogin(u.nome, u.tipo, u.usuario, u.token);
+    else if (u.usuario) document.getElementById('loginUsuario').value = u.usuario;
   }
 };
 </script>
