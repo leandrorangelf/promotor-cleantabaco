@@ -154,6 +154,15 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedido-resumo-card strong { display: block; font-size: 22px; color: var(--purple); }
 .pedido-resumo-card span { color: var(--text-muted); font-size: 11px; }
 .pedidos-tabela-wrap { max-width: 1180px; overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); }
+.pedidos-cards { display: none; flex-direction: column; gap: 10px; }
+.pedido-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.pedido-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.pedido-card-nome { font-weight: 700; font-size: 14px; }
+.pedido-card-local { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pedido-card-body { font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.pedido-card-body span strong { color: var(--text); }
+.pedido-card-footer { display: flex; justify-content: space-between; align-items: center; }
+.pedido-card-valor { font-weight: 700; font-size: 15px; color: var(--purple); }
 .pedidos-tabela { width: 100%; min-width: 840px; border-collapse: collapse; font-size: 13px; }
 .pedidos-tabela th, .pedidos-tabela td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #F1EFE8; vertical-align: top; }
 .pedidos-tabela th { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
@@ -171,8 +180,8 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 }
 @media (max-width: 520px) {
   .pedidos-filtros { grid-template-columns: repeat(2, 1fr); }
-  .pedidos-tabela { min-width: 480px; }
-  .pedidos-tabela th:nth-child(1), .pedidos-tabela td:nth-child(1) { display: none; }
+  .pedidos-tabela-wrap { display: none; }
+  .pedidos-cards { display: flex !important; }
   .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .pedido-sku { font-size: 14px; font-weight: 700; }
@@ -1254,6 +1263,7 @@ button:active { transform: translateY(1px); }
     </div>
     <div id="pPedidosResumo" class="pedidos-resumo"></div>
     <div id="pPedidosLista" class="pedidos-tabela-wrap"></div>
+    <div id="pPedidosCards" class="pedidos-cards"></div>
   </div>
 </div>
 
@@ -1447,6 +1457,7 @@ button:active { transform: translateY(1px); }
     </div>
     <div id="gPedidosResumo" class="pedidos-resumo"></div>
     <div id="gPedidosLista" class="pedidos-tabela-wrap"></div>
+    <div id="gPedidosCards" class="pedidos-cards"></div>
   </div>
 
   <div class="page" id="gVisitas">
@@ -2283,8 +2294,11 @@ function renderPedidos(tipo) {
   const valor = lista.reduce((sum, v) => sum + valorPedido(v), 0);
   const dinheiro = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   resumo.innerHTML = `<div class="pedido-resumo-card"><strong>${lista.length}</strong><span>Pedidos</span></div><div class="pedido-resumo-card"><strong>${confirmados}</strong><span>Confirmados</span></div><div class="pedido-resumo-card"><strong>${entregues}</strong><span>Entregues</span></div><div class="pedido-resumo-card"><strong>${pacotes.toLocaleString('pt-BR')}</strong><span>Pacotes</span></div><div class="pedido-resumo-card"><strong>${dinheiro}</strong><span>Valor informado</span></div>`;
+  const cards = document.getElementById(prefixo + 'PedidosCards');
   if (!lista.length) {
-    tabela.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div><p>Ajuste ou limpe os filtros.</p></div>';
+    const vazio = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div><p>Ajuste ou limpe os filtros.</p></div>';
+    tabela.innerHTML = vazio;
+    if (cards) cards.innerHTML = vazio;
     return;
   }
   tabela.innerHTML = `<table class="pedidos-tabela"><thead><tr><th>Data</th><th>Cliente/PDV</th>${tipo === 'G' ? '<th>Promotor</th><th>Coordenador</th>' : ''}<th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th><th></th></tr></thead><tbody>${lista.map(v => {
@@ -2294,6 +2308,28 @@ function renderPedidos(tipo) {
     const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
     return `<tr><td>${data}</td><td><strong>${d.pdv?.nomeFantasia || 'PDV sem nome'}</strong><br><span class="pedido-produtos">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</span></td>${tipo === 'G' ? `<td>${v.promotor || '—'}</td><td>${nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor))}</td>` : ''}<td><span class="status-chip ${statusClass(status)}">${status}</span></td><td class="pedido-produtos">${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${valorPedido(v) ? valorPedido(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td><td><button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button></td></tr>`;
   }).join('')}</tbody></table>`;
+  if (cards) cards.innerHTML = lista.map(v => {
+    const d = v.dados || {};
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+    const status = statusDaVisita(v);
+    const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
+    const val = valorPedido(v);
+    return `<div class="pedido-card">
+      <div class="pedido-card-header">
+        <div><div class="pedido-card-nome">${d.pdv?.nomeFantasia || 'PDV sem nome'}</div><div class="pedido-card-local">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</div></div>
+        <span class="status-chip ${statusClass(status)}">${status}</span>
+      </div>
+      <div class="pedido-card-body">
+        <span>${textoProdutosPedido(v)}</span>
+        <span><strong>${pacotesPedido(v).toLocaleString('pt-BR')} pac</strong> · ${data}</span>
+        ${tipo === 'G' ? `<span>Promotor: <strong>${v.promotor || '—'}</strong></span>` : ''}
+      </div>
+      <div class="pedido-card-footer">
+        <span class="pedido-card-valor">${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span>
+        <button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function limparFiltrosPedidos(tipo) {
