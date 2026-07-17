@@ -2098,8 +2098,8 @@ async function inicializarJornada() {
     const status = await window.NativeJornadaBridge.getStatus();
     if (status.permissaoSegundoPlano === false) {
       const texto = document.getElementById('jornadaStatusTexto');
-      if (texto) texto.innerHTML = `Permita localização <strong>"Sempre"</strong> para rastrear em segundo plano.
-        <br><button type="button" onclick="window.NativeJornadaBridge.openSettings()" style="margin-top:8px;padding:8px 16px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">Abrir configurações</button>`;
+      if (texto) texto.innerHTML = `Abrindo configurações — selecione <strong>"Sempre permitir"</strong> para o rastreamento funcionar em segundo plano.`;
+      await window.NativeJornadaBridge.openSettings();
     } else {
       await atualizarStatusJornada();
     }

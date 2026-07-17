@@ -526,7 +526,8 @@
         start: (options) => Jornada.start(options),
         stop: (options) => Jornada.stop(options),
         flush: () => Jornada.flush(),
-        schedule: (options) => Jornada.schedule(options)
+        schedule: (options) => Jornada.schedule(options),
+        openSettings: () => Jornada.openSettings()
       };
     }
   });
