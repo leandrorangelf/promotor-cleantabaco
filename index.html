@@ -2121,10 +2121,19 @@ async function inicializarJornada() {
 }
 
 async function iniciarJornadaManual() {
-  await garantirJornadaBridgeCarregada();
-  await solicitarPermissoesJornada();
-  await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
-  await atualizarStatusJornada();
+  const btn = document.getElementById('jornadaIniciar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Iniciando...'; }
+  try {
+    await garantirJornadaBridgeCarregada();
+    await solicitarPermissoesJornada();
+    await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
+    await atualizarStatusJornada();
+  } catch (e) {
+    toast('Erro ao iniciar jornada: ' + (e?.message || e), 5000);
+    console.error('iniciarJornadaManual', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Iniciar agora'; }
+  }
 }
 
 async function pararJornadaManual() {
@@ -5248,9 +5257,11 @@ function metaChipHTML(texto, meta) {
 }
 
 function statsVisitasPromotor(visitas) {
-  const d = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0 };
+  const d = { visitas:0, pedidos:0, parceiros:0, valor:0, ruptura:0, pacotes:0, diasComVisita:0 };
+  const dias = new Set();
   visitas.forEach(v => {
     d.visitas++;
+    dias.add(String(v.criado_em || '').slice(0, 10));
     const pedidoFechado = ['Pedido confirmado','Pedido entregue'].includes(statusDaVisita(v));
     if (pedidoFechado) d.pedidos++;
     if ((v.dados?.comercial?.receptividade||'').includes('Parceiro')) d.parceiros++;
@@ -5259,6 +5270,7 @@ function statsVisitasPromotor(visitas) {
     const preco = v.dados?.comercial?.pedidoPreco||{};
     if (pedidoFechado) ['GR','GM','CM','CC'].forEach(s => { d.valor += (qty[s]||0)*(preco[s]||0); d.pacotes += (qty[s]||0); });
   });
+  d.diasComVisita = dias.size;
   return d;
 }
 
@@ -5290,6 +5302,26 @@ function resumoBonusStatsHTML(d, bonus) {
         ${metaChipHTML(`PDVs no mês (${bonus.metas.baseDuzentosPdvs.atual}/${bonus.metas.baseDuzentosPdvs.alvo})`, bonus.metas.baseDuzentosPdvs)}
       </div>
     </div>
+    ${(()=>{
+      const mediaDia = d.diasComVisita ? d.visitas / d.diasComVisita : null;
+      const abaixo = mediaDia !== null && mediaDia < 25;
+      const cor = mediaDia === null ? 'var(--text-muted)' : mediaDia >= 25 ? 'var(--mint)' : mediaDia >= 20 ? 'var(--amber)' : 'var(--red,#e53e3e)';
+      const mediaStr = mediaDia !== null ? mediaDia.toFixed(1).replace('.',',') : '—';
+      return `<div style="margin-bottom:10px;padding:8px 10px;border-radius:8px;background:${abaixo?'#FFF7ED':'#F7FBF8'};border:1px solid ${abaixo?'#FDE68A':'#C6F6D5'};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div>
+          <div style="font-size:10px;color:var(--text-muted);font-weight:700;">VISITAS/DIA (${d.diasComVisita} dia${d.diasComVisita===1?'':'s'})</div>
+          <div style="font-size:22px;font-weight:900;color:${cor};line-height:1.2;">${mediaStr}<span style="font-size:11px;color:var(--text-muted);font-weight:600;"> / dia</span></div>
+          ${abaixo?`<div style="font-size:10px;color:var(--amber);font-weight:700;margin-top:2px;">⚠ abaixo da média (25–30/dia)</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          ${[30,25,20,15,10].map(ref=>{
+            const atingiu = mediaDia !== null && mediaDia >= ref;
+            return `<div style="width:28px;height:5px;border-radius:3px;background:${atingiu?(ref>=25?'var(--mint)':'var(--amber)'):'#E2E8F0'};"></div>`;
+          }).join('')}
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px;">meta 25</div>
+        </div>
+      </div>`;
+    })()}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
       <div><div style="color:var(--text-muted);font-size:10px;">VISITAS</div><div style="font-weight:800;font-size:16px;">${d.visitas}</div></div>
       <div><div style="color:var(--text-muted);font-size:10px;">PEDIDOS</div><div style="font-weight:800;font-size:16px;">${d.pedidos}</div></div>

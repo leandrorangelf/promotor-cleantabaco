@@ -1,6 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 import { autenticar } from './_auth.js';
 
+function haversineMetros(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function pedidoConfirmadoSemValor(dados = {}) {
   const comercial = dados?.comercial || {};
   if (!['Pedido confirmado', 'Pedido entregue'].includes(comercial.statusPedido) || comercial.pedidoFeito !== 'Sim') return false;
@@ -43,11 +51,31 @@ export default async function handler(req, res) {
           WHERE promotor = ${promotor} AND lower(nome_fantasia) = lower(${pdv.nomeFantasia})
         `;
         if (existe.length === 0) {
+          await sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION`;
+          await sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION`;
+          await sql`ALTER TABLE clientes ADD COLUMN IF NOT EXISTS suspeito_duplicata BOOLEAN DEFAULT FALSE`;
+
+          const loc = dados?.localizacao;
+          const lat = (loc?.ok && Number.isFinite(+loc.latitude)) ? +loc.latitude : null;
+          const lng = (loc?.ok && Number.isFinite(+loc.longitude)) ? +loc.longitude : null;
+
+          let suspeito_duplicata = false;
+          if (lat && lng) {
+            const delta = 0.00045;
+            const proximos = await sql`
+              SELECT latitude, longitude FROM clientes
+              WHERE promotor = ${promotor}
+                AND latitude BETWEEN ${lat - delta} AND ${lat + delta}
+                AND longitude BETWEEN ${lng - delta} AND ${lng + delta}
+            `;
+            suspeito_duplicata = proximos.some(c => haversineMetros(lat, lng, c.latitude, c.longitude) < 50);
+          }
+
           const [{ count }] = await sql`SELECT COUNT(*)::int as count FROM clientes WHERE promotor = ${promotor}`;
           const codigo = 'PDV-' + String(count + 1).padStart(3, '0');
           await sql`
-            INSERT INTO clientes (codigo, promotor, nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor)
-            VALUES (${codigo}, ${promotor}, ${pdv.nomeFantasia}, ${pdv.cnpj||''}, ${pdv.tipo||''}, ${pdv.ie||''}, ${pdv.endereco||''}, ${pdv.cidade||''}, ${pdv.uf||''}, ${pdv.nomeComprador||''}, ${pdv.telefone||''}, ${pdv.distribuidor||''})
+            INSERT INTO clientes (codigo, promotor, nome_fantasia, cnpj, tipo, ie, endereco, cidade, uf, nome_comprador, telefone, distribuidor, latitude, longitude, suspeito_duplicata)
+            VALUES (${codigo}, ${promotor}, ${pdv.nomeFantasia}, ${pdv.cnpj||''}, ${pdv.tipo||''}, ${pdv.ie||''}, ${pdv.endereco||''}, ${pdv.cidade||''}, ${pdv.uf||''}, ${pdv.nomeComprador||''}, ${pdv.telefone||''}, ${pdv.distribuidor||''}, ${lat}, ${lng}, ${suspeito_duplicata})
             ON CONFLICT (promotor, nome_fantasia) DO NOTHING
           `;
         } else {
