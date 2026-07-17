@@ -6222,6 +6222,9 @@ window.addEventListener('pagehide', salvarRascunhoVisita);
 
 // INIT
 window.onload = function() {
+  if (jornadaNativaDisponivel() && window.NativeGeoBridge?.requestPermissions) {
+    window.NativeGeoBridge.requestPermissions().catch(() => {});
+  }
   const saved = localStorage.getItem('ct_user');
   if (saved) {
     const u = JSON.parse(saved);
