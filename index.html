@@ -138,6 +138,21 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 /* PEDIDO */
 .pedido-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F1EFE8; }
 .pedido-row:last-child { border-bottom: none; }
+.pedidos-page .page-intro { max-width: 1180px; }
+.pedidos-filtros { max-width: 1180px; }
+.pedidos-filtros .filtro-group input, .pedidos-filtros .filtro-group select { width: 100%; }
+.pedidos-resumo { max-width: 1180px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.pedido-resumo-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.pedido-resumo-card strong { display: block; font-size: 22px; color: var(--purple); }
+.pedido-resumo-card span { color: var(--text-muted); font-size: 11px; }
+.pedidos-tabela-wrap { max-width: 1180px; overflow-x: auto; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); }
+.pedidos-tabela { width: 100%; min-width: 840px; border-collapse: collapse; font-size: 13px; }
+.pedidos-tabela th, .pedidos-tabela td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #F1EFE8; vertical-align: top; }
+.pedidos-tabela th { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.pedido-produtos { color: var(--text-muted); line-height: 1.45; }
+.pedido-produtos strong { color: var(--text); }
+.pedido-somente-leitura { color: var(--text-muted); font-size: 12px; margin: 8px 0 14px; }
+@media (max-width: 720px) { .pedidos-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .pedido-sku { font-size: 14px; font-weight: 700; }
 .pedido-qty { display: flex; align-items: center; gap: 10px; }
 .qty-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text); }
@@ -775,6 +790,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova'); alternarMenuMobile('P', false)">＋ Nova</button>
     <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes'); alternarMenuMobile('P', false)">Carteira</button>
     <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico'); alternarMenuMobile('P', false)">Histórico</button>
+    <button class="nav-btn" data-p-page="pedidos" onclick="mudarAbaP('pedidos'); alternarMenuMobile('P', false)">Pedidos</button>
     <button class="nav-btn" data-p-page="fotos" onclick="mudarAbaP('fotos'); alternarMenuMobile('P', false)">Minhas fotos</button>
     <a class="nav-btn" href="manual.html" style="text-decoration:none;" onclick="alternarMenuMobile('P', false)">📘 Manual</a>
   </aside>
@@ -783,6 +799,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-p-page="nova" onclick="mudarAbaP('nova')">＋ Nova</button>
     <button class="nav-btn" data-p-page="clientes" onclick="mudarAbaP('clientes')">Carteira</button>
     <button class="nav-btn" data-p-page="historico" onclick="mudarAbaP('historico')">Histórico</button>
+    <button class="nav-btn" data-p-page="pedidos" onclick="mudarAbaP('pedidos')">Pedidos</button>
     <button class="nav-btn" data-p-page="fotos" onclick="mudarAbaP('fotos')">Minhas fotos</button>
     <a class="nav-btn" href="manual.html" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">📘 Manual</a>
   </div>
@@ -1203,6 +1220,21 @@ button:active { transform: translateY(1px); }
 </div>
 
 <!-- APP GESTOR -->
+  <div class="page pedidos-page" id="pPedidos">
+    <div class="page-intro"><h1>Pedidos</h1><p>Consulte seus pedidos registrados nas visitas.</p></div>
+    <div class="pedido-somente-leitura">Somente consulta, sem edição. Para alterar dados, use o fluxo de edição da visita.</div>
+    <div class="filtros pedidos-filtros">
+      <div class="filtro-group"><label>De</label><input id="pFiltroPedidoDe" type="date" onchange="renderPedidos('P')"></div>
+      <div class="filtro-group"><label>Até</label><input id="pFiltroPedidoAte" type="date" onchange="renderPedidos('P')"></div>
+      <div class="filtro-group"><label>Status</label><select id="pFiltroPedidoStatus" onchange="renderPedidos('P')"><option value="">Todos</option><option>Em negociação</option><option>Pedido confirmado</option><option>Pedido entregue</option></select></div>
+      <div class="filtro-group"><label>Cliente/PDV</label><input id="pFiltroPedidoCliente" type="text" placeholder="Nome do cliente" oninput="renderPedidos('P')"></div>
+      <div class="filtro-group"><label>Busca</label><input id="pFiltroPedidoBusca" type="search" placeholder="Cidade ou produto" oninput="renderPedidos('P')"></div>
+      <button class="btn-filtrar" type="button" onclick="limparFiltrosPedidos('P')">Limpar filtros</button>
+    </div>
+    <div id="pPedidosResumo" class="pedidos-resumo"></div>
+    <div id="pPedidosLista" class="pedidos-tabela-wrap"></div>
+  </div>
+
 <div id="appGestor" style="display:none;">
   <div class="header">
     <button class="mobile-menu-toggle" id="mobileMenuToggleG" type="button" aria-label="Abrir menu" onclick="alternarMenuMobile('G', true)">☰</button>
@@ -1220,6 +1252,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
     <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria'); alternarMenuMobile('G', false)">Diretoria</button>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
+    <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos'); alternarMenuMobile('G', false)">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance'); alternarMenuMobile('G', false)">Performance</button>
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises'); alternarMenuMobile('G', false)">Análises</button>
@@ -1234,6 +1267,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos')">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria')">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance')">Performance</button>
     <button class="nav-btn" data-gestor-page="analises" onclick="mudarAbaG('analises')">Análises</button>
@@ -1373,6 +1407,24 @@ button:active { transform: translateY(1px); }
       </div>
 
     </div>
+  </div>
+
+  <div class="page pedidos-page" id="gPedidos">
+    <div class="page-intro"><h1>Pedidos</h1><p>Consulte pedidos por promotor, coordenador, cliente e status.</p></div>
+    <div class="pedido-somente-leitura">Somente consulta, sem edição. Os dados respeitam o escopo do seu perfil.</div>
+    <div class="filtros pedidos-filtros">
+      <div class="filtro-group"><label>De</label><input id="gFiltroPedidoDe" type="date" onchange="renderPedidos('G')"></div>
+      <div class="filtro-group"><label>Até</label><input id="gFiltroPedidoAte" type="date" onchange="renderPedidos('G')"></div>
+      <div class="filtro-group"><label>Status</label><select id="gFiltroPedidoStatus" onchange="renderPedidos('G')"><option value="">Todos</option><option>Em negociação</option><option>Pedido confirmado</option><option>Pedido entregue</option></select></div>
+      <div class="filtro-group"><label>Promotor</label><select id="gFiltroPedidoPromotor" onchange="renderPedidos('G')"><option value="">Todos</option></select></div>
+      <div class="filtro-group"><label>Coordenador</label><select id="gFiltroPedidoCoordenador" onchange="renderPedidos('G')"><option value="">Todos</option></select></div>
+      <div class="filtro-group"><label>Cliente/PDV</label><input id="gFiltroPedidoCliente" type="text" placeholder="Nome do cliente" oninput="renderPedidos('G')"></div>
+      <div class="filtro-group"><label>Busca</label><input id="gFiltroPedidoBusca" type="search" placeholder="Cidade, UF ou produto" oninput="renderPedidos('G')"></div>
+      <button class="btn-filtrar" type="button" onclick="limparFiltrosPedidos('G')">Limpar filtros</button>
+      <button class="export-btn orders" type="button" onclick="exportarPedidosTela('G')">Exportar pedidos filtrados</button>
+    </div>
+    <div id="gPedidosResumo" class="pedidos-resumo"></div>
+    <div id="gPedidosLista" class="pedidos-tabela-wrap"></div>
   </div>
 
   <div class="page" id="gVisitas">
@@ -2060,6 +2112,10 @@ function mudarAbaP(aba) {
     if (visitasPromotor.length) renderHistorico();
     carregarVisitasPromotor().then(() => renderHistorico());
   }
+  if (aba === 'pedidos') {
+    renderPedidos('P');
+    carregarVisitasPromotor().then(() => renderPedidos('P'));
+  }
   if (aba === 'clientes') {
     if (todosClientes.length) renderClientes(todosClientes);
     carregarClientes();
@@ -2074,6 +2130,7 @@ function atualizarAbaGestorAtual() {
   if (aba === 'galeria') { carregarGaleria(); return; }
   if (aba === 'performance') { carregarPerformance(); return; }
   if (aba === 'promotores') { carregarPromotoresAdmin(); return; }
+  if (aba === 'pedidos') { renderPedidos('G'); return; }
   carregarGestor();
 }
 
@@ -2085,6 +2142,7 @@ function mudarAbaG(aba) {
   sincronizarMenuMobile('G');
   if (aba === 'diretoria') renderDiretoria();
   if (aba === 'visitas') { definirPeriodoVisitasHoje(); renderListaGestor(); }
+  if (aba === 'pedidos') { renderPedidos('G'); if (!visitasGestor.length) carregarGestor().then(() => renderPedidos('G')); }
   if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') carregarPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
@@ -2092,6 +2150,129 @@ function mudarAbaG(aba) {
   if (aba === 'mapa') { resetarFiltrosMapa(); carregarMapa(); }
   if (aba === 'metas') renderMetasGestor();
   if (aba === 'promotores') carregarPromotoresAdmin();
+}
+
+let pedidosTelaCache = { P: [], G: [] };
+const PEDIDOS_SKUS = { GR: 'Gudang Red', GM: 'Gudang Menta', CM: 'Cretec Menta', CC: 'Cretec Cereja' };
+const PEDIDOS_CAIXAS = { GR: 48, GM: 48, CM: 50, CC: 50 };
+
+function valorPedido(v) {
+  const c = v.dados?.comercial || {};
+  const qty = c.pedidoPac || c.pedidoQty || {};
+  const preco = c.pedidoPreco || {};
+  return Object.keys(PEDIDOS_SKUS).reduce((total, sku) => total + (Number(qty[sku]) || 0) * (Number(preco[sku]) || 0), 0);
+}
+
+function pacotesPedido(v) {
+  const c = v.dados?.comercial || {};
+  const qty = c.pedidoPac || c.pedidoQty || {};
+  return Object.keys(PEDIDOS_SKUS).reduce((total, sku) => total + (Number(qty[sku]) || 0), 0);
+}
+
+function textoProdutosPedido(v) {
+  const c = v.dados?.comercial || {};
+  const qty = c.pedidoPac || c.pedidoQty || {};
+  return Object.keys(PEDIDOS_SKUS).filter(sku => Number(qty[sku]) > 0).map(sku => `${PEDIDOS_SKUS[sku]} (${sku}): ${qty[sku]} pac`).join('<br>') || 'Produtos não informados';
+}
+
+function coordenadorDoPromotor(nome) {
+  const p = promotoresAdmin.find(x => x.tipo === 'promotor' && x.nome === nome);
+  return p?.coordenador_usuario || '';
+}
+
+function nomeCoordenadorPedido(usuario) {
+  if (!usuario) return 'Sem coordenador';
+  const p = promotoresAdmin.find(x => x.usuario === usuario);
+  return p?.nome || usuario;
+}
+
+function preencherFiltrosPedidos() {
+  const promotores = [...new Set(visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').map(v => v.promotor).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  const promSel = document.getElementById('gFiltroPedidoPromotor');
+  const promotorAtual = promSel?.value || '';
+  if (promSel) promSel.innerHTML = '<option value="">Todos</option>' + promotores.map(p => `<option>${p}</option>`).join('');
+  if (promSel) promSel.value = promotores.includes(promotorAtual) ? promotorAtual : '';
+  const coordenadores = [...new Set(promotores.map(coordenadorDoPromotor).filter(Boolean))].sort();
+  const coordSel = document.getElementById('gFiltroPedidoCoordenador');
+  const coordenadorAtual = coordSel?.value || '';
+  if (coordSel) coordSel.innerHTML = '<option value="">Todos</option>' + coordenadores.map(c => `<option value="${c}">${nomeCoordenadorPedido(c)}</option>`).join('');
+  if (coordSel) coordSel.value = coordenadores.includes(coordenadorAtual) ? coordenadorAtual : '';
+}
+
+function aplicarFiltrosPedidos(lista, tipo) {
+  const prefixo = tipo === 'P' ? 'p' : 'g';
+  const valor = id => document.getElementById(prefixo + id)?.value || '';
+  const de = valor('FiltroPedidoDe');
+  const ate = valor('FiltroPedidoAte');
+  const status = valor('FiltroPedidoStatus');
+  const promotor = tipo === 'G' ? valor('FiltroPedidoPromotor') : '';
+  const coordenador = tipo === 'G' ? valor('FiltroPedidoCoordenador') : '';
+  const cliente = normalizarTexto(valor('FiltroPedidoCliente'));
+  const busca = normalizarTexto(valor('FiltroPedidoBusca'));
+  return lista.filter(v => {
+    const d = v.dados || {};
+    const c = d.comercial || {};
+    if (c.pedidoFeito !== 'Sim') return false;
+    const dia = String(v.criado_em || '').slice(0, 10);
+    if (de && dia < de) return false;
+    if (ate && dia > ate) return false;
+    if (status && statusDaVisita(v) !== status) return false;
+    if (promotor && v.promotor !== promotor) return false;
+    if (coordenador && coordenadorDoPromotor(v.promotor) !== coordenador) return false;
+    const texto = normalizarTexto([d.pdv?.nomeFantasia, d.pdv?.cidade, d.pdv?.uf, v.promotor, textoProdutosPedido(v)].join(' '));
+    if (cliente && !normalizarTexto(d.pdv?.nomeFantasia).includes(cliente)) return false;
+    if (busca && !texto.includes(busca)) return false;
+    return true;
+  });
+}
+
+function renderPedidos(tipo) {
+  const prefixo = tipo === 'P' ? 'p' : 'g';
+  const origem = tipo === 'P' ? visitasPromotor : visitasGestor;
+  if (tipo === 'G') preencherFiltrosPedidos();
+  const lista = aplicarFiltrosPedidos(origem, tipo).sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
+  pedidosTelaCache[tipo] = lista;
+  const resumo = document.getElementById(prefixo + 'PedidosResumo');
+  const tabela = document.getElementById(prefixo + 'PedidosLista');
+  if (!resumo || !tabela) return;
+  const confirmados = lista.filter(v => statusDaVisita(v) === 'Pedido confirmado').length;
+  const entregues = lista.filter(v => statusDaVisita(v) === 'Pedido entregue').length;
+  const pacotes = lista.reduce((sum, v) => sum + pacotesPedido(v), 0);
+  const valor = lista.reduce((sum, v) => sum + valorPedido(v), 0);
+  const dinheiro = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  resumo.innerHTML = `<div class="pedido-resumo-card"><strong>${lista.length}</strong><span>Pedidos</span></div><div class="pedido-resumo-card"><strong>${confirmados}</strong><span>Confirmados</span></div><div class="pedido-resumo-card"><strong>${entregues}</strong><span>Entregues</span></div><div class="pedido-resumo-card"><strong>${pacotes.toLocaleString('pt-BR')}</strong><span>Pacotes</span></div><div class="pedido-resumo-card"><strong>${dinheiro}</strong><span>Valor informado</span></div>`;
+  if (!lista.length) {
+    tabela.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div><p>Ajuste ou limpe os filtros.</p></div>';
+    return;
+  }
+  tabela.innerHTML = `<table class="pedidos-tabela"><thead><tr><th>Data</th><th>Cliente/PDV</th>${tipo === 'G' ? '<th>Promotor</th><th>Coordenador</th>' : ''}<th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th><th></th></tr></thead><tbody>${lista.map(v => {
+    const d = v.dados || {};
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+    const status = statusDaVisita(v);
+    const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
+    return `<tr><td>${data}</td><td><strong>${d.pdv?.nomeFantasia || 'PDV sem nome'}</strong><br><span class="pedido-produtos">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</span></td>${tipo === 'G' ? `<td>${v.promotor || '—'}</td><td>${nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor))}</td>` : ''}<td><span class="status-chip ${statusClass(status)}">${status}</span></td><td class="pedido-produtos">${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${valorPedido(v) ? valorPedido(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td><td><button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button></td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function limparFiltrosPedidos(tipo) {
+  const prefixo = tipo === 'P' ? 'p' : 'g';
+  ['FiltroPedidoDe','FiltroPedidoAte','FiltroPedidoStatus','FiltroPedidoPromotor','FiltroPedidoCoordenador','FiltroPedidoCliente','FiltroPedidoBusca'].forEach(sufixo => {
+    const el = document.getElementById(prefixo + sufixo);
+    if (el) el.value = '';
+  });
+  renderPedidos(tipo);
+}
+
+function exportarPedidosTela(tipo) {
+  const lista = pedidosTelaCache[tipo] || [];
+  if (!lista.length) return toast('Nenhum pedido nos filtros atuais');
+  const rows = [['Data', 'Cliente/PDV', 'Cidade', 'UF', 'Promotor', 'Coordenador', 'Status', 'Produtos', 'Pacotes', 'Valor']];
+  lista.forEach(v => {
+    const d = v.dados || {};
+    rows.push([new Date(v.criado_em).toLocaleDateString('pt-BR'), d.pdv?.nomeFantasia || '', d.pdv?.cidade || '', d.pdv?.uf || '', v.promotor || '', nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor)), statusDaVisita(v), textoProdutosPedido(v).replace(/<br>/g, ' | '), pacotesPedido(v), valorPedido(v).toFixed(2)]);
+  });
+  baixarCSV(`cleantabaco_pedidos_${new Date().toISOString().slice(0, 10)}.csv`, rows[0], rows.slice(1));
+  toast(`${lista.length} pedido(s) exportado(s)`);
 }
 
 // SECOES DO FORMULÁRIO
