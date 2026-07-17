@@ -6258,7 +6258,10 @@ window.onload = function() {
   if (jornadaNativaDisponivel()) {
     if (window.NativeGeoBridge?.requestPermissions) window.NativeGeoBridge.requestPermissions().catch(() => {});
     if (window.NativeCameraBridge?.checkPermissions) window.NativeCameraBridge.checkPermissions().then(s => {
-      if (s?.camera !== 'granted') window.NativeCameraBridge.requestPermissions().catch(() => {});
+      const falta = [];
+      if (s?.camera !== 'granted') falta.push('camera');
+      if (s?.photos !== 'granted') falta.push('photos');
+      if (falta.length) window.NativeCameraBridge.requestPermissions({ permissions: falta }).catch(() => {});
     }).catch(() => {});
   }
   const saved = localStorage.getItem('ct_user');
