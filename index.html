@@ -1727,6 +1727,7 @@ button:active { transform: translateY(1px); }
 <script src="performance.js"></script>
 <script src="geo-bridge.js"></script>
 <script src="jornada-bridge.js"></script>
+<script src="camera-bridge.js"></script>
 <script>
 const API = '';
 
@@ -2970,18 +2971,9 @@ async function processarImagemCapturada(dataUrl, origem, exifDataExterna = null)
   renderFotos();
 }
 
-let cameraBridgePromise = null;
 function garantirCameraBridgeCarregada() {
-  if (window.NativeCameraBridge) return Promise.resolve();
-  if (cameraBridgePromise) return cameraBridgePromise;
-  cameraBridgePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'camera-bridge.js';
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('camera-bridge.js indisponivel'));
-    document.head.appendChild(script);
-  });
-  return cameraBridgePromise;
+  if (!window.NativeCameraBridge) return Promise.reject(new Error('camera-bridge.js indisponivel'));
+  return Promise.resolve();
 }
 
 function exifDataOriginalCamera(exif) {
@@ -6229,8 +6221,11 @@ window.addEventListener('pagehide', salvarRascunhoVisita);
 
 // INIT
 window.onload = function() {
-  if (jornadaNativaDisponivel() && window.NativeGeoBridge?.requestPermissions) {
-    window.NativeGeoBridge.requestPermissions().catch(() => {});
+  if (jornadaNativaDisponivel()) {
+    if (window.NativeGeoBridge?.requestPermissions) window.NativeGeoBridge.requestPermissions().catch(() => {});
+    if (window.NativeCameraBridge?.checkPermissions) window.NativeCameraBridge.checkPermissions().then(s => {
+      if (s?.camera !== 'granted') window.NativeCameraBridge.requestPermissions().catch(() => {});
+    }).catch(() => {});
   }
   const saved = localStorage.getItem('ct_user');
   if (saved) {

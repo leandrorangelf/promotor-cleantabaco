@@ -14,7 +14,7 @@ $index = $index -replace "const API = '';", "const API = 'https://promotor-clean
 [System.IO.File]::WriteAllText($indexPath, $index, $utf8)
 
 # Copia bridges construidos de volta para a raiz (Vercel precisa servir esses arquivos)
-foreach ($file in @('geo-bridge.js', 'jornada-bridge.js')) {
+foreach ($file in @('geo-bridge.js', 'jornada-bridge.js', 'camera-bridge.js')) {
   $src = Join-Path $target $file
   if (Test-Path $src) {
     Copy-Item -LiteralPath $src -Destination (Join-Path $root $file) -Force
