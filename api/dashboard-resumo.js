@@ -91,10 +91,11 @@ export default async function handler(req, res) {
                    WHEN dados->'comercial'->>'pedidoFeito' = 'Sim' THEN 'Pedido confirmado'
                    ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
-          FROM visitas
-          WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
-            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
-            AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
+          FROM visitas v LEFT JOIN promotores p ON p.nome = v.promotor
+          WHERE v.criado_em >= ${limites.inicio}::timestamptz AND v.criado_em < ${limites.fim}::timestamptz
+            AND to_char(v.criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+            AND (${usaPromotores} = FALSE OR v.promotor = ANY(${promotores}))
+            AND (${filtros.coordenadores.length} = 0 OR p.coordenador_usuario = ANY(${filtros.coordenadores}))
         ), filtradas AS (
           SELECT * FROM base
           WHERE (${filtros.ufs.length} = 0 OR uf = ANY(${filtros.ufs}))
@@ -119,9 +120,11 @@ export default async function handler(req, res) {
             TRIM(COALESCE(dados->'pdv'->>'cidade','')) AS cidade,
             COALESCE(dados->'comercial'->>'statusPedido', CASE WHEN dados->'comercial'->>'pedidoFeito' = 'Sim' THEN 'Pedido confirmado' ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
-          FROM visitas WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
-            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
-            AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
+          FROM visitas v LEFT JOIN promotores p ON p.nome = v.promotor
+          WHERE v.criado_em >= ${limites.inicio}::timestamptz AND v.criado_em < ${limites.fim}::timestamptz
+            AND to_char(v.criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+            AND (${usaPromotores} = FALSE OR v.promotor = ANY(${promotores}))
+            AND (${filtros.coordenadores.length} = 0 OR p.coordenador_usuario = ANY(${filtros.coordenadores}))
         )
         SELECT uf, COUNT(*)::int AS visitas,
           COUNT(*) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue'))::int AS pedidos,
@@ -147,9 +150,11 @@ export default async function handler(req, res) {
             TRIM(COALESCE(dados->'pdv'->>'cidade','')) AS cidade,
             COALESCE(dados->'comercial'->>'statusPedido', CASE WHEN dados->'comercial'->>'pedidoFeito' = 'Sim' THEN 'Pedido confirmado' ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
-          FROM visitas WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
-            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
-            AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
+          FROM visitas v LEFT JOIN promotores p ON p.nome = v.promotor
+          WHERE v.criado_em >= ${limites.inicio}::timestamptz AND v.criado_em < ${limites.fim}::timestamptz
+            AND to_char(v.criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+            AND (${usaPromotores} = FALSE OR v.promotor = ANY(${promotores}))
+            AND (${filtros.coordenadores.length} = 0 OR p.coordenador_usuario = ANY(${filtros.coordenadores}))
         )
         SELECT promotor, COUNT(*)::int AS visitas,
           COUNT(*) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue'))::int AS pedidos,

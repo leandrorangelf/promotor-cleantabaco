@@ -1410,10 +1410,10 @@ button:active { transform: translateY(1px); }
       <div class="dashboard-kpis" id="dashboardKpis">
         <div class="dashboard-kpi"><div class="dashboard-kpi-icon" data-icon="visitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="dashboard-kpi-label">Visitas</div><div class="dashboard-kpi-value" id="dashboardVisitas">—</div></div></div>
         <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2 13h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg></div><div><div class="dashboard-kpi-label">Pedidos</div><div class="dashboard-kpi-value" id="dashboardPedidos">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Red</div><div class="dashboard-kpi-value" id="dashboardPacotesGR">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesGM">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesCM">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Cereja</div><div class="dashboard-kpi-value" id="dashboardPacotesCC">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Gudang Red</div><div class="dashboard-kpi-value" id="dashboardPacotesGR">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Gudang Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesGM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Cretec Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesCM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Cretec Cereja</div><div class="dashboard-kpi-value" id="dashboardPacotesCC">—</div></div></div>
       </div>
       <div class="dashboard-grid">
         <section class="card"><div class="card-title">Brasil no período</div><div id="gMapaBrasil"><div class="empty">Carregando mapa...</div></div><div id="gMapaLegenda"></div><div id="gMapaTip" style="display:none"></div></section>
@@ -1951,7 +1951,7 @@ function parametrosDashboard() {
 
 function aplicarFiltrosDashboard() {
   fecharFiltrosDashboard();
-  return carregarDashboardResumo();
+  return carregarDashboardResumo({ force: true });
 }
 
 function marcarDashboardAtualizando(ativo) {

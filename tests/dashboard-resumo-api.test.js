@@ -7,6 +7,8 @@ assert.ok(src.includes("import { autenticar } from './_auth.js'"));
 assert.ok(src.includes("sessao.tipo === 'promotor'"));
 assert.ok(src.includes("sessao.tipo === 'coordenador'"));
 assert.ok(src.includes('coordenador_usuario'));
+assert.ok((src.match(/p\.coordenador_usuario = ANY\(\$\{filtros\.coordenadores\}\)/g) || []).length >= 3,
+  'coordenador deve filtrar totais, estados e ranking');
 assert.ok(src.includes('pedidoPac'));
 assert.ok(src.includes('pedidoQty'));
 assert.ok(src.includes('statusPedido'));
