@@ -2252,6 +2252,12 @@ function definirPeriodoMesAtual() {
   document.getElementById('gFiltroAte').value = dataLocal(hoje);
 }
 
+function definirPeriodoVisitasGestorHoje() {
+  const hoje = dataLocal(new Date());
+  document.getElementById('gFiltroDe').value = hoje;
+  document.getElementById('gFiltroAte').value = hoje;
+}
+
 function definirPeriodoVisitasHoje() {
   const de = document.getElementById('vFiltroDe');
   const ate = document.getElementById('vFiltroAte');
@@ -2271,7 +2277,7 @@ function fazerLogin(nome, tipo, usuario='', token='') {
     document.getElementById('appGestor').style.display = 'block';
     document.getElementById('headerNomeG').textContent = nome;
     document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
-    definirPeriodoMesAtual();
+    definirPeriodoVisitasGestorHoje();
     if (tipo === 'diretoria') {
       document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelector('#appGestor .nav-btn[data-gestor-page="diretoria"]')?.classList.add('active');

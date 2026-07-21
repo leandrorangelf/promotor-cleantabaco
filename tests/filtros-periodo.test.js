@@ -2,6 +2,9 @@ const assert = require('assert');
 const fs = require('fs');
 
 const html = fs.readFileSync('index.html', 'utf8');
+assert.ok(html.includes('function definirPeriodoVisitasGestorHoje()'));
+assert.ok(html.includes("document.getElementById('gFiltroDe').value = hoje"));
+assert.ok(html.includes("document.getElementById('gFiltroAte').value = hoje"));
 
 assert.ok(html.includes('function definirPeriodoMesAtual()'), 'deve existir uma rotina para o periodo mensal padrao');
 assert.ok(/definirPeriodoMesAtual\(\);[\s\S]{0,500}carregarGestor\(\)/.test(html), 'o login gestor deve iniciar carregando o mes atual');
