@@ -35,6 +35,8 @@ assert.ok(!html.includes('await registrarValidacoesVisita(visitaSalvaId'), 'salv
 assert.ok(html.includes('function analisarFotoModal'), 'modal deve permitir analisar IA a foto atual');
 assert.ok(html.includes('function avancarParaProximaFotoPendente'), 'fila deve avancar para a proxima foto pendente');
 assert.ok(html.includes('function abrirFilaRevisao'), 'grade deve abrir o fluxo sequencial no modal');
+assert.ok(html.includes('async function garantirFotoGaleriaCarregada'), 'modal deve carregar foto vizinha sob demanda');
+assert.ok(html.includes('await garantirFotoGaleriaCarregada(novoIndex)'), 'navegacao deve aguardar a proxima foto');
 assert.ok(html.includes('const fila = filaRevisaoAtual()'), 'fila deve ser recalculada localmente apos revisao');
 assert.ok(html.includes('async function registrarRevisaoManual'), 'modal deve registrar aprovacao manual sem depender da IA');
 assert.ok(html.includes('galeriaVisiveis[i]?.foto || lista[i]'), 'modal deve usar a foto do item atual ao navegar');
