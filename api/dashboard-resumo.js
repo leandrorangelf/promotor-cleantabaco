@@ -11,6 +11,13 @@ function mesesValidos(valor) {
   return listaQuery(valor).filter(m => /^\d{4}-(0[1-9]|1[0-2])$/.test(m)).sort();
 }
 
+function limitesMeses(meses) {
+  const inicio = `${meses[0]}-01T00:00:00-03:00`;
+  const [ano, mes] = meses[meses.length - 1].split('-').map(Number);
+  const fim = new Date(Date.UTC(ano, mes, 1, 3)).toISOString();
+  return { inicio, fim };
+}
+
 function numeros(row = {}) {
   return Object.fromEntries(Object.entries(row).map(([chave, valor]) => [chave, typeof valor === 'string' && /^-?\d+(\.\d+)?$/.test(valor) ? Number(valor) : valor]));
 }
@@ -32,6 +39,7 @@ async function promotoresPermitidos(sql, sessao, coordenadores) {
 }
 
 export default async function handler(req, res) {
+  const inicioMs = Date.now();
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -45,6 +53,7 @@ export default async function handler(req, res) {
 
   const meses = mesesValidos(req.query.meses);
   if (!meses.length) return res.status(400).json({ erro: 'Informe ao menos um mes valido' });
+  const limites = limitesMeses(meses);
 
   const filtros = {
     promotores: listaQuery(req.query.promotores),
@@ -82,7 +91,8 @@ export default async function handler(req, res) {
                    ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
           FROM visitas
-          WHERE to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+          WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
+            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
             AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
         ), filtradas AS (
           SELECT * FROM base
@@ -107,7 +117,8 @@ export default async function handler(req, res) {
             TRIM(COALESCE(dados->'pdv'->>'cidade','')) AS cidade,
             COALESCE(dados->'comercial'->>'statusPedido', CASE WHEN dados->'comercial'->>'pedidoFeito' = 'Sim' THEN 'Pedido confirmado' ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
-          FROM visitas WHERE to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+          FROM visitas WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
+            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
             AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
         )
         SELECT uf, COUNT(*)::int AS visitas,
@@ -128,7 +139,8 @@ export default async function handler(req, res) {
             TRIM(COALESCE(dados->'pdv'->>'cidade','')) AS cidade,
             COALESCE(dados->'comercial'->>'statusPedido', CASE WHEN dados->'comercial'->>'pedidoFeito' = 'Sim' THEN 'Pedido confirmado' ELSE 'Sem negociação' END) AS statusPedido,
             COALESCE(dados->'comercial'->'pedidoPac', dados->'comercial'->'pedidoQty', '{}'::jsonb) AS quantidades
-          FROM visitas WHERE to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+          FROM visitas WHERE criado_em >= ${limites.inicio}::timestamptz AND criado_em < ${limites.fim}::timestamptz
+            AND to_char(criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
             AND (${usaPromotores} = FALSE OR promotor = ANY(${promotores}))
         )
         SELECT promotor, COUNT(*)::int AS visitas,
@@ -150,8 +162,9 @@ export default async function handler(req, res) {
           UPPER(TRIM(COALESCE(v.dados->'pdv'->>'uf',''))) AS uf,
           TRIM(COALESCE(v.dados->'pdv'->>'cidade','')) AS cidade
         FROM visitas v LEFT JOIN promotores p ON p.nome = v.promotor
-        WHERE to_char(v.criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
-          AND (${usaPromotores} = FALSE OR v.promotor = ANY(${promotores}))
+        WHERE v.criado_em >= ${limites.inicio}::timestamptz AND v.criado_em < ${limites.fim}::timestamptz
+          AND to_char(v.criado_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM') = ANY(${meses})
+          AND (${restringePermitidos} = FALSE OR v.promotor = ANY(${permitidos}))
       `
     ]);
 
@@ -164,11 +177,13 @@ export default async function handler(req, res) {
     });
     const unicos = chave => [...new Set(opcoesRows.map(row => row[chave]).filter(Boolean))].sort((a,b) => String(a).localeCompare(String(b), 'pt-BR'));
 
+    res.setHeader('Server-Timing', `dashboard;dur=${Date.now() - inicioMs}`);
     return res.status(200).json({
       periodo: { meses }, totais, estados: estadosRows.map(numeros), ranking,
       opcoes: { promotores: unicos('promotor'), coordenadores: unicos('coordenador_usuario'), ufs: unicos('uf'), cidades: unicos('cidade'), produtos: SKUS }
     });
   } catch (e) {
+    res.setHeader('Server-Timing', `dashboard;dur=${Date.now() - inicioMs}`);
     return res.status(500).json({ erro: e.message });
   }
 }
