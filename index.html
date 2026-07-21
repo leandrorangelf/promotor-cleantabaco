@@ -169,6 +169,36 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .pedido-produtos { color: var(--text-muted); line-height: 1.45; }
 .pedido-produtos strong { color: var(--text); }
 .pedido-somente-leitura { color: var(--text-muted); font-size: 12px; margin: 8px 0 14px; }
+.dashboard-filtros-legado, .dashboard-legado { display: none !important; }
+.dashboard-toolbar { background:#fff; border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:16px; }
+.dashboard-toolbar-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.dashboard-periodo { font-size:13px; color:var(--text-muted); font-weight:700; }
+.dashboard-filter-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.dashboard-filter { position:relative; }
+.dashboard-filter > button { width:100%; border:1px solid var(--border); background:#fff; border-radius:10px; padding:10px 12px; text-align:left; color:var(--text); font:inherit; cursor:pointer; }
+.dashboard-filter > button small { display:block; color:var(--text-muted); font-size:10px; font-weight:800; text-transform:uppercase; margin-bottom:2px; }
+.dashboard-filter-menu { display:none; position:absolute; z-index:80; top:calc(100% + 6px); left:0; right:0; min-width:220px; background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 35px rgba(30,22,72,.16); padding:10px; }
+.dashboard-filter.open .dashboard-filter-menu { display:block; }
+.dashboard-filter-search { width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 9px; margin-bottom:8px; }
+.dashboard-filter-options { max-height:210px; overflow:auto; display:flex; flex-direction:column; gap:3px; }
+.dashboard-filter-option { display:flex; align-items:center; gap:8px; padding:6px; border-radius:7px; font-size:12px; cursor:pointer; }
+.dashboard-filter-option:hover { background:var(--cream); }
+.dashboard-filter-actions { display:flex; gap:6px; border-top:1px solid var(--border); padding-top:8px; margin-top:8px; }
+.dashboard-filter-actions button { flex:1; border:0; border-radius:8px; padding:7px; font-size:11px; font-weight:800; cursor:pointer; }
+.dashboard-filter-actions .all { background:var(--purple-light); color:var(--purple); }
+.dashboard-filter-actions .clear { background:var(--cream); color:var(--text-muted); }
+.dashboard-apply { background:var(--purple); color:#fff; border:0; border-radius:10px; padding:10px 16px; font-weight:800; cursor:pointer; }
+.dashboard-updating { opacity:.65; pointer-events:none; }
+.dashboard-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.dashboard-kpi { background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; gap:12px; min-height:92px; }
+.dashboard-kpi-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:11px; background:var(--purple-light); color:var(--purple); flex:0 0 auto; }
+.dashboard-kpi-icon svg { width:21px; height:21px; }
+.dashboard-kpi-label { color:var(--text-muted); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+.dashboard-kpi-value { color:var(--text); font-size:26px; font-weight:900; line-height:1.1; margin-top:3px; }
+.dashboard-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); gap:14px; }
+.dashboard-sort { border:1px solid var(--border); border-radius:8px; padding:7px 9px; background:#fff; color:var(--text); }
+@media (max-width:899px) { .dashboard-filter-grid,.dashboard-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } .dashboard-grid { grid-template-columns:1fr; } }
+@media (max-width:520px) { .dashboard-filter-grid,.dashboard-kpis { grid-template-columns:1fr; } }
 @media (max-width: 899px) {
   .pedidos-page > .page-intro,
   .pedidos-page > .pedido-somente-leitura,
@@ -1329,7 +1359,21 @@ button:active { transform: translateY(1px); }
   <div class="page active" id="gPainel">
     <div class="page-intro"><h1>Visão geral</h1><p>Acompanhe a execução em campo e os principais indicadores.</p></div>
     <div class="gestor-wrap">
-      <div class="filtros">
+      <div class="dashboard-toolbar" id="dashboardToolbar">
+        <div class="dashboard-toolbar-head">
+          <div><div class="dashboard-periodo" id="dashboardPeriodo">Mês atual</div></div>
+          <button class="dashboard-apply" type="button" onclick="aplicarFiltrosDashboard()">Aplicar filtros</button>
+        </div>
+        <div class="dashboard-filter-grid">
+          <div class="dashboard-filter" data-dashboard-filter="meses"><button type="button" onclick="abrirFiltroDashboard('meses')"><small>Período</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+          <div class="dashboard-filter" data-dashboard-filter="promotores"><button type="button" onclick="abrirFiltroDashboard('promotores')"><small>Promotor</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+          <div class="dashboard-filter" data-dashboard-filter="coordenadores"><button type="button" onclick="abrirFiltroDashboard('coordenadores')"><small>Coordenador</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+          <div class="dashboard-filter" data-dashboard-filter="ufs"><button type="button" onclick="abrirFiltroDashboard('ufs')"><small>UF</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+          <div class="dashboard-filter" data-dashboard-filter="cidades"><button type="button" onclick="abrirFiltroDashboard('cidades')"><small>Cidade</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+          <div class="dashboard-filter" data-dashboard-filter="produtos"><button type="button" onclick="abrirFiltroDashboard('produtos')"><small>Produto</small><span data-filter-label>Todos</span></button><div class="dashboard-filter-menu"></div></div>
+        </div>
+      </div>
+      <div class="filtros dashboard-filtros-legado">
         <div class="filtro-row">
           <div class="filtro-group">
             <label>Promotor</label>
@@ -1363,10 +1407,26 @@ button:active { transform: translateY(1px); }
         </div>
       </div>
 
+      <div class="dashboard-kpis" id="dashboardKpis">
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon" data-icon="visitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="dashboard-kpi-label">Visitas</div><div class="dashboard-kpi-value" id="dashboardVisitas">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2 13h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg></div><div><div class="dashboard-kpi-label">Pedidos</div><div class="dashboard-kpi-value" id="dashboardPedidos">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Red</div><div class="dashboard-kpi-value" id="dashboardPacotesGR">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesGM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesCM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Cereja</div><div class="dashboard-kpi-value" id="dashboardPacotesCC">—</div></div></div>
+      </div>
+      <div class="dashboard-grid">
+        <section class="card"><div class="card-title">Brasil no período</div><div id="gMapaBrasil"><div class="empty">Carregando mapa...</div></div><div id="gMapaLegenda"></div><div id="gMapaTip" style="display:none"></div></section>
+        <section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="card-title">Estados</div><select class="dashboard-sort" id="dashboardEstadoOrdem" onchange="renderMapaBrasilResumo()"><option value="visitas">Mais visitas</option><option value="pedidos">Mais pedidos</option><option value="pacotes">Mais pacotes</option><option value="uf">UF A–Z</option></select></div><div id="gMapaEstados"><div class="empty">Sem dados</div></div></section>
+      </div>
+      <section class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="card-title">Ranking de promotores</div><select class="dashboard-sort" id="dashboardRankingOrdem" onchange="renderRankingDashboard()"><option value="visitas">Mais visitas</option><option value="pedidos">Mais pedidos</option><option value="pacotes">Mais pacotes</option><option value="GR">Gudang Red</option><option value="GM">Gudang Menta</option><option value="CM">Cretec Menta</option><option value="CC">Cretec Cereja</option></select></div><div id="gRanking"><div class="empty">Sem dados</div></div></section>
+
+      <div class="dashboard-legado">
+
       <div class="exec-summary">
         <div class="exec-panel primary">
           <div class="exec-title">Leitura do periodo</div>
-          <div class="exec-text" id="gResumoInteligente">Carregando leitura dos indicadores...</div>
+          <div class="exec-text" id="legacyGResumoInteligente">Carregando leitura dos indicadores...</div>
         </div>
         <div class="exec-panel">
           <div class="exec-title">Prioridades sugeridas</div>
@@ -1382,13 +1442,13 @@ button:active { transform: translateY(1px); }
         <div class="card-title">🗺️ Visitas por Estado</div>
         <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;">
           <div style="flex:1 1 320px;min-width:280px;position:relative;">
-            <div id="gMapaBrasil"><div class="empty">Sem dados</div></div>
-            <div id="gMapaTip" style="position:absolute;display:none;pointer-events:none;background:var(--navy,#101A31);color:#fff;padding:8px 11px;border-radius:8px;font-size:12px;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:20;white-space:nowrap;"></div>
-            <div id="gMapaLegenda" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;font-size:11px;color:var(--text-muted);"></div>
+            <div id="legacyGMapaBrasil"><div class="empty">Sem dados</div></div>
+            <div id="legacyGMapaTip" style="position:absolute;display:none;pointer-events:none;background:var(--navy,#101A31);color:#fff;padding:8px 11px;border-radius:8px;font-size:12px;line-height:1.45;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:20;white-space:nowrap;"></div>
+            <div id="legacyGMapaLegenda" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;font-size:11px;color:var(--text-muted);"></div>
           </div>
           <div style="flex:1 1 260px;min-width:240px;">
             <div style="font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-muted);margin-bottom:8px;">NÚMEROS POR ESTADO</div>
-            <div id="gMapaEstados"><div class="empty">Sem dados</div></div>
+            <div id="legacyGMapaEstados"><div class="empty">Sem dados</div></div>
           </div>
         </div>
       </div>
@@ -1396,13 +1456,13 @@ button:active { transform: translateY(1px); }
       <!-- PERFORMANCE POR PROMOTOR -->
       <div class="card" style="margin-bottom:14px;">
         <div class="card-title">📊 Performance por Promotor</div>
-        <div id="gRanking"><div class="empty">Sem dados</div></div>
+        <div id="legacyGRanking"><div class="empty">Sem dados</div></div>
       </div>
 
       <!-- EVOLUÇÃO SEMANAL -->
       <div class="card" style="margin-bottom:14px;">
         <div class="card-title">📈 Evolução Semanal de Visitas</div>
-        <div id="gEvolucao"><div class="empty">Sem dados</div></div>
+          <div id="legacyGEvolucao"><div class="empty">Sem dados</div></div>
       </div>
 
       <!-- PRESENÇA SKU + TIPO PDV -->
@@ -1420,7 +1480,7 @@ button:active { transform: translateY(1px); }
       <!-- RECEPTIVIDADE -->
       <div class="card" style="margin-bottom:14px;">
         <div class="card-title">🤝 Receptividade por Promotor</div>
-        <div id="gReceptividade"><div class="empty">Sem dados</div></div>
+          <div id="legacyGReceptividade"><div class="empty">Sem dados</div></div>
       </div>
 
       <!-- FREQUÊNCIA RECOMPRA -->
@@ -1451,6 +1511,8 @@ button:active { transform: translateY(1px); }
       <div class="card" style="margin-bottom:14px;">
         <div class="card-title">📅 PDVs Sem Visita nos Últimos 30 Dias</div>
         <div id="gSemVisita"><div class="empty">Sem dados</div></div>
+      </div>
+
       </div>
 
     </div>
@@ -1544,9 +1606,10 @@ button:active { transform: translateY(1px); }
         </div>
         <div id="galeriaResumo" class="foto-text" style="margin-top:12px;">Carregue a galeria para ver as fotos.</div>
         <div id="galeriaLista" style="margin-top:12px;"></div>
+        <button id="galeriaCarregarMais" class="btn-detalhes" type="button" onclick="carregarGaleria({ continuar: true })" style="display:none;margin:16px auto 0;">Carregar mais</button>
       </div>
       <div class="card" id="iaValidacaoCard" style="margin-top:16px;">
-        <div class="card-title">Teste rápido de foto</div>
+        <div class="card-title">Validação IA manual</div>
         <div class="foto-text">Área experimental: teste uma foto sem alterar visitas reais.</div>
         <input type="file" id="iaFotoInput" accept="image/*" onchange="prepararFotoIA(event)" style="display:none;">
         <button class="btn-filtrar" type="button" onclick="document.getElementById('iaFotoInput').click()" style="margin-top:12px;">Escolher foto</button>
@@ -1770,6 +1833,209 @@ let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let galeriaFotos = [];
 let galeriaVisiveis = [];
+let galeriaProximoCursor = '';
+let galeriaTemMais = false;
+let galeriaObservador = null;
+const dashboardFiltros = {
+  meses: new Set(), promotores: new Set(), coordenadores: new Set(),
+  ufs: new Set(), cidades: new Set(), produtos: new Set()
+};
+const dashboardFiltroOpcoes = {
+  meses: [], promotores: [], coordenadores: [], ufs: [], cidades: [],
+  produtos: [
+    { valor:'GR', label:'Gudang Red' }, { valor:'GM', label:'Gudang Menta' },
+    { valor:'CM', label:'Cretec Menta' }, { valor:'CC', label:'Cretec Cereja' }
+  ]
+};
+const dashboardResumoCache = new Map();
+let dashboardRequestId = 0;
+let dashboardAbortController = null;
+let dashboardResumoAtual = null;
+
+function mesDashboardAtual() {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+}
+
+function opcoesMesesDashboard() {
+  const opcoes = [];
+  const base = new Date();
+  base.setDate(1);
+  for (let i=0; i<24; i++) {
+    const data = new Date(base.getFullYear(), base.getMonth()-i, 1);
+    const valor = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}`;
+    opcoes.push({ valor, label:data.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}) });
+  }
+  return opcoes;
+}
+
+function mesesDashboardSelecionados() {
+  return [...dashboardFiltros.meses].sort();
+}
+
+function normalizarOpcaoDashboard(item) {
+  return typeof item === 'string' ? { valor:item, label:item } : item;
+}
+
+function atualizarLabelFiltroDashboard(nome) {
+  const box = document.querySelector(`[data-dashboard-filter="${nome}"]`);
+  const label = box?.querySelector('[data-filter-label]');
+  if (!label) return;
+  const selecionados = dashboardFiltros[nome];
+  if (!selecionados.size) label.textContent = 'Todos';
+  else if (selecionados.size === 1) {
+    const valor = [...selecionados][0];
+    const opcao = (dashboardFiltroOpcoes[nome] || []).map(normalizarOpcaoDashboard).find(item => item.valor === valor);
+    label.textContent = opcao?.label || valor;
+  } else label.textContent = `${selecionados.size} selecionados`;
+}
+
+function renderOpcoesFiltroDashboard(nome, busca = '') {
+  const box = document.querySelector(`[data-dashboard-filter="${nome}"]`);
+  const lista = box?.querySelector('.dashboard-filter-options');
+  if (!lista) return;
+  const termo = normalizarTexto(busca);
+  const opcoes = (dashboardFiltroOpcoes[nome] || []).map(normalizarOpcaoDashboard)
+    .filter(item => !termo || normalizarTexto(item.label).includes(termo));
+  lista.innerHTML = opcoes.map(item => `<label class="dashboard-filter-option"><input type="checkbox" value="${esc(item.valor)}" ${dashboardFiltros[nome].has(item.valor)?'checked':''} onchange="alternarOpcaoDashboard('${nome}','${esc(item.valor)}',this.checked)"><span>${esc(item.label)}</span></label>`).join('') || '<div class="empty">Nenhuma opção</div>';
+}
+
+function montarFiltroDashboard(nome) {
+  const box = document.querySelector(`[data-dashboard-filter="${nome}"]`);
+  const menu = box?.querySelector('.dashboard-filter-menu');
+  if (!menu) return;
+  menu.innerHTML = `<input class="dashboard-filter-search" type="search" placeholder="Buscar" oninput="renderOpcoesFiltroDashboard('${nome}',this.value)"><div class="dashboard-filter-options"></div><div class="dashboard-filter-actions"><button class="all" type="button" onclick="selecionarTudoDashboard('${nome}')">Selecionar tudo</button><button class="clear" type="button" onclick="limparFiltroDashboard('${nome}')">Limpar</button></div>`;
+  renderOpcoesFiltroDashboard(nome);
+}
+
+function abrirFiltroDashboard(nome) {
+  document.querySelectorAll('.dashboard-filter').forEach(el => el.classList.toggle('open', el.dataset.dashboardFilter === nome && !el.classList.contains('open')));
+  montarFiltroDashboard(nome);
+}
+
+function fecharFiltrosDashboard() {
+  document.querySelectorAll('.dashboard-filter.open').forEach(el => el.classList.remove('open'));
+}
+
+function alternarOpcaoDashboard(nome, valor, marcado) {
+  if (marcado) dashboardFiltros[nome].add(valor); else dashboardFiltros[nome].delete(valor);
+  atualizarLabelFiltroDashboard(nome);
+}
+
+function selecionarTudoDashboard(nome) {
+  dashboardFiltros[nome] = new Set((dashboardFiltroOpcoes[nome] || []).map(normalizarOpcaoDashboard).map(item => item.valor));
+  atualizarLabelFiltroDashboard(nome);
+  renderOpcoesFiltroDashboard(nome);
+}
+
+function limparFiltroDashboard(nome) {
+  dashboardFiltros[nome].clear();
+  if (nome === 'meses') dashboardFiltros.meses.add(mesDashboardAtual());
+  atualizarLabelFiltroDashboard(nome);
+  renderOpcoesFiltroDashboard(nome);
+}
+
+function inicializarFiltrosDashboard() {
+  dashboardFiltroOpcoes.meses = opcoesMesesDashboard();
+  if (!dashboardFiltros.meses.size) dashboardFiltros.meses.add(mesDashboardAtual());
+  Object.keys(dashboardFiltros).forEach(atualizarLabelFiltroDashboard);
+}
+
+function parametrosDashboard() {
+  const params = new URLSearchParams();
+  Object.entries(dashboardFiltros).forEach(([nome,valores]) => {
+    if (valores.size) params.set(nome, [...valores].sort().join(','));
+  });
+  return params;
+}
+
+function aplicarFiltrosDashboard() {
+  fecharFiltrosDashboard();
+  return carregarDashboardResumo();
+}
+
+function marcarDashboardAtualizando(ativo) {
+  document.getElementById('dashboardToolbar')?.classList.toggle('dashboard-updating', ativo);
+}
+
+async function carregarDashboardResumo({ force = false } = {}) {
+  inicializarFiltrosDashboard();
+  const params = parametrosDashboard();
+  const chave = params.toString();
+  const cached = dashboardResumoCache.get(chave);
+  if (!force && cached && Date.now() - cached.em < 30000) {
+    dashboardResumoAtual = cached.dados;
+    renderDashboardResumo();
+    return cached.dados;
+  }
+  const requestId = ++dashboardRequestId;
+  dashboardAbortController?.abort();
+  dashboardAbortController = new AbortController();
+  marcarDashboardAtualizando(true);
+  try {
+    const res = await apiFetch(`${API}/api/dashboard-resumo?${params}`, { headers:headers(), signal:dashboardAbortController.signal });
+    const dados = await res.json();
+    if (!res.ok) throw new Error(dados.erro || 'Erro ao carregar dashboard');
+    if (requestId !== dashboardRequestId) return null;
+    dashboardResumoCache.set(chave, { em:Date.now(), dados });
+    dashboardResumoAtual = dados;
+    atualizarOpcoesDashboard(dados.opcoes || {});
+    renderDashboardResumo();
+    return dados;
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Erro ao carregar dashboard: ' + e.message);
+    return null;
+  } finally {
+    if (requestId === dashboardRequestId) marcarDashboardAtualizando(false);
+  }
+}
+
+function atualizarOpcoesDashboard(opcoes) {
+  ['promotores','coordenadores','ufs','cidades'].forEach(nome => { dashboardFiltroOpcoes[nome] = opcoes[nome] || []; });
+  Object.keys(dashboardFiltros).forEach(atualizarLabelFiltroDashboard);
+}
+
+function ordenarDashboard(lista, campo, direcao = 'desc') {
+  const fator = direcao === 'asc' ? 1 : -1;
+  return [...lista].sort((a,b) => campo === 'uf' || campo === 'promotor'
+    ? fator * String(a[campo]||'').localeCompare(String(b[campo]||''),'pt-BR')
+    : fator * (Number(a[campo]||0)-Number(b[campo]||0)));
+}
+
+function renderDashboardResumo() {
+  if (!dashboardResumoAtual) return;
+  const totais = dashboardResumoAtual.totais || {};
+  [['dashboardVisitas','visitas'],['dashboardPedidos','pedidos'],['dashboardPacotesGR','GR'],['dashboardPacotesGM','GM'],['dashboardPacotesCM','CM'],['dashboardPacotesCC','CC']]
+    .forEach(([id,chave]) => { const el=document.getElementById(id); if(el) el.textContent=Number(totais[chave]||0).toLocaleString('pt-BR'); });
+  const meses = dashboardResumoAtual.periodo?.meses || mesesDashboardSelecionados();
+  const periodo = document.getElementById('dashboardPeriodo');
+  if (periodo) periodo.textContent = meses.map(m => new Date(m+'-01T12:00:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})).join(' + ');
+  renderMapaBrasilResumo();
+  renderRankingDashboard();
+}
+
+function renderMapaBrasilResumo() {
+  const cont = document.getElementById('gMapaBrasil');
+  const estados = dashboardResumoAtual?.estados || [];
+  if (!cont || typeof BR_MAP === 'undefined') return;
+  const porUf = Object.fromEntries(estados.map(item => [item.uf,item]));
+  const max = Math.max(...estados.map(item => Number(item.visitas||0)),1);
+  const paths = Object.entries(BR_MAP.paths).map(([uf,d]) => `<path d="${d}" fill="${_corEstado(Number(porUf[uf]?.visitas||0),max)}" stroke="#fff" stroke-width=".9"><title>${uf}: ${Number(porUf[uf]?.visitas||0)} visitas · ${Number(porUf[uf]?.pedidos||0)} pedidos · ${Number(porUf[uf]?.pacotes||0)} pacotes</title></path>`).join('');
+  const labels = Object.entries(BR_MAP.cent).filter(([uf]) => porUf[uf]?.visitas).map(([uf,[x,y]]) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="12" font-weight="800" fill="#1E1648">${porUf[uf].visitas}</text>`).join('');
+  cont.innerHTML = `<svg viewBox="0 0 ${BR_MAP.vw} ${BR_MAP.vh}" style="width:100%;max-height:430px">${paths}${labels}</svg>`;
+  const campo = document.getElementById('dashboardEstadoOrdem')?.value || 'visitas';
+  const lista = ordenarDashboard(estados,campo,campo==='uf'?'asc':'desc');
+  const box = document.getElementById('gMapaEstados');
+  if (box) box.innerHTML = lista.length ? `<table class="data-table"><thead><tr><th>UF</th><th>Visitas</th><th>Pedidos</th><th>Pacotes</th></tr></thead><tbody>${lista.map(item=>`<tr><td><strong>${esc(item.uf)}</strong></td><td>${item.visitas}</td><td>${item.pedidos}</td><td>${Number(item.pacotes||0).toLocaleString('pt-BR')}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Sem dados no período</div>';
+}
+
+function renderRankingDashboard() {
+  const campo = document.getElementById('dashboardRankingOrdem')?.value || 'visitas';
+  const lista = ordenarDashboard(dashboardResumoAtual?.ranking || [],campo,'desc');
+  const box = document.getElementById('gRanking');
+  if (!box) return;
+  box.innerHTML = lista.length ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Promotor</th><th>Visitas</th><th>Pedidos</th><th>Pacotes</th><th>GR</th><th>GM</th><th>CM</th><th>CC</th></tr></thead><tbody>${lista.map(item=>`<tr><td><strong>${esc(item.promotor)}</strong></td><td>${item.visitas}</td><td>${item.pedidos}</td><td>${Number(item.pacotes||0).toLocaleString('pt-BR')}</td><td>${item.GR||0}</td><td>${item.GM||0}</td><td>${item.CM||0}</td><td>${item.CC||0}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Sem promotores no período</div>';
+}
 let filaRevisaoIndex = -1;
 let acompanhamentoVisitaId = null;
 let visitasPerformance = [];
@@ -2018,7 +2284,9 @@ function fazerLogin(nome, tipo, usuario='', token='') {
       document.getElementById('gPainel').classList.add('active');
     }
     if (tipo === 'gestor') carregarPromotoresAdmin();
-    carregarMetas().then(() => carregarGestor());
+    inicializarFiltrosDashboard();
+    if (tipo === 'diretoria') carregarGestor();
+    else Promise.all([carregarMetas(), carregarDashboardResumo()]);
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;
@@ -2216,6 +2484,7 @@ function mudarAbaP(aba) {
 // NAVEGAÇÃO GESTOR
 function atualizarAbaGestorAtual() {
   const aba = document.querySelector('#appGestor .nav-btn.active')?.dataset.gestorPage || 'painel';
+  if (aba === 'painel') { carregarDashboardResumo({ force:true }); return; }
   if (aba === 'mapa') { carregarMapa(); return; }
   if (aba === 'galeria') { carregarGaleria(); return; }
   if (aba === 'performance') { carregarPerformance(); return; }
@@ -2231,8 +2500,9 @@ function mudarAbaG(aba) {
   document.getElementById('g' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('active');
   document.querySelector(`#appGestor .nav-btn[data-gestor-page="${aba}"]`)?.classList.add('active');
   sincronizarMenuMobile('G');
-  if (aba === 'diretoria') renderDiretoria();
-  if (aba === 'visitas') { definirPeriodoVisitasHoje(); renderListaGestor(); }
+  if (aba === 'painel') carregarDashboardResumo();
+  if (aba === 'diretoria') { if (!visitasGestor.length) carregarGestor(); else renderDiretoria(); }
+  if (aba === 'visitas') { definirPeriodoVisitasHoje(); if (!visitasGestor.length) carregarGestor(); else renderListaGestor(); }
   if (aba === 'pedidos') { renderPedidos('G'); if (!visitasGestor.length) carregarGestor().then(() => renderPedidos('G')); }
   if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') carregarPerformance();
@@ -2905,8 +3175,10 @@ async function calcularHashFoto(dataUrl) {
 async function criarFotoComMetadados(dataUrl, origem, exifData = null) {
   const agora = new Date();
   const divergenteHoras = exifData ? Math.abs(agora - exifData) / 3600000 : 0;
+  const miniatura = await compactarDataUrlImagem(dataUrl, 320, 0.55);
   return {
     imagem: dataUrl,
+    miniatura,
     origem,
     capturadaEm: agora.toISOString(),
     enviadaEm: '',
@@ -3172,31 +3444,8 @@ function prepararFotoIA(event) {
 }
 
 async function analisarFotoIA() {
-  const input = document.getElementById('iaFotoInput');
   const resultado = document.getElementById('iaResultado');
-  const file = iaFotoSelecionada || input?.files?.[0];
-  if (!file) {
-    if (resultado) resultado.textContent = 'Selecione uma foto para analisar.';
-    return;
-  }
-
-  try {
-    if (resultado) resultado.textContent = 'Analisando foto...';
-    const foto = await compactarDataUrlImagem(await lerArquivoComoDataUrl(file));
-    const res = await apiFetch(`${API}/api/avaliar-foto`, {
-      method: 'POST',
-      headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao avaliar foto');
-    if (resultado) {
-      const status = data.aprovado ? 'Aprovado' : (data.score >= 50 ? 'Revisao manual' : 'Reprovado');
-      resultado.innerHTML = `<strong>${status}</strong><br>Score: ${data.score}<br>Modo: ${data.modo}<br>Materiais: ${(data.materiais_detectados || []).join(', ') || 'nenhum'}<br>${data.motivo || ''}`;
-    }
-  } catch (e) {
-    if (resultado) resultado.textContent = 'Nao foi possivel analisar a foto: ' + e.message;
-  }
+  if (resultado) resultado.textContent = 'Para manter custo e auditoria, analise fotos salvas diretamente na galeria.';
 }
 
 function esc(valor) {
@@ -3283,19 +3532,27 @@ function abrirFotoMinhasFotos(i) {
   abrirFoto(i, 'modal');
 }
 
-async function carregarGaleria() {
+async function carregarGaleria({ continuar = false } = {}) {
   const selPromotor = document.getElementById('galFiltroPromotor');
   const dia = document.getElementById('galFiltroDia')?.value || '';
+  const status = document.getElementById('galFiltroStatus')?.value || '';
   const resumo = document.getElementById('galeriaResumo');
-  if (resumo) resumo.textContent = 'Carregando galeria...';
+  const botaoMais = document.getElementById('galeriaCarregarMais');
+  if (!continuar) galeriaProximoCursor = '';
+  if (resumo) resumo.textContent = continuar ? 'Carregando mais fotos...' : 'Carregando galeria...';
+  if (botaoMais) botaoMais.disabled = true;
   try {
-    let url = `${API}/api/validacoes-fotos?`;
+    let url = `${API}/api/validacoes-fotos?limite=24&`;
     if (selPromotor?.value) url += `promotor=${encodeURIComponent(selPromotor.value)}&`;
     if (dia) url += `de=${dia}T00:00:00Z&ate=${dia}T23:59:59Z&`;
+    if (status) url += `status=${encodeURIComponent(status)}&`;
+    if (continuar && galeriaProximoCursor) url += `cursor=${encodeURIComponent(galeriaProximoCursor)}&`;
     const res = await apiFetch(url, { headers: headers() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao carregar galeria');
-    galeriaFotos = data.validacoes || [];
+    galeriaFotos = continuar ? [...galeriaFotos, ...(data.validacoes || [])] : (data.validacoes || []);
+    galeriaProximoCursor = data.proximo_cursor || '';
+    galeriaTemMais = Boolean(data.tem_mais && galeriaProximoCursor);
     if (selPromotor && selPromotor.options.length <= 1) {
       [...new Set(galeriaFotos.map(v => v.promotor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(nome => {
         const opt = document.createElement('option');
@@ -3305,21 +3562,54 @@ async function carregarGaleria() {
       });
     }
   } catch(e) {
-    galeriaFotos = [];
+    if (!continuar) galeriaFotos = [];
     if (resumo) resumo.textContent = 'Não foi possível carregar a galeria: ' + e.message;
   }
+  if (botaoMais) botaoMais.disabled = false;
   renderGaleria();
+}
+
+async function carregarImagemGaleria(img) {
+  if (!img || img.dataset.carregando === '1' || img.src) return;
+  img.dataset.carregando = '1';
+  try {
+    const res = await apiFetch(`${API}${img.dataset.url}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok || !data.foto) throw new Error(data.erro || 'Miniatura indisponivel');
+    const item = galeriaFotos.find(v => String(v.visita_id) === img.dataset.visita && String(v.foto_index) === img.dataset.index);
+    if (item) item.foto = data.foto;
+    img.src = fotoSrc(data.foto);
+  } catch(e) {
+    img.alt = 'Foto indisponível';
+  }
+}
+
+function observarImagensGaleria() {
+  if (galeriaObservador) galeriaObservador.disconnect();
+  const imagens = [...document.querySelectorAll('img[data-galeria-url]')];
+  if (!('IntersectionObserver' in window)) {
+    imagens.forEach(carregarImagemGaleria);
+    return;
+  }
+  galeriaObservador = new IntersectionObserver(entradas => entradas.forEach(entrada => {
+    if (!entrada.isIntersecting) return;
+    galeriaObservador.unobserve(entrada.target);
+    carregarImagemGaleria(entrada.target);
+  }), { rootMargin: '240px' });
+  imagens.forEach(img => galeriaObservador.observe(img));
 }
 
 function renderGaleria() {
   const lista = document.getElementById('galeriaLista');
   const resumo = document.getElementById('galeriaResumo');
+  const botaoMais = document.getElementById('galeriaCarregarMais');
   if (!lista || !resumo) return;
   const statusFiltro = document.getElementById('galFiltroStatus')?.value || '';
   galeriaVisiveis = statusFiltro
     ? galeriaFotos.filter(item => statusValidacaoIA(item) === statusFiltro)
     : galeriaFotos.filter(item => statusValidacaoIA(item) !== 'aprovado');
   resumo.textContent = `${galeriaVisiveis.length} foto(s) para revisar (${galeriaFotos.length} no total, ${galeriaFotos.filter(i => statusValidacaoIA(i) === 'aprovado').length} ja aprovadas).`;
+  if (botaoMais) botaoMais.style.display = galeriaTemMais ? 'block' : 'none';
   if (!galeriaVisiveis.length) {
     lista.innerHTML = '<div class="empty">Nenhuma foto encontrada para os filtros.</div>';
     return;
@@ -3327,9 +3617,10 @@ function renderGaleria() {
   lista.innerHTML = `<div class="rel-fotos" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">${galeriaVisiveis.map((item,i) => {
     const data = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : '—';
     const src = fotoSrc(item.foto);
-    const miolo = src
+    const urlFoto = item.miniatura_url || item.foto_url;
+    const miolo = (src || urlFoto)
       ? `<button class="rel-foto-btn" type="button" onclick="abrirFotoGaleria(${i})" style="width:100%;border-radius:0;">
-          <img src="${src}" alt="Foto ${item.foto_index + 1} de ${item.cliente_nome || 'PDV'}">
+          <img ${src ? `src="${src}"` : ''} ${urlFoto ? `data-galeria-url="${esc(urlFoto)}" data-visita="${esc(item.visita_id)}" data-index="${Number(item.foto_index)}"` : ''} loading="lazy" alt="${esc(`Foto ${Number(item.foto_index) + 1} de ${item.cliente_nome || 'PDV'}`)}">
         </button>`
       : `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#EEF1F7;color:var(--text-muted);font-size:12px;text-align:center;padding:8px;">Foto indisponível</div>`;
     const status = statusValidacaoIA(item);
@@ -3340,8 +3631,8 @@ function renderGaleria() {
             <button class="btn-detalhes" type="button" onclick="revisarFotoGaleria(${item.id}, 'reprovado')">Reprovar</button>
           </div>`
         : `<div style="display:flex;gap:6px;margin-top:8px;">
-            <button class="btn-detalhes" type="button" onclick="abrirFilaRevisao('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
-            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManual('${item.visita_id}', ${item.foto_index}, '${(item.cliente_nome || '').replace(/'/g, "\\'")}')">Confirmar tabela</button>
+            <button class="btn-detalhes" type="button" onclick="abrirFotoGaleria(${i})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManualPorIndice(${i})">Confirmar tabela</button>
           </div>`)
       : '';
     return `
@@ -3359,9 +3650,22 @@ function renderGaleria() {
       </div>
     `;
   }).join('')}</div>`;
+  observarImagensGaleria();
 }
 
-function abrirFotoGaleria(i) {
+async function abrirFotoGaleria(i) {
+  const item = galeriaVisiveis[i];
+  if (item && !item.foto && item.foto_url) {
+    try {
+      const res = await apiFetch(`${API}${item.foto_url}`, { headers: headers() });
+      const data = await res.json();
+      if (!res.ok || !data.foto) throw new Error(data.erro || 'Foto indisponivel');
+      item.foto = data.foto;
+    } catch (e) {
+      toast('Não foi possível abrir a foto: ' + e.message);
+      return;
+    }
+  }
   fotosModalAtual = galeriaVisiveis.map(v => v.foto);
   abrirFoto(i, tipoAtual === 'gestor' ? 'revisao' : 'modal');
 }
@@ -3374,37 +3678,27 @@ function abrirFilaRevisao(visitaId, fotoIndex) {
   }
 }
 
+function confirmarTabelaManualPorIndice(i) {
+  const item = galeriaVisiveis[i];
+  if (!item) return;
+  confirmarTabelaManual(item.visita_id, item.foto_index, item.cliente_nome || '');
+}
+
 async function analisarFotoGaleria(botao, visitaId, fotoIndex) {
   const item = galeriaFotos.find(v => String(v.visita_id) === String(visitaId) && Number(v.foto_index) === Number(fotoIndex));
   if (!item) return;
   const textoOriginal = botao?.textContent;
   if (botao) { botao.disabled = true; botao.textContent = 'Analisando...'; }
   try {
-    const foto = fotoMeta(item.foto);
-    const fotoIA = await prepararFotoParaIA(item.foto);
-    let hash = item.imagem_hash || foto.imagemHash || '';
-    if (!hash) hash = await calcularHashFoto(foto.imagem || fotoIA);
-    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+    item.status_ia = 'analisando';
+    renderGaleria();
+    const res = await apiFetch(`${API}/api/analisar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: fotoIA })
-    });
-    const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
-
-    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
-      method: 'POST',
-      headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        visita_id: visitaId,
-        foto_index: fotoIndex,
-        imagem_hash: hash,
-        cliente_nome: item.cliente_nome || '',
-        resultado
-      })
+      body: JSON.stringify({ visita_id: visitaId, foto_index: fotoIndex })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao analisar foto');
     atualizarValidacaoLocal(data.validacao);
     renderGaleria();
     toast('Foto analisada');
@@ -3433,21 +3727,13 @@ async function analisarFotoModal() {
   botao.disabled = true;
   botao.textContent = 'Analisando...';
   try {
-    const foto = fotoMeta(item.foto);
-    const fotoIA = await prepararFotoParaIA(item.foto);
-    const hash = item.imagem_hash || foto.imagemHash || await calcularHashFoto(foto.imagem || fotoIA);
-    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+    item.status_ia = 'analisando';
+    const res = await apiFetch(`${API}/api/analisar-foto`, {
       method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: fotoIA })
-    });
-    const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
-    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
-      method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visita_id: item.visita_id, foto_index: item.foto_index, imagem_hash: hash, cliente_nome: item.cliente_nome || '', resultado })
+      body: JSON.stringify({ visita_id: item.visita_id, foto_index: item.foto_index })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao analisar foto');
     atualizarValidacaoLocal(data.validacao);
     if (statusValidacaoIA(data.validacao) === 'revisao_manual') {
       renderGaleria();
@@ -3651,44 +3937,6 @@ async function baixarFotoAtual() {
   }
 }
 
-async function registrarValidacoesVisita(visitaId, dados, fotosDaVisita) {
-  if (!visitaId || !dados?.presenca?.tabelaVisivel || !fotosDaVisita?.length) return;
-  const clienteNome = dados?.pdv?.nomeFantasia || '';
-  for (let i = 0; i < fotosDaVisita.length; i++) {
-    const foto = fotoMeta(fotosDaVisita[i]);
-    let resultado = { status_ia: 'pendente', score: 0, motivo: 'Validacao IA pendente ou indisponivel.' };
-    try {
-      const fotoIA = await prepararFotoParaIA(fotosDaVisita[i]);
-      const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
-        method: 'POST',
-        headers: { ...headers(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foto: fotoIA })
-      });
-      const dataIA = await resIA.json();
-      if (resIA.ok) resultado = dataIA;
-      else resultado = { status_ia: 'revisao_manual', score: 50, motivo: dataIA.detalhe || dataIA.erro || 'IA nao concluiu a analise.' };
-    } catch(e) {
-      resultado = { status_ia: 'revisao_manual', score: 50, motivo: 'IA indisponivel: ' + e.message };
-    }
-
-    try {
-      await apiFetch(`${API}/api/validacoes-fotos`, {
-        method: 'POST',
-        headers: { ...headers(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          visita_id: visitaId,
-          foto_index: i,
-          imagem_hash: foto.imagemHash || '',
-          cliente_nome: clienteNome,
-          resultado
-        })
-      });
-    } catch(e) {
-      // A visita ja foi salva; a galeria marcara como pendente se o registro falhar.
-    }
-  }
-}
-
 async function salvarProspeccao() {
   const nome = document.getElementById('prospeccaoNome').value.trim();
   if (!nome) { toast('⚠️ Informe o nome do local'); return; }
@@ -3828,8 +4076,6 @@ async function salvarVisita() {
     }
     const data = await res.json();
     if (data.ok) {
-      const visitaSalvaId = editandoId || data.id;
-      await registrarValidacoesVisita(visitaSalvaId, dados, fotosParaSalvar);
       if (editandoId) {
         toast('Visita atualizada');
       } else if (dados.localizacao?.ok) {
@@ -4463,7 +4709,6 @@ async function carregarGestor() {
     const dataClientes = await resClientes.json();
     clientesGestor = dataClientes.clientes || [];
 
-    renderPainel();
     renderDiretoria();
     renderListaGestor();
   } catch(e) {

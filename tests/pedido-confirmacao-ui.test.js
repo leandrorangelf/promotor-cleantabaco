@@ -1,7 +1,7 @@
 const fs = require('fs');
 const assert = require('assert');
 
-const html = fs.readFileSync('index.html', 'utf8');
+const html = fs.readFileSync('index.html', 'utf8').replace(/\r\n/g, '\n');
 const inicio = html.indexOf('function atualizarStatusPedido(status)');
 const fim = html.indexOf('\n}\n', inicio) + 2;
 assert.ok(inicio >= 0 && fim > inicio, 'função de atualização do pedido deve existir');

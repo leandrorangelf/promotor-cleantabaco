@@ -12,7 +12,7 @@ assert.ok(html.includes('id="iaFotoStatus"'), 'deve mostrar status da foto selec
 assert.ok(html.includes('id="iaFotoPreview"'), 'deve mostrar preview da foto selecionada');
 assert.ok(html.includes('function analisarFotoIA'), 'deve ter funcao analisarFotoIA');
 assert.ok(html.includes('function prepararFotoIA'), 'deve ter funcao prepararFotoIA');
-assert.ok(html.includes('/api/avaliar-foto'), 'deve chamar a rota isolada de avaliacao');
+assert.ok(!html.includes('apiFetch(`${API}/api/avaliar-foto`'), 'frontend nao deve chamar a rota nao auditada');
 assert.ok(html.includes('id="iaResultado"'), 'deve ter container para resultado');
 assert.ok(!html.includes('GEMINI_API_KEY'), 'frontend nao deve expor GEMINI_API_KEY');
 

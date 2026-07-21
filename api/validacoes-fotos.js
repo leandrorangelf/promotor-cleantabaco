@@ -1,8 +1,12 @@
 import { neon } from '@neondatabase/serverless';
 import { autenticar } from './_auth.js';
 
-async function garantirTabela(sql) {
-  await sql`
+let tabelaPronta;
+
+export async function garantirTabela(sql) {
+  if (tabelaPronta) return tabelaPronta;
+  tabelaPronta = (async () => {
+    await sql`
     CREATE TABLE IF NOT EXISTS validacoes_fotos (
       id SERIAL PRIMARY KEY,
       visita_id TEXT NOT NULL,
@@ -18,15 +22,29 @@ async function garantirTabela(sql) {
       revisado_por TEXT DEFAULT '',
       revisado_em TIMESTAMPTZ,
       possivel_reuso BOOLEAN NOT NULL DEFAULT FALSE,
+      modelo_ia TEXT DEFAULT '',
+      input_tokens INTEGER DEFAULT 0,
+      output_tokens INTEGER DEFAULT 0,
+      custo_usd_estimado NUMERIC DEFAULT 0,
+      erro_ia TEXT DEFAULT '',
       criado_em TIMESTAMPTZ DEFAULT NOW(),
       atualizado_em TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(visita_id, foto_index)
     )
-  `;
+    `;
+    await sql`ALTER TABLE validacoes_fotos
+      ALTER COLUMN visita_id TYPE TEXT,
+      ADD COLUMN IF NOT EXISTS modelo_ia TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS input_tokens INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS output_tokens INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS custo_usd_estimado NUMERIC DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS erro_ia TEXT DEFAULT ''`;
+  })();
   try {
-    await sql`ALTER TABLE validacoes_fotos ALTER COLUMN visita_id TYPE TEXT`;
-  } catch (e) {
-    // Coluna ja e TEXT ou tabela recem-criada — nao bloqueia o handler
+    return await tabelaPronta;
+  } catch (erro) {
+    tabelaPronta = null;
+    throw erro;
   }
 }
 
@@ -43,14 +61,32 @@ function normalizarFoto(foto) {
   try { return JSON.parse(foto); } catch(e) { return { imagem: foto, origem: 'legado' }; }
 }
 
+function codificarCursor(item) {
+  if (!item) return '';
+  return Buffer.from(JSON.stringify({ criado_em: item.criado_em, visita_id: String(item.visita_id), foto_index: Number(item.foto_index) })).toString('base64url');
+}
+
+function decodificarCursor(valor = '') {
+  if (!valor) return null;
+  try {
+    const cursor = JSON.parse(Buffer.from(String(valor), 'base64url').toString('utf8'));
+    if (!cursor.criado_em || cursor.visita_id == null || !Number.isInteger(Number(cursor.foto_index))) throw new Error('incompleto');
+    return cursor;
+  } catch {
+    throw new Error('Cursor invalido');
+  }
+}
+
 function statusIa(resultado = {}) {
   if (resultado.aprovado === true || resultado.status_ia === 'aprovado') return 'aprovado';
   if (resultado.status_ia === 'reprovado') return 'reprovado';
   return 'revisao_manual';
 }
 
-async function validarAcessoVisita(sql, sessao, visitaId) {
-  const rows = await sql`SELECT id, promotor, dados FROM visitas WHERE id = ${visitaId} LIMIT 1`;
+export async function validarAcessoVisita(sql, sessao, visitaId, incluirFotos = false) {
+  const rows = incluirFotos
+    ? await sql`SELECT id, promotor, dados, fotos FROM visitas WHERE id = ${visitaId} LIMIT 1`
+    : await sql`SELECT id, promotor, dados FROM visitas WHERE id = ${visitaId} LIMIT 1`;
   if (!rows.length) return null;
   const visita = rows[0];
   if (sessao.tipo === 'promotor' && visita.promotor !== sessao.nome) return null;
@@ -77,91 +113,70 @@ export default async function handler(req, res) {
 
   try {
     const sql = neon(process.env.DATABASE_URL);
-    await garantirTabela(sql);
-
     if (req.method === 'GET') {
-      let { promotor, status = '', de = '', ate = '', limite = '80' } = req.query;
-      const limiteFotos = Math.max(20, Math.min(120, Number(limite) || 80));
+      let { promotor, status = '', de = '', ate = '', limite = '24', cursor: cursorRaw = '' } = req.query;
+      const limiteFotos = Math.max(1, Math.min(48, Number(limite) || 24));
+      const cursor = decodificarCursor(cursorRaw);
       if (sessao.tipo === 'promotor') promotor = sessao.nome;
 
-      let promotoresPermitidos = null;
+      let promotoresPermitidos = [];
+      let restringePromotores = false;
       if (sessao.tipo === 'coordenador') {
         const rowsPromotores = await sql`
           SELECT nome FROM promotores
           WHERE ativo = TRUE AND tipo = 'promotor' AND coordenador_usuario = ${sessao.usuario}
         `;
         promotoresPermitidos = rowsPromotores.map(p => p.nome);
+        restringePromotores = true;
         if (promotor && !promotoresPermitidos.includes(promotor)) {
           return res.status(403).json({ erro: 'Sem permissao para ver validacoes deste promotor' });
         }
       }
-
-      let visitas;
-      if (promotoresPermitidos && !promotor && de && ate) {
-        visitas = promotoresPermitidos.length
-          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`
-          : [];
-      } else if (promotoresPermitidos && !promotor) {
-        visitas = promotoresPermitidos.length
-          ? await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ANY(${promotoresPermitidos}) AND jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 200`
-          : [];
-      } else if (promotor && de && ate) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 200`;
-      } else if (promotor) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE promotor = ${promotor} AND jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 200`;
-      } else if (de && ate) {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 AND criado_em >= ${de}::timestamptz AND criado_em <= ${ate}::timestamptz ORDER BY criado_em DESC LIMIT 300`;
-      } else {
-        visitas = await sql`SELECT id, promotor, dados, criado_em, fotos FROM visitas WHERE jsonb_array_length(to_jsonb(fotos)) > 0 ORDER BY criado_em DESC LIMIT 300`;
+      if (promotor) {
+        promotoresPermitidos = [promotor];
+        restringePromotores = true;
+      }
+      if (restringePromotores && !promotoresPermitidos.length) {
+        return res.status(200).json({ validacoes: [], proximo_cursor: '', tem_mais: false });
       }
 
-      const ids = visitas.map(v => v.id).filter(Boolean);
-      const validacoes = ids.length
-        ? await sql`SELECT * FROM validacoes_fotos WHERE visita_id = ANY(${ids})`
-        : [];
-      const porChave = new Map(validacoes.map(v => [`${v.visita_id}:${v.foto_index}`, v]));
-      const hashCount = {};
-      validacoes.forEach(v => {
-        if (v.imagem_hash) hashCount[v.imagem_hash] = (hashCount[v.imagem_hash] || 0) + 1;
-      });
+      const rows = await sql`
+        SELECT vf.id, v.id AS visita_id, v.promotor,
+          COALESCE(v.dados->'pdv'->>'nomeFantasia', vf.cliente_nome, '') AS cliente_nome,
+          v.criado_em, (foto.ord - 1)::int AS foto_index,
+          COALESCE(vf.imagem_hash, CASE WHEN jsonb_typeof(foto.valor) = 'object' THEN foto.valor->>'imagemHash' ELSE '' END, '') AS imagem_hash,
+          COALESCE(CASE WHEN jsonb_typeof(foto.valor) = 'object' THEN foto.valor->>'origem' END, 'legado') AS origem,
+          COALESCE(CASE WHEN jsonb_typeof(foto.valor) = 'object' THEN foto.valor->>'capturadaEm' END, '') AS "capturadaEm",
+          COALESCE(CASE WHEN jsonb_typeof(foto.valor) = 'object' THEN foto.valor->>'enviadaEm' END, '') AS "enviadaEm",
+          COALESCE(vf.status_ia, 'pendente') AS status_ia, COALESCE(vf.score, 0) AS score,
+          COALESCE(vf.motivo, '') AS motivo, COALESCE(vf.materiais_detectados, '[]'::jsonb) AS materiais_detectados,
+          COALESCE(vf.status_manual, '') AS status_manual, COALESCE(vf.revisado_por, '') AS revisado_por,
+          vf.revisado_em, COALESCE(vf.possivel_reuso, FALSE) AS possivel_reuso
+        FROM visitas v
+        CROSS JOIN LATERAL jsonb_array_elements(to_jsonb(v.fotos)) WITH ORDINALITY AS foto(valor, ord)
+        LEFT JOIN validacoes_fotos vf ON vf.visita_id = v.id::text AND vf.foto_index = (foto.ord - 1)::int
+        WHERE (${restringePromotores} = FALSE OR v.promotor = ANY(${promotoresPermitidos}))
+          AND (${de || null}::timestamptz IS NULL OR v.criado_em >= ${de || null}::timestamptz)
+          AND (${ate || null}::timestamptz IS NULL OR v.criado_em <= ${ate || null}::timestamptz)
+          AND (${status} = '' OR COALESCE(NULLIF(vf.status_manual,''), NULLIF(vf.status_ia,''), 'pendente') = ${status})
+          AND (${cursor?.criado_em || null}::timestamptz IS NULL OR
+            (v.criado_em, v.id::text, (foto.ord - 1)::int) < (${cursor?.criado_em || null}::timestamptz, ${cursor?.visita_id || ''}, ${Number(cursor?.foto_index || 0)}))
+        ORDER BY v.criado_em DESC, v.id::text DESC, foto.ord DESC
+        LIMIT ${limiteFotos + 1}
+      `;
 
-      const itens = [];
-      visitas.forEach(visita => {
-        if (itens.length >= limiteFotos) return;
-        const dados = normalizarDados(visita.dados);
-        const fotos = Array.isArray(visita.fotos) ? visita.fotos : [];
-        fotos.forEach((fotoRaw, index) => {
-          if (itens.length >= limiteFotos) return;
-          const foto = normalizarFoto(fotoRaw);
-          const validacao = porChave.get(`${visita.id}:${index}`) || {};
-          const itemStatus = validacao.status_manual || validacao.status_ia || 'pendente';
-          if (status && itemStatus !== status) return;
-          const hash = validacao.imagem_hash || foto?.imagemHash || '';
-          itens.push({
-            id: validacao.id || null,
-            visita_id: visita.id,
-            promotor: visita.promotor,
-            cliente_nome: dados?.pdv?.nomeFantasia || validacao.cliente_nome || '',
-            criado_em: visita.criado_em,
-            foto_index: index,
-            foto,
-            imagem_hash: hash,
-            origem: foto?.origem || 'legado',
-            capturadaEm: foto?.capturadaEm || '',
-            enviadaEm: foto?.enviadaEm || '',
-            status_ia: validacao.status_ia || 'pendente',
-            score: Number(validacao.score || 0),
-            motivo: validacao.motivo || '',
-            materiais_detectados: validacao.materiais_detectados || [],
-            status_manual: validacao.status_manual || '',
-            revisado_por: validacao.revisado_por || '',
-            revisado_em: validacao.revisado_em || null,
-            possivel_reuso: Boolean(validacao.possivel_reuso || (hash && hashCount[hash] > 1))
-          });
-        });
+      const temMais = rows.length > limiteFotos;
+      const pagina = rows.slice(0, limiteFotos).map(row => ({
+        ...row,
+        score: Number(row.score || 0),
+        miniatura_url: `/api/foto?id=${encodeURIComponent(row.visita_id)}&index=${row.foto_index}&variant=thumb`,
+        foto_url: `/api/foto?id=${encodeURIComponent(row.visita_id)}&index=${row.foto_index}&variant=full`
+      }));
+      return res.status(200).json({
+        validacoes: pagina,
+        proximo_cursor: temMais ? codificarCursor(pagina[pagina.length - 1]) : '',
+        tem_mais: temMais
       });
-
-      return res.status(200).json({ validacoes: itens });
     }
 
     if (req.method === 'POST') {
