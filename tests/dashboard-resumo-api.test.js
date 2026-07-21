@@ -9,7 +9,8 @@ assert.ok(src.includes("sessao.tipo === 'coordenador'"));
 assert.ok(src.includes('coordenador_usuario'));
 assert.ok((src.match(/EXISTS \(SELECT 1 FROM promotores p/g) || []).length >= 3,
   'coordenador deve filtrar totais, estados e ranking');
-assert.ok(!src.includes('LEFT JOIN promotores p ON p.nome = v.promotor'), 'filtro nao deve duplicar visitas por nomes repetidos');
+assert.strictEqual((src.match(/LEFT JOIN promotores p ON p\.nome = v\.promotor/g) || []).length, 1,
+  'LEFT JOIN deve existir somente na consulta DISTINCT de opcoes');
 assert.ok(src.includes('pedidoPac'));
 assert.ok(src.includes('pedidoQty'));
 assert.ok(src.includes('statusPedido'));
