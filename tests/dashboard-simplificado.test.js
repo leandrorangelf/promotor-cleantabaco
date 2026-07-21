@@ -7,6 +7,11 @@ const html = fs.readFileSync('index.html', 'utf8');
 });
 assert.ok(html.includes('function mesesDashboardSelecionados'));
 assert.ok(html.includes('function aplicarFiltrosDashboard'));
+assert.ok(html.includes('carregarDashboardResumo({ force: true })'), 'Aplicar filtros deve ignorar cache anterior');
+assert.ok(html.includes("cache: force ? 'no-store' : 'default'"), 'force deve ignorar tambem o cache HTTP');
+['Pacotes — Gudang Red','Pacotes — Gudang Menta','Pacotes — Cretec Menta','Pacotes — Cretec Cereja'].forEach(rotulo => {
+  assert.ok(html.includes(rotulo), `${rotulo} ausente`);
+});
 assert.ok(html.includes('Selecionar tudo'));
 assert.ok(html.includes('dashboard-filter-search'));
 ['dashboardVisitas','dashboardPedidos','dashboardPacotesGR','dashboardPacotesGM','dashboardPacotesCM','dashboardPacotesCC','gMapaBrasil','gRanking'].forEach(id => {

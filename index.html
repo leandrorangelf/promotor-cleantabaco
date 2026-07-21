@@ -1327,7 +1327,6 @@ button:active { transform: translateY(1px); }
   <div class="mobile-menu-backdrop" id="mobileMenuBackdropG" onclick="alternarMenuMobile('G', false)"></div>
   <aside class="mobile-menu-drawer" id="mobileMenuDrawerG" aria-label="Menu do gestor">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
-    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria'); alternarMenuMobile('G', false)">Diretoria</button>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos'); alternarMenuMobile('G', false)">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
@@ -1341,7 +1340,6 @@ button:active { transform: translateY(1px); }
   </aside>
   <div class="nav">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
-    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos')">Pedidos</button>
@@ -1410,10 +1408,10 @@ button:active { transform: translateY(1px); }
       <div class="dashboard-kpis" id="dashboardKpis">
         <div class="dashboard-kpi"><div class="dashboard-kpi-icon" data-icon="visitas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="dashboard-kpi-label">Visitas</div><div class="dashboard-kpi-value" id="dashboardVisitas">—</div></div></div>
         <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2 13h10l2-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg></div><div><div class="dashboard-kpi-label">Pedidos</div><div class="dashboard-kpi-value" id="dashboardPedidos">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Red</div><div class="dashboard-kpi-value" id="dashboardPacotesGR">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Gudang Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesGM">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesCM">—</div></div></div>
-        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Cretec Cereja</div><div class="dashboard-kpi-value" id="dashboardPacotesCC">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Gudang Red</div><div class="dashboard-kpi-value" id="dashboardPacotesGR">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Gudang Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesGM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Cretec Menta</div><div class="dashboard-kpi-value" id="dashboardPacotesCM">—</div></div></div>
+        <div class="dashboard-kpi"><div class="dashboard-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div><div><div class="dashboard-kpi-label">Pacotes — Cretec Cereja</div><div class="dashboard-kpi-value" id="dashboardPacotesCC">—</div></div></div>
       </div>
       <div class="dashboard-grid">
         <section class="card"><div class="card-title">Brasil no período</div><div id="gMapaBrasil"><div class="empty">Carregando mapa...</div></div><div id="gMapaLegenda"></div><div id="gMapaTip" style="display:none"></div></section>
@@ -1621,7 +1619,7 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
 
-  <div class="page" id="gDiretoria">
+  <div hidden aria-hidden="true">
     <div class="page-intro"><h1>Diretoria</h1><p>Resumo executivo de vendas, cobertura, equipe e riscos comerciais.</p></div>
     <div class="gestor-wrap">
       <div class="director-hero">
@@ -1951,7 +1949,7 @@ function parametrosDashboard() {
 
 function aplicarFiltrosDashboard() {
   fecharFiltrosDashboard();
-  return carregarDashboardResumo();
+  return carregarDashboardResumo({ force: true });
 }
 
 function marcarDashboardAtualizando(ativo) {
@@ -1973,7 +1971,7 @@ async function carregarDashboardResumo({ force = false } = {}) {
   dashboardAbortController = new AbortController();
   marcarDashboardAtualizando(true);
   try {
-    const res = await apiFetch(`${API}/api/dashboard-resumo?${params}`, { headers:headers(), signal:dashboardAbortController.signal });
+    const res = await apiFetch(`${API}/api/dashboard-resumo?${params}`, { headers:headers(), signal:dashboardAbortController.signal, cache: force ? 'no-store' : 'default' });
     const dados = await res.json();
     if (!res.ok) throw new Error(dados.erro || 'Erro ao carregar dashboard');
     if (requestId !== dashboardRequestId) return null;
@@ -2252,6 +2250,12 @@ function definirPeriodoMesAtual() {
   document.getElementById('gFiltroAte').value = dataLocal(hoje);
 }
 
+function definirPeriodoVisitasGestorHoje() {
+  const hoje = dataLocal(new Date());
+  document.getElementById('gFiltroDe').value = hoje;
+  document.getElementById('gFiltroAte').value = hoje;
+}
+
 function definirPeriodoVisitasHoje() {
   const de = document.getElementById('vFiltroDe');
   const ate = document.getElementById('vFiltroAte');
@@ -2271,22 +2275,14 @@ function fazerLogin(nome, tipo, usuario='', token='') {
     document.getElementById('appGestor').style.display = 'block';
     document.getElementById('headerNomeG').textContent = nome;
     document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
-    definirPeriodoMesAtual();
-    if (tipo === 'diretoria') {
-      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('#appGestor .nav-btn[data-gestor-page="diretoria"]')?.classList.add('active');
-      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
-      document.getElementById('gDiretoria').classList.add('active');
-    } else {
-      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('#appGestor .nav-btn[data-gestor-page="painel"]')?.classList.add('active');
-      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
-      document.getElementById('gPainel').classList.add('active');
-    }
+    definirPeriodoVisitasGestorHoje();
+    document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#appGestor .nav-btn[data-gestor-page="painel"]')?.classList.add('active');
+    document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
+    document.getElementById('gPainel').classList.add('active');
     if (tipo === 'gestor') carregarPromotoresAdmin();
     inicializarFiltrosDashboard();
-    if (tipo === 'diretoria') carregarGestor();
-    else Promise.all([carregarMetas(), carregarDashboardResumo()]);
+    Promise.all([carregarMetas(), carregarDashboardResumo()]);
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;
@@ -4695,8 +4691,8 @@ async function carregarGestor() {
 
   let url = `${API}/api/listar?`;
   if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
-  if (de) url += `de=${de}T00:00:00Z&`;
-  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  if (de) url += `de=${de}T00:00:00-03:00&`;
+  if (ate) url += `ate=${ate}T23:59:59-03:00&`;
 
   try {
     const res = await apiFetch(url, { headers: headers() });
@@ -4949,8 +4945,8 @@ async function carregarMapa() {
   const ate = document.getElementById('mapaFiltroAte').value;
   let url = `${API}/api/listar?`;
   if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
-  if (de) url += `de=${de}T00:00:00Z&`;
-  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  if (de) url += `de=${de}T00:00:00-03:00&`;
+  if (ate) url += `ate=${ate}T23:59:59-03:00&`;
   try {
     const res = await apiFetch(url, { headers: headers() });
     const data = await res.json();
@@ -5075,6 +5071,14 @@ async function limparFiltrosMapa() {
   await aplicarFiltrosMapa();
 }
 
+function agruparPontosMapaPorDia(pontos) {
+  return pontos.reduce((grupos, visita) => {
+    const dia = new Date(visita.criado_em).toLocaleDateString('sv-SE');
+    (grupos[dia] ||= []).push(visita);
+    return grupos;
+  }, {});
+}
+
 function renderMapa() {
   const pontos = visitasMapa
     .filter(v => v.dados?.localizacao?.ok
@@ -5100,7 +5104,7 @@ function renderMapa() {
 
   mapaCamadaPontos.clearLayers();
 
-  const promotorFiltrado = document.getElementById('gFiltroPromotor').value;
+  const promotorFiltrado = document.getElementById('mapaFiltroPromotor').value;
   const latlngs = pontos.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
 
   pontos.forEach((v, i) => {
@@ -5120,8 +5124,11 @@ function renderMapa() {
       .addTo(mapaCamadaPontos);
   });
 
-  if (promotorFiltrado && latlngs.length > 1) {
-    L.polyline(latlngs, { color: '#1E1648', weight: 3, opacity: 0.6 }).addTo(mapaCamadaPontos);
+  if (promotorFiltrado) {
+    Object.values(agruparPontosMapaPorDia(pontos)).forEach(grupo => {
+      const linha = grupo.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
+      if (linha.length > 1) L.polyline(linha, { color: '#1E1648', weight: 3, opacity: 0.6 }).addTo(mapaCamadaPontos);
+    });
   }
 
   mapaLeaflet.fitBounds(latlngs, { padding: [30, 30] });
