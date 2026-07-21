@@ -1971,7 +1971,7 @@ async function carregarDashboardResumo({ force = false } = {}) {
   dashboardAbortController = new AbortController();
   marcarDashboardAtualizando(true);
   try {
-    const res = await apiFetch(`${API}/api/dashboard-resumo?${params}`, { headers:headers(), signal:dashboardAbortController.signal });
+    const res = await apiFetch(`${API}/api/dashboard-resumo?${params}`, { headers:headers(), signal:dashboardAbortController.signal, cache: force ? 'no-store' : 'default' });
     const dados = await res.json();
     if (!res.ok) throw new Error(dados.erro || 'Erro ao carregar dashboard');
     if (requestId !== dashboardRequestId) return null;
@@ -4691,8 +4691,8 @@ async function carregarGestor() {
 
   let url = `${API}/api/listar?`;
   if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
-  if (de) url += `de=${de}T00:00:00Z&`;
-  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  if (de) url += `de=${de}T00:00:00-03:00&`;
+  if (ate) url += `ate=${ate}T23:59:59-03:00&`;
 
   try {
     const res = await apiFetch(url, { headers: headers() });
@@ -4945,8 +4945,8 @@ async function carregarMapa() {
   const ate = document.getElementById('mapaFiltroAte').value;
   let url = `${API}/api/listar?`;
   if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
-  if (de) url += `de=${de}T00:00:00Z&`;
-  if (ate) url += `ate=${ate}T23:59:59Z&`;
+  if (de) url += `de=${de}T00:00:00-03:00&`;
+  if (ate) url += `ate=${ate}T23:59:59-03:00&`;
   try {
     const res = await apiFetch(url, { headers: headers() });
     const data = await res.json();
