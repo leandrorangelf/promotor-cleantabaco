@@ -2,6 +2,9 @@ const assert = require('assert');
 const fs = require('fs');
 
 const html = fs.readFileSync('index.html', 'utf8');
+assert.ok(html.includes("document.getElementById('mapaFiltroPromotor').value"));
+assert.ok(html.includes('function agruparPontosMapaPorDia'));
+assert.ok(html.includes("toLocaleDateString('sv-SE')"));
 
 assert.ok(html.includes('leaflet@1.9.4/dist/leaflet.css'), 'deve carregar o CSS do Leaflet');
 assert.ok(html.includes('leaflet@1.9.4/dist/leaflet.js'), 'deve carregar o JS do Leaflet');

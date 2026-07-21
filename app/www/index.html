@@ -5081,6 +5081,14 @@ async function limparFiltrosMapa() {
   await aplicarFiltrosMapa();
 }
 
+function agruparPontosMapaPorDia(pontos) {
+  return pontos.reduce((grupos, visita) => {
+    const dia = new Date(visita.criado_em).toLocaleDateString('sv-SE');
+    (grupos[dia] ||= []).push(visita);
+    return grupos;
+  }, {});
+}
+
 function renderMapa() {
   const pontos = visitasMapa
     .filter(v => v.dados?.localizacao?.ok
@@ -5106,7 +5114,7 @@ function renderMapa() {
 
   mapaCamadaPontos.clearLayers();
 
-  const promotorFiltrado = document.getElementById('gFiltroPromotor').value;
+  const promotorFiltrado = document.getElementById('mapaFiltroPromotor').value;
   const latlngs = pontos.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
 
   pontos.forEach((v, i) => {
@@ -5126,8 +5134,11 @@ function renderMapa() {
       .addTo(mapaCamadaPontos);
   });
 
-  if (promotorFiltrado && latlngs.length > 1) {
-    L.polyline(latlngs, { color: '#1E1648', weight: 3, opacity: 0.6 }).addTo(mapaCamadaPontos);
+  if (promotorFiltrado) {
+    Object.values(agruparPontosMapaPorDia(pontos)).forEach(grupo => {
+      const linha = grupo.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
+      if (linha.length > 1) L.polyline(linha, { color: '#1E1648', weight: 3, opacity: 0.6 }).addTo(mapaCamadaPontos);
+    });
   }
 
   mapaLeaflet.fitBounds(latlngs, { padding: [30, 30] });
