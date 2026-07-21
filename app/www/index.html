@@ -1327,7 +1327,6 @@ button:active { transform: translateY(1px); }
   <div class="mobile-menu-backdrop" id="mobileMenuBackdropG" onclick="alternarMenuMobile('G', false)"></div>
   <aside class="mobile-menu-drawer" id="mobileMenuDrawerG" aria-label="Menu do gestor">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
-    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria'); alternarMenuMobile('G', false)">Diretoria</button>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos'); alternarMenuMobile('G', false)">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
@@ -1341,7 +1340,6 @@ button:active { transform: translateY(1px); }
   </aside>
   <div class="nav">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
-    <button class="nav-btn" data-gestor-page="diretoria" onclick="mudarAbaG('diretoria')">Diretoria</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos')">Pedidos</button>
@@ -1621,7 +1619,7 @@ button:active { transform: translateY(1px); }
     </div>
   </div>
 
-  <div class="page" id="gDiretoria">
+  <div hidden aria-hidden="true">
     <div class="page-intro"><h1>Diretoria</h1><p>Resumo executivo de vendas, cobertura, equipe e riscos comerciais.</p></div>
     <div class="gestor-wrap">
       <div class="director-hero">
@@ -2278,21 +2276,13 @@ function fazerLogin(nome, tipo, usuario='', token='') {
     document.getElementById('headerNomeG').textContent = nome;
     document.querySelectorAll('.only-gestor').forEach(el => el.style.display = tipo === 'gestor' ? '' : 'none');
     definirPeriodoVisitasGestorHoje();
-    if (tipo === 'diretoria') {
-      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('#appGestor .nav-btn[data-gestor-page="diretoria"]')?.classList.add('active');
-      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
-      document.getElementById('gDiretoria').classList.add('active');
-    } else {
-      document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('#appGestor .nav-btn[data-gestor-page="painel"]')?.classList.add('active');
-      document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
-      document.getElementById('gPainel').classList.add('active');
-    }
+    document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#appGestor .nav-btn[data-gestor-page="painel"]')?.classList.add('active');
+    document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
+    document.getElementById('gPainel').classList.add('active');
     if (tipo === 'gestor') carregarPromotoresAdmin();
     inicializarFiltrosDashboard();
-    if (tipo === 'diretoria') carregarGestor();
-    else Promise.all([carregarMetas(), carregarDashboardResumo()]);
+    Promise.all([carregarMetas(), carregarDashboardResumo()]);
   } else {
     document.getElementById('appPromotor').style.display = 'block';
     document.getElementById('headerNomeP').textContent = nome;

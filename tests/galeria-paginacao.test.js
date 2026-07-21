@@ -14,5 +14,6 @@ assert.ok(src.includes('miniatura_url'));
 assert.ok(src.includes('foto_url'));
 assert.ok(foto.includes('req.query.index'));
 assert.ok(foto.includes("variant === 'thumb'"));
+assert.ok(foto.includes('fotoOriginal?.miniatura || fotoOriginal?.imagem'), 'foto antiga deve usar imagem original como fallback lazy');
 assert.ok(foto.includes("'Cache-Control', 'private"));
 console.log('galeria-paginacao.test.js passou');
