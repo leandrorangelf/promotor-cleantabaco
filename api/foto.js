@@ -46,9 +46,12 @@ export default async function handler(req, res) {
       }
       const fotoOriginal = fotos[index];
       const variante = variant === 'thumb' ? 'thumb' : 'full';
-      const foto = variante === 'thumb' && fotoOriginal?.miniatura
-        ? { ...fotoOriginal, imagem: fotoOriginal.miniatura }
+      const foto = variante === 'thumb'
+        ? (fotoOriginal?.miniatura ? { ...fotoOriginal, imagem: fotoOriginal.miniatura } : null)
         : fotoOriginal;
+      if (variante === 'thumb' && !foto) {
+        return res.status(200).json({ foto: null, variante, miniatura_indisponivel: true });
+      }
       return res.status(200).json({ foto, variante });
     }
     return res.status(200).json({ fotos });

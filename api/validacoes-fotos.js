@@ -113,8 +113,6 @@ export default async function handler(req, res) {
 
   try {
     const sql = neon(process.env.DATABASE_URL);
-    await garantirTabela(sql);
-
     if (req.method === 'GET') {
       let { promotor, status = '', de = '', ate = '', limite = '24', cursor: cursorRaw = '' } = req.query;
       const limiteFotos = Math.max(1, Math.min(48, Number(limite) || 24));

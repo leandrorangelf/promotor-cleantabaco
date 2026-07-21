@@ -3575,7 +3575,7 @@ async function carregarImagemGaleria(img) {
   try {
     const res = await apiFetch(`${API}${img.dataset.url}`, { headers: headers() });
     const data = await res.json();
-    if (!res.ok || !data.foto) throw new Error(data.erro || 'Foto indisponivel');
+    if (!res.ok || !data.foto) throw new Error(data.erro || 'Miniatura indisponivel');
     const item = galeriaFotos.find(v => String(v.visita_id) === img.dataset.visita && String(v.foto_index) === img.dataset.index);
     if (item) item.foto = data.foto;
     img.src = fotoSrc(data.foto);
@@ -3620,7 +3620,7 @@ function renderGaleria() {
     const urlFoto = item.miniatura_url || item.foto_url;
     const miolo = (src || urlFoto)
       ? `<button class="rel-foto-btn" type="button" onclick="abrirFotoGaleria(${i})" style="width:100%;border-radius:0;">
-          <img ${src ? `src="${src}"` : ''} ${urlFoto ? `data-galeria-url="${urlFoto}" data-visita="${item.visita_id}" data-index="${item.foto_index}"` : ''} loading="lazy" alt="Foto ${item.foto_index + 1} de ${item.cliente_nome || 'PDV'}">
+          <img ${src ? `src="${src}"` : ''} ${urlFoto ? `data-galeria-url="${esc(urlFoto)}" data-visita="${esc(item.visita_id)}" data-index="${Number(item.foto_index)}"` : ''} loading="lazy" alt="${esc(`Foto ${Number(item.foto_index) + 1} de ${item.cliente_nome || 'PDV'}`)}">
         </button>`
       : `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#EEF1F7;color:var(--text-muted);font-size:12px;text-align:center;padding:8px;">Foto indisponível</div>`;
     const status = statusValidacaoIA(item);
@@ -3653,7 +3653,19 @@ function renderGaleria() {
   observarImagensGaleria();
 }
 
-function abrirFotoGaleria(i) {
+async function abrirFotoGaleria(i) {
+  const item = galeriaVisiveis[i];
+  if (item && !item.foto && item.foto_url) {
+    try {
+      const res = await apiFetch(`${API}${item.foto_url}`, { headers: headers() });
+      const data = await res.json();
+      if (!res.ok || !data.foto) throw new Error(data.erro || 'Foto indisponivel');
+      item.foto = data.foto;
+    } catch (e) {
+      toast('Não foi possível abrir a foto: ' + e.message);
+      return;
+    }
+  }
   fotosModalAtual = galeriaVisiveis.map(v => v.foto);
   abrirFoto(i, tipoAtual === 'gestor' ? 'revisao' : 'modal');
 }

@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { autenticar } from './_auth.js';
 import { avaliarFotoConfigurada } from './avaliar-foto.js';
-import { garantirTabela, validarAcessoVisita } from './validacoes-fotos.js';
+import { validarAcessoVisita } from './validacoes-fotos.js';
 
 function normalizarFoto(foto) {
   if (typeof foto !== 'string') return foto || {};
@@ -36,7 +36,6 @@ export default async function handler(req, res) {
 
   const sql = neon(process.env.DATABASE_URL);
   try {
-    await garantirTabela(sql);
     const visita = await validarAcessoVisita(sql, sessao, visita_id, true);
     if (!visita) return res.status(403).json({ erro: 'Sem permissao para analisar esta foto' });
     const fotos = Array.isArray(visita.fotos) ? visita.fotos : [];
