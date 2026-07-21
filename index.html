@@ -3566,7 +3566,7 @@ async function carregarGaleria({ continuar = false } = {}) {
 }
 
 async function carregarImagemGaleria(img) {
-  if (!img || img.dataset.carregando === '1' || img.src) return;
+  if (!img || img.dataset.carregando === '1' || img.hasAttribute('src')) return;
   img.dataset.carregando = '1';
   try {
     const res = await apiFetch(`${API}${img.dataset.url}`, { headers: headers() });
@@ -3713,12 +3713,12 @@ function filaRevisaoAtual() {
   return galeriaVisiveis.filter(item => !['aprovado', 'reprovado'].includes(statusValidacaoIA(item)));
 }
 
-function avancarParaProximaFotoPendente() {
+async function avancarParaProximaFotoPendente() {
   renderGaleria();
   const fila = filaRevisaoAtual();
   const proximo = fila.length ? galeriaVisiveis.indexOf(fila[0]) : -1;
   if (proximo < 0) { fecharFoto(); return; }
-  abrirFoto(proximo, 'revisao');
+  await abrirFotoGaleria(proximo);
 }
 
 async function analisarFotoModal() {
@@ -3742,7 +3742,7 @@ async function analisarFotoModal() {
       toast('Foto analisada: precisa de revisao');
     } else {
       toast('Foto analisada');
-      avancarParaProximaFotoPendente();
+      await avancarParaProximaFotoPendente();
     }
   } catch(e) {
     toast('Nao foi possivel analisar: ' + e.message);
@@ -3839,7 +3839,7 @@ async function revisarFotoGaleria(id, statusManual, emFila = false) {
     if (!res.ok) throw new Error(data.erro || 'Erro ao revisar foto');
     atualizarValidacaoLocal(data.validacao);
     toast(statusManual === 'aprovado' ? 'Foto aprovada' : 'Foto reprovada');
-    if (emFila) avancarParaProximaFotoPendente();
+    if (emFila) await avancarParaProximaFotoPendente();
     else renderGaleria();
     return true;
   } catch(e) {
@@ -3855,7 +3855,7 @@ async function revisarFotoModal(statusManual) {
     const validacao = await registrarRevisaoManual(item, statusManual);
     atualizarValidacaoLocal(validacao);
     toast(statusManual === 'aprovado' ? 'Foto aprovada' : 'Foto reprovada');
-    avancarParaProximaFotoPendente();
+    await avancarParaProximaFotoPendente();
   } catch(e) {
     toast('Nao foi possivel revisar: ' + e.message);
   }
