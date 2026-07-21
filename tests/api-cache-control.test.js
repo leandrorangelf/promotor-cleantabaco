@@ -4,7 +4,6 @@ const fs = require('fs');
 [
   'api/listar.js',
   'api/clientes.js',
-  'api/foto.js',
   'api/validacoes-fotos.js'
 ].forEach(file => {
   const src = fs.readFileSync(file, 'utf8');
@@ -14,5 +13,8 @@ const fs = require('fs');
     `${file} deve desativar cache HTTP para dados dinamicos`
   );
 });
+
+const foto = fs.readFileSync('api/foto.js', 'utf8');
+assert.ok(foto.includes("res.setHeader('Cache-Control', 'private, max-age=300')"), 'foto individual deve usar cache privado curto');
 
 console.log('api-cache-control.test.js passou');

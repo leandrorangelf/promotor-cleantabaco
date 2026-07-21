@@ -1,3 +1,18 @@
+const MODELO_GEMINI = 'gemini-2.5-flash';
+const PRECO_INPUT_USD_M = 0.30;
+const PRECO_OUTPUT_USD_M = 2.50;
+
+function calcularUso(data = {}) {
+  const input = Number(data.usageMetadata?.promptTokenCount || 0);
+  const output = Number(data.usageMetadata?.candidatesTokenCount || 0);
+  return {
+    modelo: MODELO_GEMINI,
+    input_tokens: input,
+    output_tokens: output,
+    custo_usd_estimado: (input * PRECO_INPUT_USD_M + output * PRECO_OUTPUT_USD_M) / 1_000_000
+  };
+}
+
 function respostaMock() {
   return {
     aprovado: true,
@@ -6,7 +21,8 @@ function respostaMock() {
     materiais_detectados: ['tabela_precos'],
     pdv_detectado: false,
     qualidade_foto: 'boa',
-    motivo: 'Simulacao: estrutura pronta para receber analise real da IA.'
+    motivo: 'Simulacao: estrutura pronta para receber analise real da IA.',
+    uso: { modelo: 'mock', input_tokens: 0, output_tokens: 0, custo_usd_estimado: 0 }
   };
 }
 
@@ -46,7 +62,7 @@ function normalizarImagemEntrada(foto) {
   return { mimeType, base64 };
 }
 
-async function avaliarComGemini(foto) {
+export async function avaliarComGemini(foto) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY nao configurada');
 
@@ -71,7 +87,7 @@ async function avaliarComGemini(foto) {
     'pdv_detectado boolean, qualidade_foto string, motivo string.'
   ].join(' ');
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODELO_GEMINI}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -90,7 +106,12 @@ async function avaliarComGemini(foto) {
   }
 
   const texto = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || '';
-  return normalizarResultado({ ...extrairJson(texto), modo: 'gemini' });
+  return { ...normalizarResultado({ ...extrairJson(texto), modo: 'gemini' }), uso: calcularUso(data) };
+}
+
+export async function avaliarFotoConfigurada(foto) {
+  if (process.env.IA_VALIDACAO_REAL !== 'true') return respostaMock();
+  return avaliarComGemini(foto);
 }
 
 export default async function handler(req, res) {
@@ -106,11 +127,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (process.env.IA_VALIDACAO_REAL !== 'true') {
-      return res.status(200).json(respostaMock());
-    }
-
-    const resultado = await avaliarComGemini(foto);
+    const resultado = await avaliarFotoConfigurada(foto);
     return res.status(200).json(resultado);
   } catch (e) {
     return res.status(500).json({

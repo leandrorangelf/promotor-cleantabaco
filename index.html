@@ -1606,9 +1606,10 @@ button:active { transform: translateY(1px); }
         </div>
         <div id="galeriaResumo" class="foto-text" style="margin-top:12px;">Carregue a galeria para ver as fotos.</div>
         <div id="galeriaLista" style="margin-top:12px;"></div>
+        <button id="galeriaCarregarMais" class="btn-detalhes" type="button" onclick="carregarGaleria({ continuar: true })" style="display:none;margin:16px auto 0;">Carregar mais</button>
       </div>
       <div class="card" id="iaValidacaoCard" style="margin-top:16px;">
-        <div class="card-title">Teste rápido de foto</div>
+        <div class="card-title">Validação IA manual</div>
         <div class="foto-text">Área experimental: teste uma foto sem alterar visitas reais.</div>
         <input type="file" id="iaFotoInput" accept="image/*" onchange="prepararFotoIA(event)" style="display:none;">
         <button class="btn-filtrar" type="button" onclick="document.getElementById('iaFotoInput').click()" style="margin-top:12px;">Escolher foto</button>
@@ -1832,6 +1833,9 @@ let visitaDetalheAtual = null;
 let fotosModalAtual = [];
 let galeriaFotos = [];
 let galeriaVisiveis = [];
+let galeriaProximoCursor = '';
+let galeriaTemMais = false;
+let galeriaObservador = null;
 const dashboardFiltros = {
   meses: new Set(), promotores: new Set(), coordenadores: new Set(),
   ufs: new Set(), cidades: new Set(), produtos: new Set()
@@ -3549,19 +3553,27 @@ function abrirFotoMinhasFotos(i) {
   abrirFoto(i, 'modal');
 }
 
-async function carregarGaleria() {
+async function carregarGaleria({ continuar = false } = {}) {
   const selPromotor = document.getElementById('galFiltroPromotor');
   const dia = document.getElementById('galFiltroDia')?.value || '';
+  const status = document.getElementById('galFiltroStatus')?.value || '';
   const resumo = document.getElementById('galeriaResumo');
-  if (resumo) resumo.textContent = 'Carregando galeria...';
+  const botaoMais = document.getElementById('galeriaCarregarMais');
+  if (!continuar) galeriaProximoCursor = '';
+  if (resumo) resumo.textContent = continuar ? 'Carregando mais fotos...' : 'Carregando galeria...';
+  if (botaoMais) botaoMais.disabled = true;
   try {
-    let url = `${API}/api/validacoes-fotos?`;
+    let url = `${API}/api/validacoes-fotos?limite=24&`;
     if (selPromotor?.value) url += `promotor=${encodeURIComponent(selPromotor.value)}&`;
     if (dia) url += `de=${dia}T00:00:00Z&ate=${dia}T23:59:59Z&`;
+    if (status) url += `status=${encodeURIComponent(status)}&`;
+    if (continuar && galeriaProximoCursor) url += `cursor=${encodeURIComponent(galeriaProximoCursor)}&`;
     const res = await apiFetch(url, { headers: headers() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao carregar galeria');
-    galeriaFotos = data.validacoes || [];
+    galeriaFotos = continuar ? [...galeriaFotos, ...(data.validacoes || [])] : (data.validacoes || []);
+    galeriaProximoCursor = data.proximo_cursor || '';
+    galeriaTemMais = Boolean(data.tem_mais && galeriaProximoCursor);
     if (selPromotor && selPromotor.options.length <= 1) {
       [...new Set(galeriaFotos.map(v => v.promotor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).forEach(nome => {
         const opt = document.createElement('option');
@@ -3571,21 +3583,54 @@ async function carregarGaleria() {
       });
     }
   } catch(e) {
-    galeriaFotos = [];
+    if (!continuar) galeriaFotos = [];
     if (resumo) resumo.textContent = 'Não foi possível carregar a galeria: ' + e.message;
   }
+  if (botaoMais) botaoMais.disabled = false;
   renderGaleria();
+}
+
+async function carregarImagemGaleria(img) {
+  if (!img || img.dataset.carregando === '1' || img.src) return;
+  img.dataset.carregando = '1';
+  try {
+    const res = await apiFetch(`${API}${img.dataset.url}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok || !data.foto) throw new Error(data.erro || 'Foto indisponivel');
+    const item = galeriaFotos.find(v => String(v.visita_id) === img.dataset.visita && String(v.foto_index) === img.dataset.index);
+    if (item) item.foto = data.foto;
+    img.src = fotoSrc(data.foto);
+  } catch(e) {
+    img.alt = 'Foto indisponível';
+  }
+}
+
+function observarImagensGaleria() {
+  if (galeriaObservador) galeriaObservador.disconnect();
+  const imagens = [...document.querySelectorAll('img[data-galeria-url]')];
+  if (!('IntersectionObserver' in window)) {
+    imagens.forEach(carregarImagemGaleria);
+    return;
+  }
+  galeriaObservador = new IntersectionObserver(entradas => entradas.forEach(entrada => {
+    if (!entrada.isIntersecting) return;
+    galeriaObservador.unobserve(entrada.target);
+    carregarImagemGaleria(entrada.target);
+  }), { rootMargin: '240px' });
+  imagens.forEach(img => galeriaObservador.observe(img));
 }
 
 function renderGaleria() {
   const lista = document.getElementById('galeriaLista');
   const resumo = document.getElementById('galeriaResumo');
+  const botaoMais = document.getElementById('galeriaCarregarMais');
   if (!lista || !resumo) return;
   const statusFiltro = document.getElementById('galFiltroStatus')?.value || '';
   galeriaVisiveis = statusFiltro
     ? galeriaFotos.filter(item => statusValidacaoIA(item) === statusFiltro)
     : galeriaFotos.filter(item => statusValidacaoIA(item) !== 'aprovado');
   resumo.textContent = `${galeriaVisiveis.length} foto(s) para revisar (${galeriaFotos.length} no total, ${galeriaFotos.filter(i => statusValidacaoIA(i) === 'aprovado').length} ja aprovadas).`;
+  if (botaoMais) botaoMais.style.display = galeriaTemMais ? 'block' : 'none';
   if (!galeriaVisiveis.length) {
     lista.innerHTML = '<div class="empty">Nenhuma foto encontrada para os filtros.</div>';
     return;
@@ -3593,9 +3638,10 @@ function renderGaleria() {
   lista.innerHTML = `<div class="rel-fotos" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">${galeriaVisiveis.map((item,i) => {
     const data = item.criado_em ? new Date(item.criado_em).toLocaleString('pt-BR') : '—';
     const src = fotoSrc(item.foto);
-    const miolo = src
+    const urlFoto = item.miniatura_url || item.foto_url;
+    const miolo = (src || urlFoto)
       ? `<button class="rel-foto-btn" type="button" onclick="abrirFotoGaleria(${i})" style="width:100%;border-radius:0;">
-          <img src="${src}" alt="Foto ${item.foto_index + 1} de ${item.cliente_nome || 'PDV'}">
+          <img ${src ? `src="${src}"` : ''} ${urlFoto ? `data-galeria-url="${urlFoto}" data-visita="${item.visita_id}" data-index="${item.foto_index}"` : ''} loading="lazy" alt="Foto ${item.foto_index + 1} de ${item.cliente_nome || 'PDV'}">
         </button>`
       : `<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#EEF1F7;color:var(--text-muted);font-size:12px;text-align:center;padding:8px;">Foto indisponível</div>`;
     const status = statusValidacaoIA(item);
@@ -3625,6 +3671,7 @@ function renderGaleria() {
       </div>
     `;
   }).join('')}</div>`;
+  observarImagensGaleria();
 }
 
 function abrirFotoGaleria(i) {
@@ -3646,31 +3693,15 @@ async function analisarFotoGaleria(botao, visitaId, fotoIndex) {
   const textoOriginal = botao?.textContent;
   if (botao) { botao.disabled = true; botao.textContent = 'Analisando...'; }
   try {
-    const foto = fotoMeta(item.foto);
-    const fotoIA = await prepararFotoParaIA(item.foto);
-    let hash = item.imagem_hash || foto.imagemHash || '';
-    if (!hash) hash = await calcularHashFoto(foto.imagem || fotoIA);
-    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+    item.status_ia = 'analisando';
+    renderGaleria();
+    const res = await apiFetch(`${API}/api/analisar-foto`, {
       method: 'POST',
       headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: fotoIA })
-    });
-    const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
-
-    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
-      method: 'POST',
-      headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        visita_id: visitaId,
-        foto_index: fotoIndex,
-        imagem_hash: hash,
-        cliente_nome: item.cliente_nome || '',
-        resultado
-      })
+      body: JSON.stringify({ visita_id: visitaId, foto_index: fotoIndex })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao analisar foto');
     atualizarValidacaoLocal(data.validacao);
     renderGaleria();
     toast('Foto analisada');
@@ -3699,21 +3730,13 @@ async function analisarFotoModal() {
   botao.disabled = true;
   botao.textContent = 'Analisando...';
   try {
-    const foto = fotoMeta(item.foto);
-    const fotoIA = await prepararFotoParaIA(item.foto);
-    const hash = item.imagem_hash || foto.imagemHash || await calcularHashFoto(foto.imagem || fotoIA);
-    const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
+    item.status_ia = 'analisando';
+    const res = await apiFetch(`${API}/api/analisar-foto`, {
       method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto: fotoIA })
-    });
-    const resultado = await resIA.json();
-    if (!resIA.ok) throw new Error(resultado.detalhe || resultado.erro || 'Erro ao analisar foto');
-    const res = await apiFetch(`${API}/api/validacoes-fotos`, {
-      method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ visita_id: item.visita_id, foto_index: item.foto_index, imagem_hash: hash, cliente_nome: item.cliente_nome || '', resultado })
+      body: JSON.stringify({ visita_id: item.visita_id, foto_index: item.foto_index })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao registrar validacao');
+    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao analisar foto');
     atualizarValidacaoLocal(data.validacao);
     if (statusValidacaoIA(data.validacao) === 'revisao_manual') {
       renderGaleria();
@@ -3917,44 +3940,6 @@ async function baixarFotoAtual() {
   }
 }
 
-async function registrarValidacoesVisita(visitaId, dados, fotosDaVisita) {
-  if (!visitaId || !dados?.presenca?.tabelaVisivel || !fotosDaVisita?.length) return;
-  const clienteNome = dados?.pdv?.nomeFantasia || '';
-  for (let i = 0; i < fotosDaVisita.length; i++) {
-    const foto = fotoMeta(fotosDaVisita[i]);
-    let resultado = { status_ia: 'pendente', score: 0, motivo: 'Validacao IA pendente ou indisponivel.' };
-    try {
-      const fotoIA = await prepararFotoParaIA(fotosDaVisita[i]);
-      const resIA = await apiFetch(`${API}/api/avaliar-foto`, {
-        method: 'POST',
-        headers: { ...headers(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foto: fotoIA })
-      });
-      const dataIA = await resIA.json();
-      if (resIA.ok) resultado = dataIA;
-      else resultado = { status_ia: 'revisao_manual', score: 50, motivo: dataIA.detalhe || dataIA.erro || 'IA nao concluiu a analise.' };
-    } catch(e) {
-      resultado = { status_ia: 'revisao_manual', score: 50, motivo: 'IA indisponivel: ' + e.message };
-    }
-
-    try {
-      await apiFetch(`${API}/api/validacoes-fotos`, {
-        method: 'POST',
-        headers: { ...headers(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          visita_id: visitaId,
-          foto_index: i,
-          imagem_hash: foto.imagemHash || '',
-          cliente_nome: clienteNome,
-          resultado
-        })
-      });
-    } catch(e) {
-      // A visita ja foi salva; a galeria marcara como pendente se o registro falhar.
-    }
-  }
-}
-
 async function salvarProspeccao() {
   const nome = document.getElementById('prospeccaoNome').value.trim();
   if (!nome) { toast('⚠️ Informe o nome do local'); return; }
@@ -4094,8 +4079,6 @@ async function salvarVisita() {
     }
     const data = await res.json();
     if (data.ok) {
-      const visitaSalvaId = editandoId || data.id;
-      await registrarValidacoesVisita(visitaSalvaId, dados, fotosParaSalvar);
       if (editandoId) {
         toast('Visita atualizada');
       } else if (dados.localizacao?.ok) {
