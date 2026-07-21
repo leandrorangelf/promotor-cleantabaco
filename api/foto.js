@@ -6,6 +6,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Cache-Control', 'private, max-age=300');
+  res.setHeader('Vary', 'Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ erro: 'Método não permitido' });
 
@@ -43,8 +44,11 @@ export default async function handler(req, res) {
       if (!Number.isInteger(index) || index < 0 || index >= fotos.length) {
         return res.status(404).json({ erro: 'Foto nao encontrada' });
       }
-      const foto = fotos[index];
+      const fotoOriginal = fotos[index];
       const variante = variant === 'thumb' ? 'thumb' : 'full';
+      const foto = variante === 'thumb' && fotoOriginal?.miniatura
+        ? { ...fotoOriginal, imagem: fotoOriginal.miniatura }
+        : fotoOriginal;
       return res.status(200).json({ foto, variante });
     }
     return res.status(200).json({ fotos });

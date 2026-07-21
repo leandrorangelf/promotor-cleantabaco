@@ -120,19 +120,5 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Metodo nao permitido' });
-
-  const { foto } = req.body || {};
-  if (!foto || typeof foto !== 'string') {
-    return res.status(400).json({ erro: 'Foto obrigatoria' });
-  }
-
-  try {
-    const resultado = await avaliarFotoConfigurada(foto);
-    return res.status(200).json(resultado);
-  } catch (e) {
-    return res.status(500).json({
-      erro: 'Nao foi possivel avaliar a foto agora',
-      detalhe: e.message
-    });
-  }
+  return res.status(410).json({ erro: 'Use /api/analisar-foto para uma analise autenticada e auditavel' });
 }

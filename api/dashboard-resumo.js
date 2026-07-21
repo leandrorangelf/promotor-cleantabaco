@@ -44,6 +44,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Cache-Control', 'private, max-age=30');
+  res.setHeader('Vary', 'Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ erro: 'Metodo nao permitido' });
 
@@ -100,15 +101,16 @@ export default async function handler(req, res) {
             AND (${filtros.cidades.length} = 0 OR cidade = ANY(${filtros.cidades}))
             AND (${filtros.produtos.length} = 0 OR EXISTS (
               SELECT 1 FROM unnest(${filtros.produtos}::text[]) produto
-              WHERE COALESCE((quantidades->>produto)::numeric,0) > 0
+              WHERE CASE WHEN TRIM(COALESCE(quantidades->>produto,'')) ~ '^[0-9]+([.,][0-9]+)?$'
+                THEN REPLACE(quantidades->>produto, ',', '.')::numeric ELSE 0 END > 0
             ))
         )
         SELECT COUNT(*)::int AS visitas,
           COUNT(*) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue'))::int AS pedidos,
-          COALESCE(SUM((quantidades->>'GR')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GR",
-          COALESCE(SUM((quantidades->>'GM')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GM",
-          COALESCE(SUM((quantidades->>'CM')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CM",
-          COALESCE(SUM((quantidades->>'CC')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CC"
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'GR','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GR',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GR",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'GM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GM',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GM",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'CM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CM',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CM",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'CC','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CC',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CC"
         FROM filtradas
       `,
       sql`
@@ -123,13 +125,19 @@ export default async function handler(req, res) {
         )
         SELECT uf, COUNT(*)::int AS visitas,
           COUNT(*) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue'))::int AS pedidos,
-          COALESCE(SUM(COALESCE((quantidades->>'GR')::numeric,0)+COALESCE((quantidades->>'GM')::numeric,0)+COALESCE((quantidades->>'CM')::numeric,0)+COALESCE((quantidades->>'CC')::numeric,0)),0) AS pacotes
+          COALESCE(SUM(
+            (CASE WHEN COALESCE(quantidades->>'GR','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GR',',','.')::numeric ELSE 0 END) +
+            (CASE WHEN COALESCE(quantidades->>'GM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GM',',','.')::numeric ELSE 0 END) +
+            (CASE WHEN COALESCE(quantidades->>'CM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CM',',','.')::numeric ELSE 0 END) +
+            (CASE WHEN COALESCE(quantidades->>'CC','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CC',',','.')::numeric ELSE 0 END)
+          ) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS pacotes
         FROM base WHERE uf <> ''
           AND (${filtros.ufs.length} = 0 OR uf = ANY(${filtros.ufs}))
           AND (${filtros.cidades.length} = 0 OR cidade = ANY(${filtros.cidades}))
           AND (${filtros.produtos.length} = 0 OR EXISTS (
             SELECT 1 FROM unnest(${filtros.produtos}::text[]) produto
-            WHERE COALESCE((quantidades->>produto)::numeric,0) > 0
+            WHERE CASE WHEN TRIM(COALESCE(quantidades->>produto,'')) ~ '^[0-9]+([.,][0-9]+)?$'
+              THEN REPLACE(quantidades->>produto, ',', '.')::numeric ELSE 0 END > 0
           ))
         GROUP BY uf ORDER BY visitas DESC
       `,
@@ -145,15 +153,16 @@ export default async function handler(req, res) {
         )
         SELECT promotor, COUNT(*)::int AS visitas,
           COUNT(*) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue'))::int AS pedidos,
-          COALESCE(SUM((quantidades->>'GR')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GR",
-          COALESCE(SUM((quantidades->>'GM')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GM",
-          COALESCE(SUM((quantidades->>'CM')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CM",
-          COALESCE(SUM((quantidades->>'CC')::numeric) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CC"
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'GR','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GR',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GR",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'GM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'GM',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "GM",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'CM','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CM',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CM",
+          COALESCE(SUM(CASE WHEN COALESCE(quantidades->>'CC','') ~ '^[0-9]+([.,][0-9]+)?$' THEN REPLACE(quantidades->>'CC',',','.')::numeric ELSE 0 END) FILTER (WHERE statusPedido IN ('Pedido confirmado','Pedido entregue')),0) AS "CC"
         FROM base WHERE (${filtros.ufs.length} = 0 OR uf = ANY(${filtros.ufs}))
           AND (${filtros.cidades.length} = 0 OR cidade = ANY(${filtros.cidades}))
           AND (${filtros.produtos.length} = 0 OR EXISTS (
             SELECT 1 FROM unnest(${filtros.produtos}::text[]) produto
-            WHERE COALESCE((quantidades->>produto)::numeric,0) > 0
+            WHERE CASE WHEN TRIM(COALESCE(quantidades->>produto,'')) ~ '^[0-9]+([.,][0-9]+)?$'
+              THEN REPLACE(quantidades->>produto, ',', '.')::numeric ELSE 0 END > 0
           ))
         GROUP BY promotor ORDER BY visitas DESC
       `,

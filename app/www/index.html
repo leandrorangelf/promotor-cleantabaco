@@ -3175,8 +3175,10 @@ async function calcularHashFoto(dataUrl) {
 async function criarFotoComMetadados(dataUrl, origem, exifData = null) {
   const agora = new Date();
   const divergenteHoras = exifData ? Math.abs(agora - exifData) / 3600000 : 0;
+  const miniatura = await compactarDataUrlImagem(dataUrl, 320, 0.55);
   return {
     imagem: dataUrl,
+    miniatura,
     origem,
     capturadaEm: agora.toISOString(),
     enviadaEm: '',
@@ -3442,31 +3444,8 @@ function prepararFotoIA(event) {
 }
 
 async function analisarFotoIA() {
-  const input = document.getElementById('iaFotoInput');
   const resultado = document.getElementById('iaResultado');
-  const file = iaFotoSelecionada || input?.files?.[0];
-  if (!file) {
-    if (resultado) resultado.textContent = 'Selecione uma foto para analisar.';
-    return;
-  }
-
-  try {
-    if (resultado) resultado.textContent = 'Analisando foto...';
-    const foto = await compactarDataUrlImagem(await lerArquivoComoDataUrl(file));
-    const res = await apiFetch(`${API}/api/avaliar-foto`, {
-      method: 'POST',
-      headers: { ...headers(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foto })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detalhe || data.erro || 'Erro ao avaliar foto');
-    if (resultado) {
-      const status = data.aprovado ? 'Aprovado' : (data.score >= 50 ? 'Revisao manual' : 'Reprovado');
-      resultado.innerHTML = `<strong>${status}</strong><br>Score: ${data.score}<br>Modo: ${data.modo}<br>Materiais: ${(data.materiais_detectados || []).join(', ') || 'nenhum'}<br>${data.motivo || ''}`;
-    }
-  } catch (e) {
-    if (resultado) resultado.textContent = 'Nao foi possivel analisar a foto: ' + e.message;
-  }
+  if (resultado) resultado.textContent = 'Para manter custo e auditoria, analise fotos salvas diretamente na galeria.';
 }
 
 function esc(valor) {
@@ -3652,8 +3631,8 @@ function renderGaleria() {
             <button class="btn-detalhes" type="button" onclick="revisarFotoGaleria(${item.id}, 'reprovado')">Reprovar</button>
           </div>`
         : `<div style="display:flex;gap:6px;margin-top:8px;">
-            <button class="btn-detalhes" type="button" onclick="abrirFilaRevisao('${item.visita_id}', ${item.foto_index})">Analisar IA</button>
-            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManual('${item.visita_id}', ${item.foto_index}, '${(item.cliente_nome || '').replace(/'/g, "\\'")}')">Confirmar tabela</button>
+            <button class="btn-detalhes" type="button" onclick="abrirFotoGaleria(${i})">Analisar IA</button>
+            <button class="btn-detalhes" type="button" onclick="confirmarTabelaManualPorIndice(${i})">Confirmar tabela</button>
           </div>`)
       : '';
     return `
@@ -3685,6 +3664,12 @@ function abrirFilaRevisao(visitaId, fotoIndex) {
     fotosModalAtual = galeriaVisiveis.map(v => v.foto);
     abrirFoto(i, 'revisao');
   }
+}
+
+function confirmarTabelaManualPorIndice(i) {
+  const item = galeriaVisiveis[i];
+  if (!item) return;
+  confirmarTabelaManual(item.visita_id, item.foto_index, item.cliente_nome || '');
 }
 
 async function analisarFotoGaleria(botao, visitaId, fotoIndex) {
