@@ -18,6 +18,8 @@ assert.ok(!jornadas.includes("from './_map-match.mjs'"), 'função Vercel não d
 assert.ok(jornadas.includes('GEOAPIFY_API_KEY'), 'chave Geoapify deve ser lida somente no servidor');
 assert.ok(jornadas.includes('SELECT nome FROM promotores'), 'restrição do coordenador deve consultar a tabela real de promotores');
 assert.ok(!jornadas.includes('FROM usuarios'), 'API não deve consultar tabela usuarios inexistente');
+assert.ok(jornadas.includes("NULLIF(${inicio}, '')::date"), 'data inicial vazia não deve ser convertida diretamente para date');
+assert.ok(jornadas.includes("NULLIF(${fim}, '')::date"), 'data final vazia não deve ser convertida diretamente para date');
 assert.ok(!jornadas.includes('MAPBOX_ACCESS_TOKEN'), 'API não deve depender da chave Mapbox');
 assert.ok(jornadas.includes('rota_assinatura'), 'deve persistir assinatura do cache');
 assert.ok(jornadas.includes('rota_ajustada JSONB'), 'deve persistir geometria derivada');

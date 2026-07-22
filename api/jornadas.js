@@ -94,8 +94,8 @@ export default async function handler(req, res) {
       SELECT id, promotor, data_local, status, iniciado_em, encerrado_em, motivo_encerramento,
              rota_assinatura, rota_ajustada, rota_ajustada_em
       FROM jornadas
-      WHERE (${inicio} = '' OR data_local >= ${inicio}::date)
-        AND (${fim} = '' OR data_local <= ${fim}::date)
+      WHERE (NULLIF(${inicio}, '') IS NULL OR data_local >= NULLIF(${inicio}, '')::date)
+        AND (NULLIF(${fim}, '') IS NULL OR data_local <= NULLIF(${fim}, '')::date)
         AND (${promotor} = '' OR promotor = ${promotor})
         AND (${sessao.tipo} <> 'coordenador' OR promotor IN (
           SELECT nome FROM promotores
