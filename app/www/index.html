@@ -3569,7 +3569,7 @@ async function carregarImagemGaleria(img) {
   if (!img || img.dataset.carregando === '1' || img.hasAttribute('src')) return;
   img.dataset.carregando = '1';
   try {
-    const res = await apiFetch(`${API}${img.dataset.url}`, { headers: headers() });
+    const res = await apiFetch(`${API}${img.dataset.galeriaUrl}`, { headers: headers() });
     const data = await res.json();
     if (!res.ok || !data.foto) throw new Error(data.erro || 'Miniatura indisponivel');
     const item = galeriaFotos.find(v => String(v.visita_id) === img.dataset.visita && String(v.foto_index) === img.dataset.index);
