@@ -5156,13 +5156,6 @@ function renderMapa() {
       .addTo(mapaCamadaPontos);
   });
 
-  if (promotorFiltrado) {
-    Object.values(agruparPontosMapaPorDia(pontos)).forEach(grupo => {
-      const linha = grupo.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
-      if (linha.length > 1) L.polyline(linha, { color: '#1E1648', weight: 3, opacity: 0.6 }).addTo(mapaCamadaPontos);
-    });
-  }
-
   mapaLeaflet.fitBounds(latlngs, { padding: [30, 30] });
   setTimeout(() => mapaLeaflet.invalidateSize(), 0);
 }

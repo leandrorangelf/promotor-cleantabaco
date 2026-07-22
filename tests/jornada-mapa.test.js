@@ -15,5 +15,6 @@ for (const arquivo of ['index.html', 'app/www/index.html']) {
   assert.ok(tela.includes("dashArray: ajustado ? undefined : '8 5'"), `${arquivo}: raw deve ser tracejado`);
   assert.ok(tela.includes('Rota ajustada às ruas'), `${arquivo}: deve explicar linha contínua`);
   assert.ok(tela.includes('Trilha GPS original'), `${arquivo}: deve explicar fallback`);
+  assert.ok(!tela.includes('L.polyline(linha, { color:'), `${arquivo}: não deve ligar visitas espaçadas com linha reta`);
 }
 console.log('jornada-mapa.test.js passou');

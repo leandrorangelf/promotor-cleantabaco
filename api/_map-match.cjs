@@ -134,7 +134,11 @@ async function ajustarJanela(janela, perfil, token, fetchImpl) {
       body: JSON.stringify({ mode: modo, waypoints }),
       signal: AbortSignal.timeout(12000)
     });
-    if (!resposta.ok) return segmentoRaw(janela, perfil);
+    if (!resposta.ok) {
+      const detalhe = typeof resposta.text === 'function' ? (await resposta.text()).slice(0, 300) : '';
+      console.warn('Geoapify map matching recusado', { status: resposta.status, modo, pontos: janela.length, detalhe });
+      return segmentoRaw(janela, perfil);
+    }
     const dados = await resposta.json();
     const coordenadasAjustadas = (dados.features || [])
       .flatMap(feature => {
@@ -145,7 +149,10 @@ async function ajustarJanela(janela, perfil, token, fetchImpl) {
       })
       .filter(par => Array.isArray(par) && par.length >= 2 && Number.isFinite(+par[0]) && Number.isFinite(+par[1]))
       .map(([lng, lat]) => [+lat, +lng]);
-    if (coordenadasAjustadas.length < 2) return segmentoRaw(janela, perfil);
+    if (coordenadasAjustadas.length < 2) {
+      console.warn('Geoapify map matching sem geometria', { modo, pontos: janela.length });
+      return segmentoRaw(janela, perfil);
+    }
     return {
       perfil,
       origem: 'matched',
@@ -153,7 +160,8 @@ async function ajustarJanela(janela, perfil, token, fetchImpl) {
       inicio_em: janela[0].capturado_em,
       fim_em: janela.at(-1).capturado_em
     };
-  } catch {
+  } catch (erro) {
+    console.warn('Geoapify map matching falhou', { modo, pontos: janela.length, mensagem: erro?.message });
     return segmentoRaw(janela, perfil);
   }
 }
