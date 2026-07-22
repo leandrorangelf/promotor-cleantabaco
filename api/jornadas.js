@@ -44,8 +44,10 @@ export default async function handler(req, res) {
   if (!sessao) return res.status(401).json({ erro: 'Sessão inválida ou expirada' });
   if (!permitidos(sessao.tipo)) return res.status(403).json({ erro: 'Perfil sem acesso às jornadas' });
 
+  let etapa = 'inicializacao';
   try {
     const sql = neon(process.env.DATABASE_URL);
+    etapa = 'criar_tabela_jornadas';
     await sql`
       CREATE TABLE IF NOT EXISTS jornadas (
         id BIGSERIAL PRIMARY KEY,
@@ -61,6 +63,7 @@ export default async function handler(req, res) {
         UNIQUE (promotor, data_local)
       )
     `;
+    etapa = 'criar_tabela_pontos';
     await sql`
       CREATE TABLE IF NOT EXISTS jornada_pontos (
         id BIGSERIAL PRIMARY KEY,
@@ -78,6 +81,7 @@ export default async function handler(req, res) {
         UNIQUE (jornada_id, ponto_id)
       )
     `;
+    etapa = 'preparar_cache_rota';
     await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_assinatura TEXT`;
     await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_ajustada JSONB`;
     await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_ajustada_em TIMESTAMPTZ`;
@@ -85,6 +89,7 @@ export default async function handler(req, res) {
     const fim = typeof req.query?.fim === 'string' ? req.query.fim : '';
     const promotor = typeof req.query?.promotor === 'string' ? req.query.promotor : '';
     const deveAjustar = req.query?.ajustar === 'true' && Boolean(promotor);
+    etapa = 'consultar_jornadas';
     const jornadas = await sql`
       SELECT id, promotor, data_local, status, iniciado_em, encerrado_em, motivo_encerramento,
              rota_assinatura, rota_ajustada, rota_ajustada_em
@@ -99,6 +104,7 @@ export default async function handler(req, res) {
       LIMIT 500
     `;
     const ids = jornadas.map(j => j.id);
+    etapa = 'consultar_pontos';
     const pontos = ids.length ? await sql`
       SELECT jornada_id, ponto_id, latitude, longitude, precisao, altitude, velocidade, direcao, capturado_em
       FROM jornada_pontos WHERE jornada_id = ANY(${ids}) ORDER BY capturado_em ASC
@@ -141,6 +147,7 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({ ok: true, jornadas: resposta });
   } catch (e) {
+    console.error('Falha em /api/jornadas', { etapa, mensagem: e?.message, codigo: e?.code });
     return res.status(500).json({ erro: e.message });
   }
 }
