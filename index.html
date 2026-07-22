@@ -4976,7 +4976,10 @@ async function carregarMapa() {
 
 async function carregarJornadasMapa(promotor = '', de = '', ate = '') {
   let url = `${API}/api/jornadas?`;
-  if (promotor) url += `promotor=${encodeURIComponent(promotor)}&`;
+  if (promotor) {
+    url += `promotor=${encodeURIComponent(promotor)}&`;
+    url += 'ajustar=true&';
+  }
   if (de) url += `inicio=${encodeURIComponent(de)}&`;
   if (ate) url += `fim=${encodeURIComponent(ate)}&`;
   try {
@@ -5000,12 +5003,31 @@ function garantirMapaLeaflet() {
   if (!jornadaPolyline) jornadaPolyline = L.layerGroup().addTo(mapaLeaflet);
 }
 
+function segmentosJornadaParaMapa(jornada) {
+  if (Array.isArray(jornada.segmentos) && jornada.segmentos.length) return jornada.segmentos;
+  const grupos = [];
+  const pontos = [...(jornada.pontos || [])].sort((a, b) => new Date(a.capturado_em) - new Date(b.capturado_em));
+  for (const ponto of pontos) {
+    const atual = grupos[grupos.length - 1];
+    if (!atual || new Date(ponto.capturado_em) - new Date(atual[atual.length - 1].capturado_em) > 15 * 60 * 1000) grupos.push([ponto]);
+    else atual.push(ponto);
+  }
+  return grupos.filter(grupo => grupo.length > 1).map(grupo => ({
+    perfil: 'driving',
+    origem: 'raw',
+    pontos: grupo.map(ponto => [+ponto.latitude, +ponto.longitude]),
+    inicio_em: grupo[0].capturado_em,
+    fim_em: grupo[grupo.length - 1].capturado_em
+  }));
+}
+
 function renderJornadasMapa() {
   const statusEl = document.getElementById('jornadaMapaStatus');
   const box = document.getElementById('mapaLeafletEl');
   if (!statusEl || !box || typeof L === 'undefined') return;
-  const pontos = jornadasMapa.flatMap(j => (j.pontos || []).map(p => ({ ...p, promotor: j.promotor, jornadaId: j.id })));
-  if (!pontos.length) {
+  const segmentos = jornadasMapa.flatMap(segmentosJornadaParaMapa);
+  const totalPontos = jornadasMapa.reduce((total, jornada) => total + (jornada.pontos || []).length, 0);
+  if (!segmentos.length) {
     statusEl.textContent = 'Não há pontos contínuos no período selecionado.';
     if (jornadaPolyline) jornadaPolyline.clearLayers();
     return;
@@ -5014,30 +5036,28 @@ function renderJornadasMapa() {
   garantirMapaLeaflet();
   jornadaPolyline.clearLayers();
   const bounds = [];
-  const porJornada = new Map();
-  pontos.sort((a, b) => new Date(a.capturado_em) - new Date(b.capturado_em));
-  for (const ponto of pontos) {
-    if (!porJornada.has(String(ponto.jornadaId))) porJornada.set(String(ponto.jornadaId), []);
-    porJornada.get(String(ponto.jornadaId)).push(ponto);
+  let ajustados = 0;
+  let brutos = 0;
+  for (const segmento of segmentos) {
+    const ajustado = segmento.origem === 'matched';
+    const latlngs = (segmento.pontos || []).map(([lat, lng]) => [+lat, +lng]).filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+    if (latlngs.length < 2) continue;
+    L.polyline(latlngs, {
+      color: '#7C3AED',
+      weight: 4,
+      opacity: ajustado ? 0.9 : 0.72,
+      dashArray: ajustado ? undefined : '8 5'
+    }).addTo(jornadaPolyline);
+    if (ajustado) ajustados += 1;
+    else brutos += 1;
+    bounds.push(...latlngs);
   }
-  for (const grupo of porJornada.values()) {
-    let segmento = [];
-    const desenhar = () => {
-      if (segmento.length > 1) {
-        const latlngs = segmento.map(p => [+p.latitude, +p.longitude]);
-        L.polyline(latlngs, { color: '#7C3AED', weight: 4, opacity: 0.78, dashArray: '8 5' }).addTo(jornadaPolyline);
-        bounds.push(...latlngs);
-      }
-      segmento = [];
-    };
-    grupo.forEach((ponto, index) => {
-      const anterior = grupo[index - 1];
-      if (anterior && new Date(ponto.capturado_em) - new Date(anterior.capturado_em) > 15 * 60 * 1000) desenhar();
-      segmento.push(ponto);
-    });
-    desenhar();
-  }
-  statusEl.textContent = `${pontos.length} pontos contínuos registrados · linha roxa tracejada`;
+  const descricao = ajustados && brutos
+    ? 'Rota parcialmente ajustada · trechos tracejados usam a Trilha GPS original'
+    : ajustados
+      ? 'Rota ajustada às ruas · linha roxa contínua'
+      : 'Trilha GPS original · ajuste indisponível · linha roxa tracejada';
+  statusEl.textContent = `${totalPontos} pontos contínuos registrados · ${descricao}`;
   if (bounds.length) mapaLeaflet.fitBounds(bounds, { padding: [30, 30] });
   setTimeout(() => mapaLeaflet.invalidateSize(), 0);
 }
