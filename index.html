@@ -5373,6 +5373,7 @@ async function carregarPromotoresAdmin() {
     renderPromotoresAdmin();
     renderCoordenadoresAdmin();
     preencherFiltroPromotores();
+    popularFiltroPromotoresGestor();
     preencherSelectMetasPromotores();
   } catch(e) {
     if (lista) lista.innerHTML = '<div class="empty">Erro ao carregar usuarios</div>';
@@ -5403,7 +5404,10 @@ function popularFiltroPromotoresPermitidos() {
 
 function popularFiltroPromotoresGestor() {
   if (tipoAtual === 'coordenador') return;
-  const nomes = [...new Set(visitasGestor.map(v => v.promotor).filter(Boolean))]
+  const nomesCadastrados = promotoresAdmin
+    .filter(p => p.ativo && p.tipo === 'promotor')
+    .map(p => p.nome);
+  const nomes = [...new Set([...nomesCadastrados, ...visitasGestor.map(v => v.promotor).filter(Boolean)])]
     .sort((a,b) => a.localeCompare(b, 'pt-BR'));
   ['gFiltroPromotor','mapaFiltroPromotor'].forEach(id => {
     const sel = document.getElementById(id);

@@ -7,6 +7,8 @@ for (const arquivo of ['index.html', 'app/www/index.html']) {
   assert.ok(html.includes('class="mapa-filtros-acoes"'), `${arquivo}: ações devem ter faixa própria`);
   assert.ok(html.includes('class="mapa-checkbox-group"'), `${arquivo}: checkbox deve ter alinhamento próprio`);
   assert.ok(html.includes('id="mapaKmTrechosCard"'), `${arquivo}: trechos devem ter cartão próprio`);
+  assert.ok(html.includes('const nomesCadastrados = promotoresAdmin'), `${arquivo}: filtro do mapa deve usar promotores ativos cadastrados`);
+  assert.match(html, /preencherFiltroPromotores\(\);\s*popularFiltroPromotoresGestor\(\);/, `${arquivo}: filtro do mapa deve ser atualizado após carregar cadastros`);
   assert.ok(!/<label>&nbsp;<\/label>[\s\S]{0,180}mapaIncluirProspeccao/.test(html), `${arquivo}: não deve alinhar checkbox com rótulo vazio`);
   assert.match(
     html,
