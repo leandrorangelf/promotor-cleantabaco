@@ -1,7 +1,9 @@
 import { neon } from '@neondatabase/serverless';
 import { createHash } from 'node:crypto';
 import { autenticar } from './_auth.js';
-import { ajustarTrilha, normalizarPontos, segmentosRaw } from './_map-match.mjs';
+import mapMatch from './_map-match.cjs';
+
+const { ajustarTrilha, normalizarPontos, segmentosRaw } = mapMatch;
 
 function respostaCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

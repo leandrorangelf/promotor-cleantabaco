@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
-import {
+import mapMatch from '../api/_map-match.cjs';
+
+const {
   ajustarTrilha,
   classificarPerfil,
   criarJanelas,
   separarPorPerfil,
   separarPorLacuna
-} from '../api/_map-match.mjs';
+} = mapMatch;
 
 const ponto = (minuto, latitude, longitude, velocidade = null, precisao = 8) => ({
   latitude,

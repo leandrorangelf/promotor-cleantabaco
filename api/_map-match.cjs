@@ -1,9 +1,9 @@
-export const LACUNA_MS = 15 * 60 * 1000;
-export const LIMITE_PONTOS = 1000;
-export const SOBREPOSICAO = 5;
+const LACUNA_MS = 15 * 60 * 1000;
+const LIMITE_PONTOS = 1000;
+const SOBREPOSICAO = 5;
 const LIMITE_CAMINHADA_MPS = 2.2;
 
-export function normalizarPontos(pontos = []) {
+function normalizarPontos(pontos = []) {
   return pontos
     .filter(ponto =>
       Number.isFinite(+ponto?.latitude) &&
@@ -21,7 +21,7 @@ export function normalizarPontos(pontos = []) {
     .sort((a, b) => Date.parse(a.capturado_em) - Date.parse(b.capturado_em));
 }
 
-export function separarPorLacuna(pontos, lacunaMs = LACUNA_MS) {
+function separarPorLacuna(pontos, lacunaMs = LACUNA_MS) {
   return normalizarPontos(pontos).reduce((grupos, ponto) => {
     const atual = grupos.at(-1);
     if (!atual || Date.parse(ponto.capturado_em) - Date.parse(atual.at(-1).capturado_em) > lacunaMs) {
@@ -33,7 +33,7 @@ export function separarPorLacuna(pontos, lacunaMs = LACUNA_MS) {
   }, []);
 }
 
-export function classificarPerfil(pontos = []) {
+function classificarPerfil(pontos = []) {
   const velocidades = pontos
     .map(ponto => ponto?.velocidade)
     .filter(valor => valor !== null && valor !== undefined && Number.isFinite(+valor))
@@ -47,7 +47,7 @@ export function classificarPerfil(pontos = []) {
   return mediana < LIMITE_CAMINHADA_MPS ? 'walking' : 'driving';
 }
 
-export function separarPorPerfil(pontos = []) {
+function separarPorPerfil(pontos = []) {
   const normalizados = normalizarPontos(pontos);
   if (normalizados.length < 2) return [];
   const lentos = normalizados.map(ponto =>
@@ -79,7 +79,7 @@ export function separarPorPerfil(pontos = []) {
   return segmentos.filter(segmento => segmento.pontos.length >= 2);
 }
 
-export function criarJanelas(pontos = [], tamanho = LIMITE_PONTOS, sobreposicao = SOBREPOSICAO) {
+function criarJanelas(pontos = [], tamanho = LIMITE_PONTOS, sobreposicao = SOBREPOSICAO) {
   if (!Number.isInteger(tamanho) || tamanho < 2) throw new Error('Tamanho de janela inválido');
   if (!Number.isInteger(sobreposicao) || sobreposicao < 0 || sobreposicao >= tamanho) throw new Error('Sobreposição inválida');
   const janelas = [];
@@ -103,7 +103,7 @@ function segmentoRaw(pontos, perfil = classificarPerfil(pontos)) {
   };
 }
 
-export function segmentosRaw(pontos = []) {
+function segmentosRaw(pontos = []) {
   return separarPorLacuna(pontos)
     .filter(grupo => grupo.length >= 2)
     .map(grupo => segmentoRaw(grupo));
@@ -158,7 +158,7 @@ async function ajustarJanela(janela, perfil, token, fetchImpl) {
   }
 }
 
-export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch } = {}) {
+async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch } = {}) {
   const grupos = separarPorLacuna(pontos).filter(grupo => grupo.length >= 2);
   if (!grupos.length) return { segmentos: [], ajuste: { status: 'sem_dados', provedor: token ? 'geoapify' : null } };
   if (!token) {
@@ -175,3 +175,16 @@ export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch
   }
   return { segmentos, ajuste: { status: statusDosSegmentos(segmentos), provedor: 'geoapify' } };
 }
+
+module.exports = {
+  LACUNA_MS,
+  LIMITE_PONTOS,
+  SOBREPOSICAO,
+  ajustarTrilha,
+  classificarPerfil,
+  criarJanelas,
+  normalizarPontos,
+  segmentosRaw,
+  separarPorLacuna,
+  separarPorPerfil
+};
