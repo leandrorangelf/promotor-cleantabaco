@@ -1,5 +1,7 @@
 import { neon } from '@neondatabase/serverless';
+import { createHash } from 'node:crypto';
 import { autenticar } from './_auth.js';
+import { ajustarTrilha, normalizarPontos, segmentosRaw } from './_map-match.mjs';
 
 function respostaCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,6 +11,27 @@ function respostaCors(res) {
 
 function permitidos(tipo) {
   return ['gestor', 'coordenador', 'diretoria'].includes(tipo);
+}
+
+function assinaturaPontos(pontos) {
+  const essenciais = normalizarPontos(pontos).map(ponto => [
+    ponto.latitude,
+    ponto.longitude,
+    ponto.precisao,
+    ponto.velocidade ?? null,
+    ponto.capturado_em
+  ]);
+  return createHash('sha256').update(JSON.stringify(essenciais)).digest('hex');
+}
+
+function lerCache(valor) {
+  if (!valor) return null;
+  try {
+    const cache = typeof valor === 'string' ? JSON.parse(valor) : valor;
+    return Array.isArray(cache?.segmentos) && cache?.ajuste?.status ? cache : null;
+  } catch {
+    return null;
+  }
 }
 
 export default async function handler(req, res) {
@@ -53,11 +76,16 @@ export default async function handler(req, res) {
         UNIQUE (jornada_id, ponto_id)
       )
     `;
+    await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_assinatura TEXT`;
+    await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_ajustada JSONB`;
+    await sql`ALTER TABLE jornadas ADD COLUMN IF NOT EXISTS rota_ajustada_em TIMESTAMPTZ`;
     const inicio = typeof req.query?.inicio === 'string' ? req.query.inicio : '';
     const fim = typeof req.query?.fim === 'string' ? req.query.fim : '';
     const promotor = typeof req.query?.promotor === 'string' ? req.query.promotor : '';
+    const deveAjustar = req.query?.ajustar === 'true' && Boolean(promotor);
     const jornadas = await sql`
-      SELECT id, promotor, data_local, status, iniciado_em, encerrado_em, motivo_encerramento
+      SELECT id, promotor, data_local, status, iniciado_em, encerrado_em, motivo_encerramento,
+             rota_assinatura, rota_ajustada, rota_ajustada_em
       FROM jornadas
       WHERE (${inicio} = '' OR data_local >= ${inicio}::date)
         AND (${fim} = '' OR data_local <= ${fim}::date)
@@ -75,7 +103,41 @@ export default async function handler(req, res) {
     ` : [];
     const porJornada = new Map(jornadas.map(j => [String(j.id), []]));
     for (const ponto of pontos) porJornada.get(String(ponto.jornada_id))?.push(ponto);
-    return res.status(200).json({ ok: true, jornadas: jornadas.map(j => ({ ...j, pontos: porJornada.get(String(j.id)) || [] })) });
+    const resposta = [];
+    for (const jornada of jornadas) {
+      const pontosJornada = porJornada.get(String(jornada.id)) || [];
+      const assinatura = assinaturaPontos(pontosJornada);
+      const cache = jornada.rota_assinatura === assinatura ? lerCache(jornada.rota_ajustada) : null;
+      let rota;
+      if (cache) {
+        rota = cache;
+      } else if (deveAjustar) {
+        rota = await ajustarTrilha(pontosJornada, {
+          token: process.env.MAPBOX_ACCESS_TOKEN || '',
+          fetchImpl: fetch
+        });
+        if (['completo', 'parcial'].includes(rota.ajuste.status)) {
+          try {
+            await sql`
+              UPDATE jornadas
+              SET rota_assinatura = ${assinatura}, rota_ajustada = ${JSON.stringify(rota)}::jsonb, rota_ajustada_em = NOW()
+              WHERE id = ${jornada.id}
+            `;
+          } catch {
+            // O cache é uma otimização; a rota calculada continua válida para esta resposta.
+          }
+        }
+      } else {
+        const segmentos = segmentosRaw(pontosJornada);
+        rota = {
+          segmentos,
+          ajuste: { status: segmentos.length ? 'indisponivel' : 'sem_dados', provedor: null }
+        };
+      }
+      const { rota_assinatura, rota_ajustada, rota_ajustada_em, ...dadosJornada } = jornada;
+      resposta.push({ ...dadosJornada, pontos: pontosJornada, segmentos: rota.segmentos, ajuste: rota.ajuste });
+    }
+    return res.status(200).json({ ok: true, jornadas: resposta });
   } catch (e) {
     return res.status(500).json({ erro: e.message });
   }
