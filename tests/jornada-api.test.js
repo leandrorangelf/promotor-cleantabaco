@@ -16,6 +16,8 @@ const jornadas = fs.readFileSync('api/jornadas.js', 'utf8');
 assert.ok(jornadas.includes("from './_map-match.cjs'"), 'jornadas deve usar helper CommonJS compatível com o runtime Vercel');
 assert.ok(!jornadas.includes("from './_map-match.mjs'"), 'função Vercel não deve carregar helper ESM via require');
 assert.ok(jornadas.includes('GEOAPIFY_API_KEY'), 'chave Geoapify deve ser lida somente no servidor');
+assert.ok(jornadas.includes('SELECT nome FROM promotores'), 'restrição do coordenador deve consultar a tabela real de promotores');
+assert.ok(!jornadas.includes('FROM usuarios'), 'API não deve consultar tabela usuarios inexistente');
 assert.ok(!jornadas.includes('MAPBOX_ACCESS_TOKEN'), 'API não deve depender da chave Mapbox');
 assert.ok(jornadas.includes('rota_assinatura'), 'deve persistir assinatura do cache');
 assert.ok(jornadas.includes('rota_ajustada JSONB'), 'deve persistir geometria derivada');

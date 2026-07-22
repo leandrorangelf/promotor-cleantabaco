@@ -98,7 +98,8 @@ export default async function handler(req, res) {
         AND (${fim} = '' OR data_local <= ${fim}::date)
         AND (${promotor} = '' OR promotor = ${promotor})
         AND (${sessao.tipo} <> 'coordenador' OR promotor IN (
-          SELECT nome FROM usuarios WHERE coordenador_usuario = ${sessao.usuario}
+          SELECT nome FROM promotores
+          WHERE ativo = TRUE AND tipo = 'promotor' AND coordenador_usuario = ${sessao.usuario}
         ))
       ORDER BY data_local DESC, iniciado_em DESC
       LIMIT 500
