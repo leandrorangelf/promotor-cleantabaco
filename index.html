@@ -2052,6 +2052,7 @@ let clientesCarregadoEm = 0;
 let visitasPromotorPromise = null;
 let clientesPromise = null;
 let promotoresAdmin = [];
+let presencasApp = {};
 const CACHE_MS = 60000;
 
 const SECAO_LABELS = ['Cadastro do PDV','Presença de Marca','Checklist Comercial','Inteligência de Mercado','Fotos & Observações'];
@@ -2387,6 +2388,7 @@ async function inicializarJornada() {
     await window.NativeJornadaBridge.schedule({ token: authToken, apiBase: API, dispositivoId: navigator.userAgent.slice(0, 120) });
     await window.NativeJornadaBridge.start({ token: authToken, apiBase: API });
     const status = await window.NativeJornadaBridge.getStatus();
+    await registrarPresencaApp(status);
     if (status.permissaoSegundoPlano === false) {
       document.getElementById('jornadaStatus').style.display = 'none';
       document.getElementById('jornadaPermissaoGuia').style.display = 'block';
@@ -2398,6 +2400,14 @@ async function inicializarJornada() {
     const texto = document.getElementById('jornadaStatusTexto');
     if (texto) texto.textContent = 'Permita localização nas configurações do app para ativar o rastreamento';
   }
+}
+
+async function registrarPresencaApp(status) {
+  if (!status?.versaoNome) return;
+  await apiFetch(`${API}/api/app-presenca`, {
+    method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ versaoNome: status.versaoNome, versaoCodigo: status.versaoCodigo })
+  });
 }
 
 async function abrirConfigPermissao() {
@@ -5360,9 +5370,14 @@ async function carregarPromotoresAdmin() {
   const lista = document.getElementById('admListaPromotores');
   if (lista) lista.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
   try {
-    const res = await apiFetch(`${API}/api/promotores`, { headers: headers() });
+    const [res, resPresenca] = await Promise.all([
+      apiFetch(`${API}/api/promotores`, { headers: headers() }),
+      apiFetch(`${API}/api/app-presenca`, { headers: headers() })
+    ]);
     const data = await res.json();
+    const dataPresenca = await resPresenca.json();
     promotoresAdmin = data.promotores || [];
+    presencasApp = Object.fromEntries((dataPresenca.presencas || []).map(p => [p.usuario, p]));
     renderPromotoresAdmin();
     renderCoordenadoresAdmin();
     preencherFiltroPromotores();
@@ -5414,11 +5429,17 @@ function popularFiltroPromotoresGestor() {
 function renderPromotoresAdmin() {
   const lista = document.getElementById('admListaPromotores');
   if (!lista) return;
-  lista.innerHTML = promotoresAdmin.length ? promotoresAdmin.map(p => `
+  lista.innerHTML = promotoresAdmin.length ? promotoresAdmin.map(p => {
+    const presenca = presencasApp[p.usuario];
+    const atualizado = Number(presenca?.versao_codigo || 0) >= 2;
+    const versaoApp = presenca ? `${presenca.versao_nome} (${presenca.versao_codigo})` : 'Sem informação';
+    const ultimoContato = presenca?.atualizado_em ? new Date(presenca.atualizado_em).toLocaleString('pt-BR') : 'Ainda não abriu a nova versão';
+    return `
     <div class="admin-row">
       <div>
         <div class="admin-name">${p.nome}</div>
         <div class="admin-meta">@${p.usuario} · ${p.tipo}</div>
+        ${p.tipo === 'promotor' ? `<div class="admin-meta">Versão do app: ${versaoApp} · ${atualizado ? 'Atualizado' : (presenca ? 'Desatualizado' : 'Sem informação')}</div><div class="admin-meta">Último contato: ${ultimoContato}</div>` : ''}
         ${p.tipo === 'promotor' && p.coordenador_usuario ? `<div class="admin-meta">Coordenador: ${nomeCoordenadorAdmin(p.coordenador_usuario)}</div>` : ''}
       </div>
       <div class="admin-actions">
@@ -5426,8 +5447,8 @@ function renderPromotoresAdmin() {
         <button class="btn-detalhes" type="button" onclick="editarPromotorAdmin(${p.id})">Editar</button>
         ${p.ativo ? `<button class="btn-excluir" type="button" onclick="desativarPromotorAdmin(${p.id})">Desativar</button>` : ''}
       </div>
-    </div>
-  `).join('') : '<div class="empty">Nenhum usuario cadastrado</div>';
+    </div>`;
+  }).join('') : '<div class="empty">Nenhum usuario cadastrado</div>';
 }
 
 function nomeCoordenadorAdmin(usuario) {

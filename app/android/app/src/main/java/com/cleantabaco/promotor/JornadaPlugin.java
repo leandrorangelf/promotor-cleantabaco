@@ -3,6 +3,7 @@ package com.cleantabaco.promotor;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.provider.Settings;
 
@@ -26,6 +27,13 @@ public class JornadaPlugin extends Plugin {
         result.put("permissaoLocalizacao", location); result.put("permissaoSegundoPlano", background);
         result.put("pendentes", new JornadaStorage(getContext()).contarPendentes());
         result.put("jornadaId", getContext().getSharedPreferences("jornada_config", 0).getString(JornadaForegroundService.EXTRA_JORNADA_ID, ""));
+        try {
+            PackageInfo info = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+            result.put("versaoNome", info.versionName == null ? "" : info.versionName);
+            result.put("versaoCodigo", android.os.Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode);
+        } catch (PackageManager.NameNotFoundException ignored) {
+            result.put("versaoNome", ""); result.put("versaoCodigo", 0);
+        }
         call.resolve(result);
     }
 
