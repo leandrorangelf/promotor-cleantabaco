@@ -113,7 +113,7 @@ export default async function handler(req, res) {
         rota = cache;
       } else if (deveAjustar) {
         rota = await ajustarTrilha(pontosJornada, {
-          token: process.env.MAPBOX_ACCESS_TOKEN || '',
+          token: process.env.GEOAPIFY_API_KEY || '',
           fetchImpl: fetch
         });
         if (['completo', 'parcial'].includes(rota.ajuste.status)) {

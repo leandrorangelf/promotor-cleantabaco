@@ -42,6 +42,10 @@ A trilha ajustada é uma representação derivada. Os pontos GPS brutos continua
 
 ## Arquitetura da rota
 
+### Decisão de provedor (atualizada em 22/07/2026)
+
+O serviço hospedado escolhido é a Geoapify Map Matching API. A integração usa `POST https://api.geoapify.com/v1/mapmatching`, chave servidor `GEOAPIFY_API_KEY`, GeoJSON como resposta e mantém Leaflet/OpenStreetMap no frontend. A escolha substitui a proposta inicial de Mapbox para evitar incompatibilidade de termos de exibição e não exige infraestrutura própria.
+
 ### Dados de entrada
 
 A fonte é a Jornada GPS já persistida, incluindo, quando disponíveis:
@@ -180,4 +184,3 @@ O HTML gera `data-galeria-url`, que no DOM corresponde a `dataset.galeriaUrl`. A
 - As miniaturas da Galeria aparecem sem exigir a abertura do modal.
 - Web e Android mantêm o mesmo comportamento.
 - Falha do serviço de ajuste não impede o uso do mapa.
-

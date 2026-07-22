@@ -14,7 +14,8 @@ assert.ok(pontos.includes('jornada_id'), 'pontos devem pertencer a uma jornada')
 
 const jornadas = fs.readFileSync('api/jornadas.js', 'utf8');
 assert.ok(jornadas.includes("from './_map-match.mjs'"), 'jornadas deve usar módulo isolado de map matching');
-assert.ok(jornadas.includes('MAPBOX_ACCESS_TOKEN'), 'token deve ser lido somente no servidor');
+assert.ok(jornadas.includes('GEOAPIFY_API_KEY'), 'chave Geoapify deve ser lida somente no servidor');
+assert.ok(!jornadas.includes('MAPBOX_ACCESS_TOKEN'), 'API não deve depender da chave Mapbox');
 assert.ok(jornadas.includes('rota_assinatura'), 'deve persistir assinatura do cache');
 assert.ok(jornadas.includes('rota_ajustada JSONB'), 'deve persistir geometria derivada');
 assert.ok(jornadas.includes('segmentos'), 'resposta deve expor segmentos estáveis');

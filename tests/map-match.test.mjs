@@ -47,8 +47,8 @@ assert.deepEqual(
   ['driving', 'walking', 'driving'],
   'deve preservar pequenos trechos sustentados a pé dentro da jornada motorizada'
 );
-const janelas = criarJanelas(Array.from({ length: 195 }, (_, i) => ({ i })));
-assert.deepEqual(janelas.map(janela => janela.length), [100, 100], 'janelas não devem repetir um bloco final já coberto');
+const janelas = criarJanelas(Array.from({ length: 1095 }, (_, i) => ({ i })));
+assert.deepEqual(janelas.map(janela => janela.length), [1000, 100], 'janelas devem respeitar o limite de mil pontos sem repetir bloco já coberto');
 assert.deepEqual(janelas[0].slice(-5), janelas[1].slice(0, 5), 'janelas devem sobrepor cinco pontos');
 
 const semToken = await ajustarTrilha(continuo, {
@@ -58,15 +58,23 @@ const semToken = await ajustarTrilha(continuo, {
 assert.equal(semToken.ajuste.status, 'indisponivel');
 assert.equal(semToken.segmentos[0].origem, 'raw');
 
-const urls = [];
+const chamadas = [];
 const ajustado = await ajustarTrilha(continuo, {
   token: 'teste',
-  fetchImpl: async url => {
-    urls.push(url);
+  fetchImpl: async (url, opcoes) => {
+    chamadas.push({ url, opcoes });
     return {
       ok: true,
       json: async () => ({
-        matchings: [{ geometry: { coordinates: [[-46, -23], [-46.001, -23.001], [-46.002, -23.002]] } }]
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          geometry: {
+            type: 'MultiLineString',
+            coordinates: [[[-46, -23], [-46.001, -23.001], [-46.002, -23.002]]]
+          },
+          properties: {}
+        }]
       })
     };
   }
@@ -74,9 +82,12 @@ const ajustado = await ajustarTrilha(continuo, {
 assert.equal(ajustado.ajuste.status, 'completo');
 assert.equal(ajustado.segmentos[0].origem, 'matched');
 assert.deepEqual(ajustado.segmentos[0].pontos[0], [-23, -46], 'deve converter [lng,lat] para [lat,lng]');
-assert.match(urls[0], /mapbox\/driving/);
-assert.match(urls[0], /timestamps=/);
-assert.match(urls[0], /radiuses=/);
+assert.match(chamadas[0].url, /^https:\/\/api\.geoapify\.com\/v1\/mapmatching\?apiKey=/);
+assert.equal(chamadas[0].opcoes.method, 'POST');
+assert.equal(chamadas[0].opcoes.headers['Content-Type'], 'application/json');
+assert.equal(JSON.parse(chamadas[0].opcoes.body).mode, 'drive');
+assert.deepEqual(JSON.parse(chamadas[0].opcoes.body).waypoints[0].location, [-46, -23]);
+assert.equal('bearing' in JSON.parse(chamadas[0].opcoes.body).waypoints[0], false, 'não deve inventar direção ausente');
 
 const falha = await ajustarTrilha([...continuo, ponto(20, -23.01, -46.01, 1)], {
   token: 'teste',
@@ -84,5 +95,21 @@ const falha = await ajustarTrilha([...continuo, ponto(20, -23.01, -46.01, 1)], {
 });
 assert.equal(falha.segmentos.every(segmento => segmento.origem === 'raw'), true);
 assert.equal(falha.ajuste.status, 'indisponivel');
+
+const caminhada = await ajustarTrilha([
+  ponto(0, -23, -46, 1),
+  ponto(1, -23.0002, -46.0002, 1.1),
+  ponto(2, -23.0004, -46.0004, 0.9)
+], {
+  token: 'teste',
+  fetchImpl: async (_url, opcoes) => ({
+    ok: true,
+    json: async () => {
+      assert.equal(JSON.parse(opcoes.body).mode, 'walk');
+      return { features: [{ geometry: { type: 'MultiLineString', coordinates: [[[-46, -23], [-46.0004, -23.0004]]] } }] };
+    }
+  })
+});
+assert.equal(caminhada.ajuste.status, 'completo');
 
 console.log('map-match.test.mjs passou');

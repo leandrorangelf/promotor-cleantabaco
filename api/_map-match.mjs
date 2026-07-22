@@ -1,5 +1,5 @@
 export const LACUNA_MS = 15 * 60 * 1000;
-export const LIMITE_PONTOS = 100;
+export const LIMITE_PONTOS = 1000;
 export const SOBREPOSICAO = 5;
 const LIMITE_CAMINHADA_MPS = 2.2;
 
@@ -118,16 +118,31 @@ function statusDosSegmentos(segmentos) {
 }
 
 async function ajustarJanela(janela, perfil, token, fetchImpl) {
-  const coordenadas = janela.map(ponto => `${ponto.longitude},${ponto.latitude}`).join(';');
-  const timestamps = janela.map(ponto => Math.floor(Date.parse(ponto.capturado_em) / 1000)).join(';');
-  const radiuses = janela.map(ponto => Math.min(100, Math.max(5, Math.round(ponto.precisao)))).join(';');
-  const url = `https://api.mapbox.com/matching/v5/mapbox/${perfil}/${coordenadas}.json?geometries=geojson&overview=full&tidy=true&timestamps=${timestamps}&radiuses=${radiuses}&access_token=${encodeURIComponent(token)}`;
+  const modo = perfil === 'walking' ? 'walk' : 'drive';
+  const waypoints = janela.map(ponto => ({
+    location: [ponto.longitude, ponto.latitude],
+    timestamp: ponto.capturado_em,
+    ...(ponto.direcao !== null && ponto.direcao !== undefined && Number.isFinite(+ponto.direcao)
+      ? { bearing: +ponto.direcao }
+      : {})
+  }));
+  const url = `https://api.geoapify.com/v1/mapmatching?apiKey=${encodeURIComponent(token)}`;
   try {
-    const resposta = await fetchImpl(url, { method: 'GET', signal: AbortSignal.timeout(12000) });
+    const resposta = await fetchImpl(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: modo, waypoints }),
+      signal: AbortSignal.timeout(12000)
+    });
     if (!resposta.ok) return segmentoRaw(janela, perfil);
     const dados = await resposta.json();
-    const coordenadasAjustadas = (dados.matchings || [])
-      .flatMap(matching => matching?.geometry?.coordinates || [])
+    const coordenadasAjustadas = (dados.features || [])
+      .flatMap(feature => {
+        const geometria = feature?.geometry;
+        if (geometria?.type === 'LineString') return geometria.coordinates || [];
+        if (geometria?.type === 'MultiLineString') return (geometria.coordinates || []).flatMap(linha => linha || []);
+        return [];
+      })
       .filter(par => Array.isArray(par) && par.length >= 2 && Number.isFinite(+par[0]) && Number.isFinite(+par[1]))
       .map(([lng, lat]) => [+lat, +lng]);
     if (coordenadasAjustadas.length < 2) return segmentoRaw(janela, perfil);
@@ -145,7 +160,7 @@ async function ajustarJanela(janela, perfil, token, fetchImpl) {
 
 export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch } = {}) {
   const grupos = separarPorLacuna(pontos).filter(grupo => grupo.length >= 2);
-  if (!grupos.length) return { segmentos: [], ajuste: { status: 'sem_dados', provedor: token ? 'mapbox' : null } };
+  if (!grupos.length) return { segmentos: [], ajuste: { status: 'sem_dados', provedor: token ? 'geoapify' : null } };
   if (!token) {
     const segmentos = grupos.map(grupo => segmentoRaw(grupo));
     return { segmentos, ajuste: { status: 'indisponivel', provedor: null } };
@@ -158,5 +173,5 @@ export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch
       for (const janela of janelas) segmentos.push(await ajustarJanela(janela, trecho.perfil, token, fetchImpl));
     }
   }
-  return { segmentos, ajuste: { status: statusDosSegmentos(segmentos), provedor: 'mapbox' } };
+  return { segmentos, ajuste: { status: statusDosSegmentos(segmentos), provedor: 'geoapify' } };
 }

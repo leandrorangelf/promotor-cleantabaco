@@ -1,5 +1,7 @@
 # Mapa, rota ajustada e galeria Implementation Plan
 
+> **Provider amendment (22/07/2026):** Geoapify Map Matching substitui Mapbox. A implementação final usa `GEOAPIFY_API_KEY`, `POST https://api.geoapify.com/v1/mapmatching`, até 1.000 pontos por chamada e resposta GeoJSON. Referências Mapbox abaixo registram o plano originalmente executado e estão substituídas por esta decisão.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Restaurar as prévias da Galeria, organizar a aba Mapa no desktop e exibir a Jornada GPS ajustada às ruas sem perder os pontos originais.
