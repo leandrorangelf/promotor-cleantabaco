@@ -47,6 +47,38 @@ export function classificarPerfil(pontos = []) {
   return mediana < LIMITE_CAMINHADA_MPS ? 'walking' : 'driving';
 }
 
+export function separarPorPerfil(pontos = []) {
+  const normalizados = normalizarPontos(pontos);
+  if (normalizados.length < 2) return [];
+  const lentos = normalizados.map(ponto =>
+    ponto.velocidade !== null &&
+    ponto.velocidade !== undefined &&
+    Number.isFinite(+ponto.velocidade) &&
+    +ponto.velocidade < LIMITE_CAMINHADA_MPS
+  );
+  const perfis = Array(normalizados.length).fill('driving');
+  for (let inicio = 0; inicio < lentos.length;) {
+    if (!lentos[inicio]) { inicio += 1; continue; }
+    let fim = inicio + 1;
+    while (fim < lentos.length && lentos[fim]) fim += 1;
+    if (fim - inicio >= 3) {
+      for (let i = inicio; i < fim; i += 1) perfis[i] = 'walking';
+    }
+    inicio = fim;
+  }
+
+  const segmentos = [{ perfil: perfis[0], pontos: [normalizados[0]] }];
+  for (let i = 1; i < normalizados.length; i += 1) {
+    const atual = segmentos.at(-1);
+    if (perfis[i] === atual.perfil) {
+      atual.pontos.push(normalizados[i]);
+    } else {
+      segmentos.push({ perfil: perfis[i], pontos: [normalizados[i - 1], normalizados[i]] });
+    }
+  }
+  return segmentos.filter(segmento => segmento.pontos.length >= 2);
+}
+
 export function criarJanelas(pontos = [], tamanho = LIMITE_PONTOS, sobreposicao = SOBREPOSICAO) {
   if (!Number.isInteger(tamanho) || tamanho < 2) throw new Error('Tamanho de janela inválido');
   if (!Number.isInteger(sobreposicao) || sobreposicao < 0 || sobreposicao >= tamanho) throw new Error('Sobreposição inválida');
@@ -121,9 +153,10 @@ export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch
 
   const segmentos = [];
   for (const grupo of grupos) {
-    const perfil = classificarPerfil(grupo);
-    const janelas = criarJanelas(grupo);
-    for (const janela of janelas) segmentos.push(await ajustarJanela(janela, perfil, token, fetchImpl));
+    for (const trecho of separarPorPerfil(grupo)) {
+      const janelas = criarJanelas(trecho.pontos);
+      for (const janela of janelas) segmentos.push(await ajustarJanela(janela, trecho.perfil, token, fetchImpl));
+    }
   }
   return { segmentos, ajuste: { status: statusDosSegmentos(segmentos), provedor: 'mapbox' } };
 }

@@ -3,6 +3,7 @@ import {
   ajustarTrilha,
   classificarPerfil,
   criarJanelas,
+  separarPorPerfil,
   separarPorLacuna
 } from '../api/_map-match.mjs';
 
@@ -30,6 +31,21 @@ assert.equal(
   ]),
   'walking',
   'trecho lento sustentado deve usar caminhada'
+);
+const misto = [
+  ponto(0, -23, -46, 12),
+  ponto(1, -23.001, -46.001, 11),
+  ponto(2, -23.002, -46.002, 10),
+  ponto(3, -23.0022, -46.0022, 1),
+  ponto(4, -23.0024, -46.0024, 1.1),
+  ponto(5, -23.0026, -46.0026, 0.9),
+  ponto(6, -23.0036, -46.0036, 9),
+  ponto(7, -23.0046, -46.0046, 10)
+];
+assert.deepEqual(
+  separarPorPerfil(misto).map(segmento => segmento.perfil),
+  ['driving', 'walking', 'driving'],
+  'deve preservar pequenos trechos sustentados a pé dentro da jornada motorizada'
 );
 const janelas = criarJanelas(Array.from({ length: 195 }, (_, i) => ({ i })));
 assert.deepEqual(janelas.map(janela => janela.length), [100, 100], 'janelas não devem repetir um bloco final já coberto');
