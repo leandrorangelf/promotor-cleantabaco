@@ -1,0 +1,129 @@
+export const LACUNA_MS = 15 * 60 * 1000;
+export const LIMITE_PONTOS = 100;
+export const SOBREPOSICAO = 5;
+const LIMITE_CAMINHADA_MPS = 2.2;
+
+export function normalizarPontos(pontos = []) {
+  return pontos
+    .filter(ponto =>
+      Number.isFinite(+ponto?.latitude) &&
+      Number.isFinite(+ponto?.longitude) &&
+      !Number.isNaN(Date.parse(ponto?.capturado_em))
+    )
+    .map(ponto => ({
+      ...ponto,
+      latitude: +ponto.latitude,
+      longitude: +ponto.longitude,
+      precisao: ponto.precisao !== null && ponto.precisao !== undefined && Number.isFinite(+ponto.precisao)
+        ? Math.max(1, +ponto.precisao)
+        : 25
+    }))
+    .sort((a, b) => Date.parse(a.capturado_em) - Date.parse(b.capturado_em));
+}
+
+export function separarPorLacuna(pontos, lacunaMs = LACUNA_MS) {
+  return normalizarPontos(pontos).reduce((grupos, ponto) => {
+    const atual = grupos.at(-1);
+    if (!atual || Date.parse(ponto.capturado_em) - Date.parse(atual.at(-1).capturado_em) > lacunaMs) {
+      grupos.push([ponto]);
+    } else {
+      atual.push(ponto);
+    }
+    return grupos;
+  }, []);
+}
+
+export function classificarPerfil(pontos = []) {
+  const velocidades = pontos
+    .map(ponto => ponto?.velocidade)
+    .filter(valor => valor !== null && valor !== undefined && Number.isFinite(+valor))
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (velocidades.length < 3) return 'driving';
+  const meio = Math.floor(velocidades.length / 2);
+  const mediana = velocidades.length % 2
+    ? velocidades[meio]
+    : (velocidades[meio - 1] + velocidades[meio]) / 2;
+  return mediana < LIMITE_CAMINHADA_MPS ? 'walking' : 'driving';
+}
+
+export function criarJanelas(pontos = [], tamanho = LIMITE_PONTOS, sobreposicao = SOBREPOSICAO) {
+  if (!Number.isInteger(tamanho) || tamanho < 2) throw new Error('Tamanho de janela inválido');
+  if (!Number.isInteger(sobreposicao) || sobreposicao < 0 || sobreposicao >= tamanho) throw new Error('Sobreposição inválida');
+  const janelas = [];
+  const passo = tamanho - sobreposicao;
+  for (let inicio = 0; inicio < pontos.length; inicio += passo) {
+    const janela = pontos.slice(inicio, inicio + tamanho);
+    if (janela.length < 2) break;
+    janelas.push(janela);
+    if (inicio + tamanho >= pontos.length) break;
+  }
+  return janelas;
+}
+
+function segmentoRaw(pontos, perfil = classificarPerfil(pontos)) {
+  return {
+    perfil,
+    origem: 'raw',
+    pontos: pontos.map(ponto => [ponto.latitude, ponto.longitude]),
+    inicio_em: pontos[0]?.capturado_em || null,
+    fim_em: pontos.at(-1)?.capturado_em || null
+  };
+}
+
+export function segmentosRaw(pontos = []) {
+  return separarPorLacuna(pontos)
+    .filter(grupo => grupo.length >= 2)
+    .map(grupo => segmentoRaw(grupo));
+}
+
+function statusDosSegmentos(segmentos) {
+  if (!segmentos.length) return 'sem_dados';
+  const ajustados = segmentos.filter(segmento => segmento.origem === 'matched').length;
+  if (ajustados === segmentos.length) return 'completo';
+  if (ajustados > 0) return 'parcial';
+  return 'indisponivel';
+}
+
+async function ajustarJanela(janela, perfil, token, fetchImpl) {
+  const coordenadas = janela.map(ponto => `${ponto.longitude},${ponto.latitude}`).join(';');
+  const timestamps = janela.map(ponto => Math.floor(Date.parse(ponto.capturado_em) / 1000)).join(';');
+  const radiuses = janela.map(ponto => Math.min(100, Math.max(5, Math.round(ponto.precisao)))).join(';');
+  const url = `https://api.mapbox.com/matching/v5/mapbox/${perfil}/${coordenadas}.json?geometries=geojson&overview=full&tidy=true&timestamps=${timestamps}&radiuses=${radiuses}&access_token=${encodeURIComponent(token)}`;
+  try {
+    const resposta = await fetchImpl(url, { method: 'GET', signal: AbortSignal.timeout(12000) });
+    if (!resposta.ok) return segmentoRaw(janela, perfil);
+    const dados = await resposta.json();
+    const coordenadasAjustadas = (dados.matchings || [])
+      .flatMap(matching => matching?.geometry?.coordinates || [])
+      .filter(par => Array.isArray(par) && par.length >= 2 && Number.isFinite(+par[0]) && Number.isFinite(+par[1]))
+      .map(([lng, lat]) => [+lat, +lng]);
+    if (coordenadasAjustadas.length < 2) return segmentoRaw(janela, perfil);
+    return {
+      perfil,
+      origem: 'matched',
+      pontos: coordenadasAjustadas,
+      inicio_em: janela[0].capturado_em,
+      fim_em: janela.at(-1).capturado_em
+    };
+  } catch {
+    return segmentoRaw(janela, perfil);
+  }
+}
+
+export async function ajustarTrilha(pontos = [], { token = '', fetchImpl = fetch } = {}) {
+  const grupos = separarPorLacuna(pontos).filter(grupo => grupo.length >= 2);
+  if (!grupos.length) return { segmentos: [], ajuste: { status: 'sem_dados', provedor: token ? 'mapbox' : null } };
+  if (!token) {
+    const segmentos = grupos.map(grupo => segmentoRaw(grupo));
+    return { segmentos, ajuste: { status: 'indisponivel', provedor: null } };
+  }
+
+  const segmentos = [];
+  for (const grupo of grupos) {
+    const perfil = classificarPerfil(grupo);
+    const janelas = criarJanelas(grupo);
+    for (const janela of janelas) segmentos.push(await ajustarJanela(janela, perfil, token, fetchImpl));
+  }
+  return { segmentos, ajuste: { status: statusDosSegmentos(segmentos), provedor: 'mapbox' } };
+}
