@@ -4768,6 +4768,12 @@ function ultimaVisitaCliente(cliente) {
     .sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em))[0] || null;
 }
 
+function ultimoPedidoCliente(cliente) {
+  return [...visitasPromotor]
+    .filter(v => clienteMatchesVisita(cliente, v) && v.dados?.comercial?.pedidoFeito === 'Sim')
+    .sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em))[0] || null;
+}
+
 function preencherCadastroCliente(c) {
   document.getElementById('nomeFantasia').value = c.nome_fantasia || '';
   const tipoEl = document.getElementById('tipoEstab');
@@ -4881,9 +4887,26 @@ function iniciarVisitaCliente(clienteJson) {
   preencherCadastroCliente(c);
   const ultima = ultimaVisitaCliente(c);
   aplicarBaseUltimaVisita(ultima);
-  setRadioValor('pedidoFeito', '', 1);
-  document.getElementById('statusPedido').selectedIndex = 0;
-  document.getElementById('bloquePedidos').style.display = 'none';
+  const ultimoPedido = ultimoPedidoCliente(c);
+  if (ultimoPedido) {
+    const com = ultimoPedido.dados?.comercial || {};
+    const qty = com.pedidoPac || com.pedidoQty || {};
+    const preco = com.pedidoPreco || {};
+    setRadioValor('pedidoFeito', 'Sim', 1);
+    document.getElementById('bloquePedidos').style.display = 'block';
+    ['GR','GM','CM','CC'].forEach(sku => {
+      const qtyEl = document.getElementById('qty' + sku);
+      if (qtyEl) qtyEl.textContent = String(qty[sku] || 0).replace('.', ',');
+      const precoEl = document.getElementById('preco' + sku);
+      if (precoEl) precoEl.value = preco[sku] || '';
+    });
+    calcularTotalPedido();
+    document.getElementById('statusPedido').value = 'Em negociação';
+  } else {
+    setRadioValor('pedidoFeito', '', 1);
+    document.getElementById('statusPedido').selectedIndex = 0;
+    document.getElementById('bloquePedidos').style.display = 'none';
+  }
   acompanhamentoVisitaId = ultima?.id || null;
   const aviso = document.getElementById('revisitaAviso');
   aviso?.classList.add('open');
@@ -4892,7 +4915,8 @@ function iniciarVisitaCliente(clienteJson) {
   if (titulo) titulo.textContent = 'Revisita rapida: ' + (c.nome_fantasia || 'PDV');
   if (texto) {
     const ultimaTxt = ultima ? ' Ultima visita: ' + new Date(ultima.criado_em).toLocaleDateString('pt-BR') + '.' : '';
-    texto.textContent = 'Cadastro carregado. Pedido, fotos e observacoes ficam novos para esta visita.' + ultimaTxt;
+    const pedidoTxt = ultimoPedido ? ' Último pedido carregado, ajuste o que mudou.' : ' Pedido fica novo para esta visita.';
+    texto.textContent = 'Cadastro carregado.' + pedidoTxt + ultimaTxt;
   }
   document.getElementById('btnSalvar').textContent = 'Salvar Revisita';
   irSecao(2);
