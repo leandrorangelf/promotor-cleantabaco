@@ -2679,9 +2679,9 @@ function renderBuscaClientesGestor() {
   }
   resultados = resultados.slice(0, 50);
   if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
-  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th><th>Tipo</th></tr></thead><tbody>${resultados.map(c => {
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Código</th><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th><th>Tipo</th></tr></thead><tbody>${resultados.map(c => {
     const tipo = tipoClienteGestor(c, visitasGestor.filter(v => clienteMatchesVisita(c, v)));
-    return `<tr onclick="abrirFichaClienteGestor('${esc(c.id)}')"><td><strong>${esc(c.nome_fantasia)}</strong></td><td>${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</td><td>${esc(c.promotor || '—')}</td><td>${badgeTipoCliente(tipo)}</td></tr>`;
+    return `<tr onclick="abrirFichaClienteGestor('${esc(c.id)}')"><td>${esc(c.codigo || '—')}</td><td><strong>${esc(c.nome_fantasia)}</strong></td><td>${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</td><td>${esc(c.promotor || '—')}</td><td>${badgeTipoCliente(tipo)}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
