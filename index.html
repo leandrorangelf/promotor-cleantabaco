@@ -2610,7 +2610,7 @@ function renderBuscaClientesGestor() {
     return normalizarTexto(c.nome_fantasia).includes(termo) || (termoDigitos && cnpjDigitos.includes(termoDigitos));
   }).slice(0, 50);
   if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
-  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${c.id}')"><td><strong>${c.nome_fantasia}</strong></td><td>${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</td><td>${c.promotor || '—'}</td></tr>`).join('')}</tbody></table>`;
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${esc(c.id)}')"><td><strong>${esc(c.nome_fantasia)}</strong></td><td>${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</td><td>${esc(c.promotor || '—')}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function abrirFichaClienteGestor(id) {
@@ -2659,16 +2659,16 @@ function renderFichaResumo() {
   document.getElementById('fichaSubpageResumo').innerHTML = `
     <div class="rel-section">
       <div class="rel-title">Dados cadastrais</div>
-      <div class="rel-row"><span class="rel-key">Código</span><span class="rel-val">${c.codigo || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${c.cnpj || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${c.tipo || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${c.ie || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${c.endereco || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${c.nome_comprador || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${c.telefone || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${c.distribuidor || '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${c.promotor || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Código</span><span class="rel-val">${esc(c.codigo || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${esc(c.cnpj || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${esc(c.tipo || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${esc(c.ie || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${esc(c.endereco || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${esc(c.nome_comprador || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${esc(c.telefone || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${esc(c.distribuidor || '—')}</span></div>
+      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${esc(c.promotor || '—')}</span></div>
     </div>
     <div class="rel-section">
       <div class="rel-title">Indicadores</div>
@@ -2691,7 +2691,7 @@ function renderFichaPedidos() {
     const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const status = statusDaVisita(v);
     const val = valorPedido(v);
-    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td><span class="status-chip ${statusClass(status)}">${status}</span></td><td>${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td></tr>`;
+    return `<tr onclick="abrirDetalheGestor('${esc(v.id)}')"><td>${data}</td><td><span class="status-chip ${statusClass(status)}">${esc(status)}</span></td><td>${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
@@ -2701,7 +2701,7 @@ function renderFichaVisitas() {
   if (!visitas.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>'; return; }
   el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Promotor</th><th>Pedido</th></tr></thead><tbody>${visitas.map(v => {
     const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td>${v.promotor || '—'}</td><td>${v.dados?.comercial?.pedidoFeito === 'Sim' ? 'Sim' : 'Não'}</td></tr>`;
+    return `<tr onclick="abrirDetalheGestor('${esc(v.id)}')"><td>${data}</td><td>${esc(v.promotor || '—')}</td><td>${v.dados?.comercial?.pedidoFeito === 'Sim' ? 'Sim' : 'Não'}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
