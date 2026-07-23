@@ -3000,9 +3000,9 @@ function exportarPedidosPDF(tipo) {
   const lista = pedidosTelaCache[tipo] || [];
   if (!lista.length) return toast('Nenhum pedido nos filtros atuais');
   const skuNomes = { GR: 'Gudang Red', GM: 'Gudang Menta', CM: 'Cretec Menta', CC: 'Cretec Cereja' };
-  let linhas = '';
   let totalGeral = 0;
-  [...lista].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).forEach(v => {
+  let pacotesGeral = 0;
+  const blocos = [...lista].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).map(v => {
     const d = v.dados || {};
     const p = d.pdv || {};
     const c = d.comercial || {};
@@ -3011,44 +3011,74 @@ function exportarPedidosPDF(tipo) {
     const dt = new Date(v.criado_em);
     const data = dt.toLocaleDateString('pt-BR');
     const hora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const itens = Object.keys(skuNomes).filter(sku => Number(qty[sku]) > 0);
-    (itens.length ? itens : ['']).forEach(sku => {
-      const pac = sku ? Number(qty[sku] || 0) : 0;
-      const precoPac = sku ? Number(preco[sku] || 0) : 0;
+    const c2 = (tipo === 'G' ? clientesGestor : todosClientes).find(x => x.promotor === v.promotor && clienteMatchesVisita(x, v));
+    const status = statusDaVisita(v);
+    let totalPedido = 0;
+    const linhasProduto = Object.keys(skuNomes).filter(sku => Number(qty[sku]) > 0).map(sku => {
+      const pac = Number(qty[sku] || 0);
+      const precoPac = Number(preco[sku] || 0);
       const subtotal = pac * precoPac;
-      totalGeral += subtotal;
-      linhas += `<tr>
-        <td>${esc(data)}</td>
-        <td>${esc(hora)}</td>
-        <td>${esc(p.nomeFantasia || 'PDV sem nome')}</td>
-        <td>${esc(v.promotor || '—')}</td>
-        <td>${esc(p.distribuidor || '—')}</td>
-        <td>${esc(sku ? skuNomes[sku] : 'Produtos não informados')}</td>
-        <td style="text-align:center;">${sku ? pac : '—'}</td>
+      totalPedido += subtotal;
+      pacotesGeral += pac;
+      return `<tr>
+        <td>${esc(skuNomes[sku])} (${sku})</td>
+        <td style="text-align:center;">${pac}</td>
         <td style="text-align:right;">${precoPac > 0 ? 'R$ ' + precoPac.toFixed(2) : '—'}</td>
         <td style="text-align:right;">${subtotal > 0 ? 'R$ ' + subtotal.toFixed(2) : '—'}</td>
       </tr>`;
-    });
-  });
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:#6B6480;">Produtos não informados</td></tr>';
+    totalGeral += totalPedido;
+    return `
+    <div class="bloco">
+      <div class="bloco-header">
+        <div>
+          <div class="bloco-nome">${esc(p.nomeFantasia || 'PDV sem nome')} ${c2?.codigo ? `<span class="bloco-codigo">${esc(c2.codigo)}</span>` : ''}</div>
+          <div class="bloco-sub">${esc(data)} às ${esc(hora)} · Promotor: ${esc(v.promotor || '—')} · <span class="status-chip">${esc(status)}</span></div>
+        </div>
+      </div>
+      <div class="bloco-info">
+        <div><span class="bloco-label">CNPJ</span> ${esc(p.cnpj || '—')}</div>
+        <div><span class="bloco-label">IE</span> ${esc(p.ie || '—')}</div>
+        <div><span class="bloco-label">Endereço</span> ${esc(p.endereco || '—')}, ${esc(p.cidade || '—')}/${esc(p.uf || '—')}</div>
+        <div><span class="bloco-label">Comprador</span> ${esc(p.nomeComprador || '—')} · <span class="bloco-label">Telefone</span> ${esc(p.telefone || '—')}</div>
+        <div><span class="bloco-label">Distribuidor</span> ${esc(p.distribuidor || '—')}</div>
+      </div>
+      <table>
+        <thead><tr><th>Produto</th><th style="text-align:center;">Pacotes</th><th style="text-align:right;">R$/pac</th><th style="text-align:right;">Subtotal</th></tr></thead>
+        <tbody>${linhasProduto}</tbody>
+      </table>
+      <div class="bloco-total">Total do pedido: ${totalPedido > 0 ? 'R$ ' + totalPedido.toFixed(2) : '—'}</div>
+      <div class="bloco-conferencia">
+        <span class="checkbox"></span> Conferido pelo distribuidor &nbsp;&nbsp;&nbsp; Data: ________________ &nbsp;&nbsp;&nbsp; Assinatura: ________________________________
+      </div>
+    </div>`;
+  }).join('');
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     body { font-family: Arial, sans-serif; font-size: 12px; color: #1A1428; padding: 24px; }
     h1 { font-size: 18px; color: #1E1648; margin-bottom: 4px; }
     .sub { color: #6B6480; font-size: 12px; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; }
+    .resumo-geral { background: #EEEDFE; border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; font-weight: 700; color: #1E1648; }
+    .bloco { border: 1px solid #D0CCC4; border-radius: 8px; padding: 14px; margin-bottom: 16px; page-break-inside: avoid; }
+    .bloco-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .bloco-nome { font-size: 14px; font-weight: 800; color: #1E1648; }
+    .bloco-codigo { font-size: 11px; font-weight: 700; color: #6B6480; margin-left: 6px; }
+    .bloco-sub { font-size: 11px; color: #6B6480; margin-top: 2px; }
+    .bloco-info { font-size: 12px; margin-bottom: 10px; line-height: 1.6; }
+    .bloco-label { color: #6B6480; font-weight: 700; }
+    .status-chip { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: #EEEDFE; color: #1E1648; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
     th { background: #1E1648; color: #fff; padding: 6px 8px; font-size: 11px; text-align: left; }
     td { padding: 6px 8px; border-bottom: 1px solid #E0DDD8; }
-    .total-row { background: #EEEDFE; font-weight: 700; }
-    .total-row td { border-bottom: none; }
+    .bloco-total { text-align: right; font-weight: 800; color: #1E1648; margin-bottom: 8px; }
+    .bloco-conferencia { font-size: 11px; color: #1A1428; border-top: 1px dashed #D0CCC4; padding-top: 10px; }
+    .checkbox { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #1A1428; margin-right: 4px; vertical-align: middle; }
+    .footer { margin-top: 24px; font-size: 11px; color: #6B6480; border-top: 1px solid #E0DDD8; padding-top: 12px; }
   </style></head><body>
-    <h1>🟢 Relação de Pedidos — Cleantabaco</h1>
+    <h1>🟢 Romaneio de Pedidos — Cleantabaco</h1>
     <div class="sub">Gerado em ${new Date().toLocaleString('pt-BR')} · ${lista.length} pedido(s) no filtro atual</div>
-    <table>
-      <thead><tr><th>Data</th><th>Hora</th><th>Cliente/PDV</th><th>Promotor</th><th>Distribuidor</th><th>Produto</th><th style="text-align:center;">Pacotes</th><th style="text-align:right;">R$/pac</th><th style="text-align:right;">Subtotal</th></tr></thead>
-      <tbody>
-        ${linhas}
-        <tr class="total-row"><td colspan="8" style="text-align:right;">TOTAL GERAL</td><td style="text-align:right;">R$ ${totalGeral.toFixed(2)}</td></tr>
-      </tbody>
-    </table>
+    <div class="resumo-geral">Total de pacotes: ${pacotesGeral.toLocaleString('pt-BR')} · Valor total: R$ ${totalGeral.toFixed(2)}</div>
+    ${blocos}
+    <div class="footer">Cleantabaco Distribuidora · Romaneio gerado via painel do gestor · ${new Date().toLocaleDateString('pt-BR')}</div>
   </body></html>`;
   const win = window.open('', '_blank');
   win.document.write(html);
