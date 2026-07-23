@@ -1607,10 +1607,12 @@ button:active { transform: translateY(1px); }
       <div class="filtro-group"><label>Status</label><select id="gFiltroPedidoStatus" onchange="renderPedidos('G')"><option value="">Todos</option><option>Em negociação</option><option>Pedido confirmado</option><option>Pedido entregue</option></select></div>
       <div class="filtro-group"><label>Promotor</label><select id="gFiltroPedidoPromotor" onchange="renderPedidos('G')"><option value="">Todos</option></select></div>
       <div class="filtro-group"><label>Coordenador</label><select id="gFiltroPedidoCoordenador" onchange="renderPedidos('G')"><option value="">Todos</option></select></div>
+      <div class="filtro-group"><label>Distribuidor</label><select id="gFiltroPedidoDistribuidor" onchange="renderPedidos('G')"><option value="">Todos</option></select></div>
       <div class="filtro-group"><label>Cliente/PDV</label><input id="gFiltroPedidoCliente" type="text" placeholder="Nome do cliente" oninput="renderPedidos('G')"></div>
       <div class="filtro-group"><label>Busca</label><input id="gFiltroPedidoBusca" type="search" placeholder="Cidade, UF ou produto" oninput="renderPedidos('G')"></div>
       <button class="btn-filtrar" type="button" onclick="limparFiltrosPedidos('G')">Limpar filtros</button>
-      <button class="export-btn orders" type="button" onclick="exportarPedidosTela('G')">Exportar pedidos filtrados</button>
+      <button class="export-btn orders" type="button" onclick="exportarPedidosTela('G')">Exportar CSV</button>
+      <button class="export-btn orders" type="button" onclick="exportarPedidosPDF('G')">Exportar PDF</button>
     </div>
     <div id="gPedidosResumo" class="pedidos-resumo"></div>
     <div id="gPedidosLista" class="pedidos-tabela-wrap"></div>
@@ -2617,7 +2619,11 @@ function pacotesPedido(v) {
 function textoProdutosPedido(v) {
   const c = v.dados?.comercial || {};
   const qty = c.pedidoPac || c.pedidoQty || {};
-  return Object.keys(PEDIDOS_SKUS).filter(sku => Number(qty[sku]) > 0).map(sku => `${PEDIDOS_SKUS[sku]} (${sku}): ${qty[sku]} pac`).join('<br>') || 'Produtos não informados';
+  const preco = c.pedidoPreco || {};
+  return Object.keys(PEDIDOS_SKUS).filter(sku => Number(qty[sku]) > 0).map(sku => {
+    const precoSku = Number(preco[sku] || 0);
+    return `${PEDIDOS_SKUS[sku]} (${sku}): ${qty[sku]} pac${precoSku > 0 ? ' × R$ ' + precoSku.toFixed(2) + '/pac' : ''}`;
+  }).join('<br>') || 'Produtos não informados';
 }
 
 function coordenadorDoPromotor(nome) {
@@ -2874,6 +2880,11 @@ function preencherFiltrosPedidos() {
   const coordenadorAtual = coordSel?.value || '';
   if (coordSel) coordSel.innerHTML = '<option value="">Todos</option>' + coordenadores.map(c => `<option value="${c}">${nomeCoordenadorPedido(c)}</option>`).join('');
   if (coordSel) coordSel.value = coordenadores.includes(coordenadorAtual) ? coordenadorAtual : '';
+  const distribuidores = [...new Set(visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').map(v => v.dados?.pdv?.distribuidor).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  const distSel = document.getElementById('gFiltroPedidoDistribuidor');
+  const distribuidorAtual = distSel?.value || '';
+  if (distSel) distSel.innerHTML = '<option value="">Todos</option>' + distribuidores.map(d => `<option>${esc(d)}</option>`).join('');
+  if (distSel) distSel.value = distribuidores.includes(distribuidorAtual) ? distribuidorAtual : '';
 }
 
 function aplicarFiltrosPedidos(lista, tipo) {
@@ -2884,6 +2895,7 @@ function aplicarFiltrosPedidos(lista, tipo) {
   const status = valor('FiltroPedidoStatus');
   const promotor = tipo === 'G' ? valor('FiltroPedidoPromotor') : '';
   const coordenador = tipo === 'G' ? valor('FiltroPedidoCoordenador') : '';
+  const distribuidor = tipo === 'G' ? valor('FiltroPedidoDistribuidor') : '';
   const cliente = normalizarTexto(valor('FiltroPedidoCliente'));
   const busca = normalizarTexto(valor('FiltroPedidoBusca'));
   return lista.filter(v => {
@@ -2896,6 +2908,7 @@ function aplicarFiltrosPedidos(lista, tipo) {
     if (status && statusDaVisita(v) !== status) return false;
     if (promotor && v.promotor !== promotor) return false;
     if (coordenador && coordenadorDoPromotor(v.promotor) !== coordenador) return false;
+    if (distribuidor && d.pdv?.distribuidor !== distribuidor) return false;
     const texto = normalizarTexto([d.pdv?.nomeFantasia, d.pdv?.cidade, d.pdv?.uf, v.promotor, textoProdutosPedido(v)].join(' '));
     if (cliente && !normalizarTexto(d.pdv?.nomeFantasia).includes(cliente)) return false;
     if (busca && !texto.includes(busca)) return false;
@@ -2925,16 +2938,16 @@ function renderPedidos(tipo) {
     if (cards) cards.innerHTML = vazio;
     return;
   }
-  tabela.innerHTML = `<table class="pedidos-tabela"><thead><tr><th>Data</th><th>Cliente/PDV</th>${tipo === 'G' ? '<th>Promotor</th><th>Coordenador</th>' : ''}<th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th><th></th></tr></thead><tbody>${lista.map(v => {
+  tabela.innerHTML = `<table class="pedidos-tabela"><thead><tr><th>Data/Hora</th><th>Cliente/PDV</th>${tipo === 'G' ? '<th>Promotor</th><th>Coordenador</th><th>Distribuidor</th>' : ''}<th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th><th></th></tr></thead><tbody>${lista.map(v => {
     const d = v.dados || {};
-    const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const status = statusDaVisita(v);
     const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
-    return `<tr><td>${data}</td><td><strong>${d.pdv?.nomeFantasia || 'PDV sem nome'}</strong><br><span class="pedido-produtos">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</span></td>${tipo === 'G' ? `<td>${v.promotor || '—'}</td><td>${nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor))}</td>` : ''}<td><span class="status-chip ${statusClass(status)}">${status}</span></td><td class="pedido-produtos">${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${valorPedido(v) ? valorPedido(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td><td><button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button></td></tr>`;
+    return `<tr><td>${data}</td><td><strong>${d.pdv?.nomeFantasia || 'PDV sem nome'}</strong><br><span class="pedido-produtos">${d.pdv?.cidade || ''}${d.pdv?.uf ? ' / ' + d.pdv.uf : ''}</span></td>${tipo === 'G' ? `<td>${v.promotor || '—'}</td><td>${nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor))}</td><td>${esc(d.pdv?.distribuidor || '—')}</td>` : ''}<td><span class="status-chip ${statusClass(status)}">${status}</span></td><td class="pedido-produtos">${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${valorPedido(v) ? valorPedido(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td><td><button class="btn-detalhes" type="button" onclick="${abrir}">Ver detalhes</button></td></tr>`;
   }).join('')}</tbody></table>`;
   if (cards) cards.innerHTML = lista.map(v => {
     const d = v.dados || {};
-    const data = new Date(v.criado_em).toLocaleDateString('pt-BR');
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const status = statusDaVisita(v);
     const abrir = tipo === 'P' ? `abrirDetalhePromotor('${v.id}')` : `abrirDetalheGestor('${v.id}')`;
     const val = valorPedido(v);
@@ -2946,7 +2959,7 @@ function renderPedidos(tipo) {
       <div class="pedido-card-body">
         <span>${textoProdutosPedido(v)}</span>
         <span><strong>${pacotesPedido(v).toLocaleString('pt-BR')} pac</strong> · ${data}</span>
-        ${tipo === 'G' ? `<span>Promotor: <strong>${v.promotor || '—'}</strong></span>` : ''}
+        ${tipo === 'G' ? `<span>Promotor: <strong>${v.promotor || '—'}</strong></span><span>Distribuidor: <strong>${esc(d.pdv?.distribuidor || '—')}</strong></span>` : ''}
       </div>
       <div class="pedido-card-footer">
         <span class="pedido-card-valor">${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span>
@@ -2958,7 +2971,7 @@ function renderPedidos(tipo) {
 
 function limparFiltrosPedidos(tipo) {
   const prefixo = tipo === 'P' ? 'p' : 'g';
-  ['FiltroPedidoDe','FiltroPedidoAte','FiltroPedidoStatus','FiltroPedidoPromotor','FiltroPedidoCoordenador','FiltroPedidoCliente','FiltroPedidoBusca'].forEach(sufixo => {
+  ['FiltroPedidoDe','FiltroPedidoAte','FiltroPedidoStatus','FiltroPedidoPromotor','FiltroPedidoCoordenador','FiltroPedidoDistribuidor','FiltroPedidoCliente','FiltroPedidoBusca'].forEach(sufixo => {
     const el = document.getElementById(prefixo + sufixo);
     if (el) el.value = '';
   });
@@ -2968,13 +2981,79 @@ function limparFiltrosPedidos(tipo) {
 function exportarPedidosTela(tipo) {
   const lista = pedidosTelaCache[tipo] || [];
   if (!lista.length) return toast('Nenhum pedido nos filtros atuais');
-  const rows = [['Data', 'Cliente/PDV', 'Cidade', 'UF', 'Promotor', 'Coordenador', 'Status', 'Produtos', 'Pacotes', 'Valor']];
+  const rows = [['Data', 'Hora', 'Cliente/PDV', 'Cidade', 'UF', 'Promotor', 'Coordenador', 'Distribuidor', 'Status', 'Produtos', 'Pacotes', 'Valor']];
   lista.forEach(v => {
     const d = v.dados || {};
-    rows.push([new Date(v.criado_em).toLocaleDateString('pt-BR'), d.pdv?.nomeFantasia || '', d.pdv?.cidade || '', d.pdv?.uf || '', v.promotor || '', nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor)), statusDaVisita(v), textoProdutosPedido(v).replace(/<br>/g, ' | '), pacotesPedido(v), valorPedido(v).toFixed(2)]);
+    const dt = new Date(v.criado_em);
+    rows.push([
+      dt.toLocaleDateString('pt-BR'), dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      d.pdv?.nomeFantasia || '', d.pdv?.cidade || '', d.pdv?.uf || '', v.promotor || '',
+      nomeCoordenadorPedido(coordenadorDoPromotor(v.promotor)), d.pdv?.distribuidor || '',
+      statusDaVisita(v), textoProdutosPedido(v).replace(/<br>/g, ' | '), pacotesPedido(v), valorPedido(v).toFixed(2)
+    ]);
   });
   baixarCSV(`cleantabaco_pedidos_${new Date().toISOString().slice(0, 10)}.csv`, rows[0], rows.slice(1));
   toast(`${lista.length} pedido(s) exportado(s)`);
+}
+
+function exportarPedidosPDF(tipo) {
+  const lista = pedidosTelaCache[tipo] || [];
+  if (!lista.length) return toast('Nenhum pedido nos filtros atuais');
+  const skuNomes = { GR: 'Gudang Red', GM: 'Gudang Menta', CM: 'Cretec Menta', CC: 'Cretec Cereja' };
+  let linhas = '';
+  let totalGeral = 0;
+  [...lista].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em)).forEach(v => {
+    const d = v.dados || {};
+    const p = d.pdv || {};
+    const c = d.comercial || {};
+    const qty = c.pedidoPac || c.pedidoQty || {};
+    const preco = c.pedidoPreco || {};
+    const dt = new Date(v.criado_em);
+    const data = dt.toLocaleDateString('pt-BR');
+    const hora = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const itens = Object.keys(skuNomes).filter(sku => Number(qty[sku]) > 0);
+    (itens.length ? itens : ['']).forEach(sku => {
+      const pac = sku ? Number(qty[sku] || 0) : 0;
+      const precoPac = sku ? Number(preco[sku] || 0) : 0;
+      const subtotal = pac * precoPac;
+      totalGeral += subtotal;
+      linhas += `<tr>
+        <td>${esc(data)}</td>
+        <td>${esc(hora)}</td>
+        <td>${esc(p.nomeFantasia || 'PDV sem nome')}</td>
+        <td>${esc(v.promotor || '—')}</td>
+        <td>${esc(p.distribuidor || '—')}</td>
+        <td>${esc(sku ? skuNomes[sku] : 'Produtos não informados')}</td>
+        <td style="text-align:center;">${sku ? pac : '—'}</td>
+        <td style="text-align:right;">${precoPac > 0 ? 'R$ ' + precoPac.toFixed(2) : '—'}</td>
+        <td style="text-align:right;">${subtotal > 0 ? 'R$ ' + subtotal.toFixed(2) : '—'}</td>
+      </tr>`;
+    });
+  });
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #1A1428; padding: 24px; }
+    h1 { font-size: 18px; color: #1E1648; margin-bottom: 4px; }
+    .sub { color: #6B6480; font-size: 12px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1E1648; color: #fff; padding: 6px 8px; font-size: 11px; text-align: left; }
+    td { padding: 6px 8px; border-bottom: 1px solid #E0DDD8; }
+    .total-row { background: #EEEDFE; font-weight: 700; }
+    .total-row td { border-bottom: none; }
+  </style></head><body>
+    <h1>🟢 Relação de Pedidos — Cleantabaco</h1>
+    <div class="sub">Gerado em ${new Date().toLocaleString('pt-BR')} · ${lista.length} pedido(s) no filtro atual</div>
+    <table>
+      <thead><tr><th>Data</th><th>Hora</th><th>Cliente/PDV</th><th>Promotor</th><th>Distribuidor</th><th>Produto</th><th style="text-align:center;">Pacotes</th><th style="text-align:right;">R$/pac</th><th style="text-align:right;">Subtotal</th></tr></thead>
+      <tbody>
+        ${linhas}
+        <tr class="total-row"><td colspan="8" style="text-align:right;">TOTAL GERAL</td><td style="text-align:right;">R$ ${totalGeral.toFixed(2)}</td></tr>
+      </tbody>
+    </table>
+  </body></html>`;
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
 }
 
 // SECOES DO FORMULÁRIO
