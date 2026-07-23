@@ -693,6 +693,18 @@ button:active { transform: translateY(1px); }
 @media (max-width: 620px) { .mapa-filtros-grid { grid-template-columns:1fr; } .mapa-filtros-acoes > button { flex:1 1 160px; } }
 .mapa-pin { background: var(--purple); color: #fff; width: 22px; height: 22px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .mapa-pin span { transform: rotate(45deg); }
+.visitas-mapa-integrado { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr); gap:14px; margin:14px 0; }
+.visitas-mapa-pane, .visitas-sequencia-pane { min-width:0; background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+.visitas-mapa-pane .mapa-box { height:42vh; min-height:320px; }
+.mapa-sequencia { max-height:42vh; min-height:320px; overflow:auto; margin-top:10px; }
+.mapa-sequencia-grupo { margin-bottom:14px; }
+.mapa-sequencia-grupo h4 { margin:0 0 7px; font-size:12px; color:var(--purple); }
+.mapa-sequencia-item { width:100%; display:flex; gap:9px; align-items:flex-start; text-align:left; border:0; border-bottom:1px solid #eee; background:transparent; padding:9px 2px; cursor:pointer; font:inherit; }
+.mapa-sequencia-item:hover, .mapa-sequencia-item:focus-visible { background:var(--purple-light); outline:none; }
+.mapa-sequencia-num { flex:0 0 23px; height:23px; border-radius:50%; background:var(--purple); color:#fff; display:grid; place-items:center; font-size:11px; font-weight:800; }
+.mapa-sequencia-item strong { display:block; font-size:13px; color:var(--text); }
+.mapa-sequencia-item span { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; }
+@media (max-width: 860px) { .visitas-mapa-integrado { grid-template-columns:1fr; } .mapa-sequencia { max-height:360px; min-height:0; } }
 .suggestion-grid { display: grid; gap: 14px; }
 .suggestion-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
 .suggestion-head { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
@@ -1592,6 +1604,29 @@ button:active { transform: translateY(1px); }
         </div>
       </div>
       <input type="text" class="busca-input" id="gBusca" oninput="renderListaGestor()" placeholder="Buscar por PDV, cidade, promotor...">
+      <div class="visitas-mapa-integrado">
+        <div class="visitas-mapa-pane">
+          <div class="filtros mapa-filtros" style="margin-bottom:12px;">
+            <div class="mapa-filtros-grid">
+              <div class="filtro-group"><label>Promotor no mapa</label><select id="mapaFiltroPromotor"><option value="">Todos</option></select></div>
+              <div class="filtro-group"><label>De</label><input type="date" id="mapaFiltroDe"></div>
+              <div class="filtro-group"><label>Até</label><input type="date" id="mapaFiltroAte"></div>
+              <div class="mapa-checkbox-group"><label><input type="checkbox" id="mapaIncluirProspeccao" checked onchange="aplicarFiltrosMapa()"> Incluir prospecção no km</label></div>
+            </div>
+            <div class="mapa-filtros-acoes"><button class="btn-filtrar" type="button" onclick="aplicarFiltrosMapa()">Aplicar no mapa</button><button class="btn-limpar-filtros" type="button" onclick="limparFiltrosMapa()">Limpar</button></div>
+          </div>
+          <div class="mapa-status-area"><div id="mapaStatus" class="mapa-status"></div></div>
+          <div id="jornadaMapaStatus" class="mapa-status"></div>
+          <div id="mapaKmCard" class="card" style="display:none;margin-bottom:12px;"><div class="card-title">Km da rota do dia</div><div id="mapaKmValor" style="font-size:28px;font-weight:800;color:var(--purple);">—</div></div>
+          <div id="mapaLeafletEl" class="mapa-box"></div>
+          <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período selecionado.</div>
+          <div id="mapaKmTrechosCard" class="card mapa-km-trechos-card" style="display:none;"><div class="card-title">Km entre pontos da rota</div><div id="mapaKmTrechos"></div></div>
+        </div>
+        <aside class="visitas-sequencia-pane">
+          <div class="card-title">Sequência de visitas</div>
+          <div id="mapaSequencia" class="mapa-sequencia"></div>
+        </aside>
+      </div>
       <div id="gLista"><div class="spinner-wrap"><div class="spinner"></div></div></div>
     </div>
   </div>
@@ -1675,38 +1710,6 @@ button:active { transform: translateY(1px); }
     <div class="page-intro"><h1>Sugestões de venda</h1><p>Quantidades em pacotes, calculadas a partir do histórico registrado de cada PDV.</p></div>
     <div class="gestor-wrap">
       <div class="suggestion-grid" id="gSugestoesLista"></div>
-    </div>
-  </div>
-
-  <div class="page" id="gMapa">
-    <div class="page-intro"><h1>Mapa</h1><p>Trajeto do promotor no período selecionado.</p></div>
-    <div class="gestor-wrap">
-      <div class="filtros mapa-filtros">
-        <div class="mapa-filtros-grid">
-          <div class="filtro-group"><label>Promotor</label><select id="mapaFiltroPromotor"><option value="">Todos</option></select></div>
-          <div class="filtro-group"><label>De</label><input type="date" id="mapaFiltroDe"></div>
-          <div class="filtro-group"><label>Até</label><input type="date" id="mapaFiltroAte"></div>
-          <div class="mapa-checkbox-group"><label><input type="checkbox" id="mapaIncluirProspeccao" checked onchange="aplicarFiltrosMapa()"> Incluir prospecção no km</label></div>
-        </div>
-        <div class="mapa-filtros-acoes">
-          <button class="btn-filtrar" type="button" onclick="aplicarFiltrosMapa()">Aplicar no mapa</button>
-          <button class="btn-limpar-filtros" type="button" onclick="limparFiltrosMapa()">Limpar</button>
-        </div>
-      </div>
-      <div class="mapa-status-area">
-        <div id="mapaStatus" class="mapa-status"></div>
-        <div id="jornadaMapaStatus" class="mapa-status"></div>
-      </div>
-      <div id="mapaKmCard" class="card" style="display:none;margin-bottom:12px;">
-        <div class="card-title">Km da rota do dia</div>
-        <div id="mapaKmValor" style="font-size:28px;font-weight:800;color:var(--purple);">—</div>
-      </div>
-      <div id="mapaLeafletEl" class="mapa-box"></div>
-      <div id="mapaVazio" class="empty" style="display:none;">Nenhuma visita com GPS no período/promotor selecionado.</div>
-      <div id="mapaKmTrechosCard" class="card mapa-km-trechos-card" style="display:none;">
-        <div class="card-title">Km entre pontos da rota</div>
-        <div id="mapaKmTrechos"></div>
-      </div>
     </div>
   </div>
 
@@ -1816,7 +1819,7 @@ button:active { transform: translateY(1px); }
 <script src="jornada-bridge.js"></script>
 <script src="camera-bridge.js"></script>
 <script>
-const API = '';
+const API = 'https://promotor-cleantabaco.vercel.app';
 
 
 let usuarioAtual = null;
@@ -2498,7 +2501,6 @@ function mudarAbaP(aba) {
 function atualizarAbaGestorAtual() {
   const aba = document.querySelector('#appGestor .nav-btn.active')?.dataset.gestorPage || 'painel';
   if (aba === 'painel') { carregarDashboardResumo({ force:true }); return; }
-  if (aba === 'mapa') { carregarMapa(); return; }
   if (aba === 'galeria') { carregarGaleria(); return; }
   if (aba === 'performance') { carregarPerformance(); return; }
   if (aba === 'promotores') { carregarPromotoresAdmin(); return; }
@@ -2507,6 +2509,7 @@ function atualizarAbaGestorAtual() {
 }
 
 function mudarAbaG(aba) {
+  if (aba === 'mapa') aba = 'visitas';
   window.scrollTo(0, 0);
   document.querySelectorAll('#appGestor .page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#appGestor .nav-btn').forEach(b => b.classList.remove('active'));
@@ -2521,7 +2524,6 @@ function mudarAbaG(aba) {
   if (aba === 'performance') carregarPerformance();
   if (aba === 'analises') renderAnalisesGerenciais();
   if (aba === 'sugestoes') renderSugestoesVenda();
-  if (aba === 'mapa') { resetarFiltrosMapa(); carregarMapa(); }
   if (aba === 'metas') renderMetasGestor();
   if (aba === 'promotores') carregarPromotoresAdmin();
 }
@@ -4952,6 +4954,7 @@ function renderPainelPromotor() {
 
 let mapaLeaflet = null;
 let mapaCamadaPontos = null;
+const mapaMarcadoresPorVisita = new Map();
 let jornadaPolyline = null;
 let visitasMapa = [];
 let jornadasMapa = [];
@@ -5129,7 +5132,7 @@ function renderMapa() {
     .sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em));
 
   document.getElementById('mapaStatus').textContent =
-    `${pontos.length} de ${visitasGestor.length} visitas no período têm GPS registrado`;
+    `${pontos.length} de ${visitasMapa.length} visitas filtradas têm GPS registrado`;
 
   const vazio = document.getElementById('mapaVazio');
   const box = document.getElementById('mapaLeafletEl');
@@ -5146,8 +5149,9 @@ function renderMapa() {
 
   mapaCamadaPontos.clearLayers();
 
-  const promotorFiltrado = document.getElementById('mapaFiltroPromotor').value;
+  const promotorFiltrado = document.getElementById('mapaFiltroPromotor')?.value || '';
   const latlngs = pontos.map(v => [+v.dados.localizacao.latitude, +v.dados.localizacao.longitude]);
+  mapaMarcadoresPorVisita.clear();
 
   pontos.forEach((v, i) => {
     const loc = v.dados.localizacao;
@@ -5161,9 +5165,11 @@ function renderMapa() {
       iconSize: [22, 22],
       iconAnchor: [11, 22]
     });
-    L.marker([+loc.latitude, +loc.longitude], { icon: icone })
+    const marcador = L.marker([+loc.latitude, +loc.longitude], { icon: icone })
       .bindPopup(`<b>${nomePdv}</b><br>${promotorFiltrado ? '' : v.promotor + '<br>'}${dataStr}<br>Precisão: ${precisaoTxt}`)
       .addTo(mapaCamadaPontos);
+    marcador.on('click', () => abrirDetalheGestor(v.id));
+    mapaMarcadoresPorVisita.set(String(v.id), marcador);
   });
 
   mapaLeaflet.fitBounds(latlngs, { padding: [30, 30] });
@@ -5449,6 +5455,15 @@ function renderPromotoresAdmin() {
       </div>
     </div>`;
   }).join('') : '<div class="empty">Nenhum usuario cadastrado</div>';
+}
+
+function focarVisitaMapa(id) {
+  const marcador = mapaMarcadoresPorVisita.get(String(id));
+  if (marcador && mapaLeaflet) {
+    mapaLeaflet.setView(marcador.getLatLng(), Math.max(mapaLeaflet.getZoom(), 15));
+    marcador.openPopup();
+  }
+  abrirDetalheGestor(id);
 }
 
 function nomeCoordenadorAdmin(usuario) {
@@ -6352,6 +6367,7 @@ function renderListaGestor() {
     <div class="visit-summary-item"><strong>${negociacao}</strong><span>em negociação</span></div>
     <div class="visit-summary-item"><strong>${confirmados}</strong><span>pedidos confirmados</span></div>
     <div class="visit-summary-item"><strong>${entregues}</strong><span>pedidos entregues</span></div>`;
+  renderMapaIntegradoVisitas(filtradas);
   if (!filtradas.length) {
     document.getElementById('gLista').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>';
     return;
@@ -6378,6 +6394,24 @@ function renderListaGestor() {
       </tr>
     `;
   }).join('') + '</tbody></table></div>';
+}
+
+function renderMapaIntegradoVisitas(visitas) {
+  visitasMapa = visitas || [];
+  renderMapa();
+  const box = document.getElementById('mapaSequencia');
+  if (!box) return;
+  if (!visitas.length) { box.innerHTML = '<div class="empty">Nenhuma visita no período.</div>'; return; }
+  const grupos = {};
+  [...visitas].sort((a,b) => new Date(a.criado_em) - new Date(b.criado_em) || String(a.id).localeCompare(String(b.id)))
+    .forEach(v => (grupos[v.promotor || 'Sem promotor'] ||= []).push(v));
+  let pos = 0;
+  box.innerHTML = Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b,'pt-BR')).map(([promotor, lista]) => `
+    <div class="mapa-sequencia-grupo"><h4>${esc(promotor)}</h4>${lista.map(v => {
+      const d = v.dados || {}, p = d.pdv || {}, i = ++pos;
+      const dt = new Date(v.criado_em);
+      return `<button class="mapa-sequencia-item" type="button" onclick="focarVisitaMapa('${v.id}')"><span class="mapa-sequencia-num">${i}</span><span><strong>${esc(p.nomeFantasia || 'PDV sem nome')}</strong><span>${esc([p.cidade,p.uf].filter(Boolean).join(' · ') || 'Local não informado')} · ${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></span></button>`;
+    }).join('')}</div>`).join('');
 }
 
 function abrirDetalheGestor(id) {
