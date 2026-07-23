@@ -362,11 +362,29 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .empty-icon { font-size: 44px; margin-bottom: 10px; }
 
 /* FICHA DE CLIENTE */
-.ficha-subtabs { display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid var(--border); }
-.ficha-subtab-btn { background: none; border: none; padding: 10px 4px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.ficha-voltar { background: none; border: none; padding: 6px 0; margin-bottom: 12px; font-size: 13px; font-weight: 700; color: var(--purple); cursor: pointer; }
+.ficha-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.ficha-header-nome { font-size: 22px; font-weight: 900; color: var(--text); }
+.ficha-header-meta { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+.ficha-header-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.ficha-subtabs { display: flex; gap: 4px; margin: 16px 0; border-bottom: 1px solid var(--border); }
+.ficha-subtab-btn { background: none; border: none; padding: 10px 14px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.ficha-subtab-btn:hover { background: var(--cream); }
 .ficha-subtab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
 .ficha-subpage { display: none; }
 .ficha-subpage.active { display: block; }
+.ficha-section-title { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 12px; }
+.ficha-info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.ficha-info-box { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--cream); }
+.ficha-info-label { color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+.ficha-info-value { color: var(--text); font-size: 14px; font-weight: 700; margin-top: 4px; word-break: break-word; }
+.ficha-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.ficha-kpi-box { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; background: #fff; }
+.ficha-kpi-label { color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+.ficha-kpi-value { color: var(--purple); font-size: 22px; font-weight: 900; margin-top: 4px; }
+.ficha-fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.ficha-foto-btn { padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; aspect-ratio: 1; background: var(--cream); }
+.ficha-foto-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .spinner-wrap { text-align: center; padding: 48px; }
 .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1550,19 +1568,31 @@ button:active { transform: translateY(1px); }
     <div class="page-intro"><h1>Clientes</h1><p>Pesquise um cliente para ver dados, pedidos e visitas.</p></div>
     <div class="gestor-wrap">
       <div id="clientesBuscaView">
+        <div class="filtros">
+          <div class="filtro-row">
+            <div class="filtro-group"><label>Promotor</label><select id="gClientesFiltroPromotor" onchange="renderBuscaClientesGestor()"><option value="">Todos</option></select></div>
+            <div class="filtro-group"><label>UF</label><select id="gClientesFiltroUF" onchange="renderBuscaClientesGestor()"><option value="">Todas</option></select></div>
+          </div>
+          <div class="filtro-row">
+            <div class="filtro-group"><label>Tipo</label><select id="gClientesFiltroTipo" onchange="renderBuscaClientesGestor()"><option value="">Todos</option><option value="cadastrado">Cliente cadastrado</option><option value="prospeccao">Prospecção</option></select></div>
+          </div>
+        </div>
         <input type="text" class="busca-input" id="gClientesBusca" oninput="renderBuscaClientesGestor()" placeholder="Buscar por nome ou CNPJ...">
         <div id="gClientesResultados"></div>
       </div>
       <div id="clientesFichaView" style="display:none;">
-        <button class="btn-detalhes" type="button" onclick="fecharFichaClienteGestor()">← Voltar à busca</button>
+        <button class="ficha-voltar" type="button" onclick="fecharFichaClienteGestor()">← Voltar à busca</button>
+        <div class="ficha-header card" id="fichaHeader"></div>
         <div class="ficha-subtabs">
           <button class="ficha-subtab-btn active" type="button" data-ficha-subtab="resumo" onclick="mudarSubAbaFichaCliente('resumo')">Resumo</button>
           <button class="ficha-subtab-btn" type="button" data-ficha-subtab="pedidos" onclick="mudarSubAbaFichaCliente('pedidos')">Pedidos</button>
           <button class="ficha-subtab-btn" type="button" data-ficha-subtab="visitas" onclick="mudarSubAbaFichaCliente('visitas')">Visitas</button>
+          <button class="ficha-subtab-btn" type="button" data-ficha-subtab="fotos" onclick="mudarSubAbaFichaCliente('fotos')">Fotos</button>
         </div>
         <div class="ficha-subpage active" id="fichaSubpageResumo"></div>
         <div class="ficha-subpage" id="fichaSubpagePedidos"></div>
         <div class="ficha-subpage" id="fichaSubpageVisitas"></div>
+        <div class="ficha-subpage" id="fichaSubpageFotos"></div>
       </div>
     </div>
   </div>
@@ -2554,8 +2584,8 @@ function mudarAbaG(aba) {
   if (aba === 'clientes') {
     document.getElementById('clientesFichaView').style.display = 'none';
     document.getElementById('clientesBuscaView').style.display = 'block';
-    if (!clientesGestor.length) carregarGestor().then(() => renderBuscaClientesGestor());
-    else renderBuscaClientesGestor();
+    if (!clientesGestor.length) carregarGestor().then(() => { preencherFiltrosClientesGestor(); renderBuscaClientesGestor(); });
+    else { preencherFiltrosClientesGestor(); renderBuscaClientesGestor(); }
   }
   if (aba === 'pedidos') { renderPedidos('G'); if (!visitasGestor.length) carregarGestor().then(() => renderPedidos('G')); }
   if (aba === 'galeria') carregarGaleria();
@@ -2600,17 +2630,59 @@ function nomeCoordenadorPedido(usuario) {
   return p?.nome || usuario;
 }
 
+function tipoClienteGestor(cliente, visitas) {
+  if (visitas.some(v => v.dados?.tipo !== 'prospeccao')) return 'cadastrado';
+  if (visitas.length) return 'prospeccao';
+  return (cliente.cnpj || cliente.endereco || cliente.tipo) ? 'cadastrado' : 'prospeccao';
+}
+
+function badgeTipoCliente(tipo) {
+  return tipo === 'prospeccao'
+    ? '<span class="badge badge-orange">Prospecção</span>'
+    : '<span class="badge badge-purple">Cliente cadastrado</span>';
+}
+
+function preencherFiltrosClientesGestor() {
+  const promSel = document.getElementById('gClientesFiltroPromotor');
+  const promotorAtual = promSel?.value || '';
+  const promotores = [...new Set(clientesGestor.map(c => c.promotor).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  if (promSel) promSel.innerHTML = '<option value="">Todos</option>' + promotores.map(p => `<option>${esc(p)}</option>`).join('');
+  if (promSel) promSel.value = promotores.includes(promotorAtual) ? promotorAtual : '';
+
+  const ufSel = document.getElementById('gClientesFiltroUF');
+  const ufAtual = ufSel?.value || '';
+  const ufs = [...new Set(clientesGestor.map(c => c.uf).filter(Boolean))].sort();
+  if (ufSel) ufSel.innerHTML = '<option value="">Todas</option>' + ufs.map(uf => `<option>${esc(uf)}</option>`).join('');
+  if (ufSel) ufSel.value = ufs.includes(ufAtual) ? ufAtual : '';
+}
+
 function renderBuscaClientesGestor() {
   const termo = normalizarTexto(document.getElementById('gClientesBusca').value.trim());
+  const filtroPromotor = document.getElementById('gClientesFiltroPromotor')?.value || '';
+  const filtroUF = document.getElementById('gClientesFiltroUF')?.value || '';
+  const filtroTipo = document.getElementById('gClientesFiltroTipo')?.value || '';
   const el = document.getElementById('gClientesResultados');
-  if (!termo) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Digite um nome ou CNPJ para buscar</div></div>'; return; }
+  if (!termo && !filtroPromotor && !filtroUF && !filtroTipo) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Digite um nome/CNPJ ou selecione um filtro</div></div>';
+    return;
+  }
   const termoDigitos = termo.replace(/\D/g, '');
-  const resultados = clientesGestor.filter(c => {
+  let resultados = clientesGestor.filter(c => {
     const cnpjDigitos = String(c.cnpj || '').replace(/\D/g, '');
-    return normalizarTexto(c.nome_fantasia).includes(termo) || (termoDigitos && cnpjDigitos.includes(termoDigitos));
-  }).slice(0, 50);
+    if (termo && !(normalizarTexto(c.nome_fantasia).includes(termo) || (termoDigitos && cnpjDigitos.includes(termoDigitos)))) return false;
+    if (filtroPromotor && c.promotor !== filtroPromotor) return false;
+    if (filtroUF && c.uf !== filtroUF) return false;
+    return true;
+  });
+  if (filtroTipo) {
+    resultados = resultados.filter(c => tipoClienteGestor(c, visitasGestor.filter(v => clienteMatchesVisita(c, v))) === filtroTipo);
+  }
+  resultados = resultados.slice(0, 50);
   if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
-  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${esc(c.id)}')"><td><strong>${esc(c.nome_fantasia)}</strong></td><td>${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</td><td>${esc(c.promotor || '—')}</td></tr>`).join('')}</tbody></table>`;
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th><th>Tipo</th></tr></thead><tbody>${resultados.map(c => {
+    const tipo = tipoClienteGestor(c, visitasGestor.filter(v => clienteMatchesVisita(c, v)));
+    return `<tr onclick="abrirFichaClienteGestor('${esc(c.id)}')"><td><strong>${esc(c.nome_fantasia)}</strong></td><td>${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</td><td>${esc(c.promotor || '—')}</td><td>${badgeTipoCliente(tipo)}</td></tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 function abrirFichaClienteGestor(id) {
@@ -2618,6 +2690,7 @@ function abrirFichaClienteGestor(id) {
   if (!cliente) { toast('Cliente não encontrado'); return; }
   fichaClienteAtual = cliente;
   fichaClienteVisitas = visitasGestor.filter(v => clienteMatchesVisita(cliente, v)).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  renderFichaHeader();
   document.getElementById('clientesBuscaView').style.display = 'none';
   document.getElementById('clientesFichaView').style.display = 'block';
   mudarSubAbaFichaCliente('resumo');
@@ -2630,6 +2703,22 @@ function fecharFichaClienteGestor() {
   document.getElementById('clientesBuscaView').style.display = 'block';
 }
 
+function renderFichaHeader() {
+  const c = fichaClienteAtual;
+  const tipo = tipoClienteGestor(c, fichaClienteVisitas);
+  const local = [c.cidade, c.uf].filter(Boolean).join('/');
+  document.getElementById('fichaHeader').innerHTML = `
+    <div>
+      <div class="ficha-header-nome">${esc(c.nome_fantasia)}</div>
+      <div class="ficha-header-meta">${esc(local || 'Cidade não informada')} · Promotor: ${esc(c.promotor || '—')}</div>
+    </div>
+    <div class="ficha-header-badges">
+      ${c.codigo ? `<span class="badge badge-purple">${esc(c.codigo)}</span>` : ''}
+      ${badgeTipoCliente(tipo)}
+    </div>
+  `;
+}
+
 function mudarSubAbaFichaCliente(aba) {
   document.querySelectorAll('.ficha-subtab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.ficha-subpage').forEach(p => p.classList.remove('active'));
@@ -2639,6 +2728,7 @@ function mudarSubAbaFichaCliente(aba) {
   if (aba === 'resumo') renderFichaResumo();
   if (aba === 'pedidos') renderFichaPedidos();
   if (aba === 'visitas') renderFichaVisitas();
+  if (aba === 'fotos') renderFichaFotos();
 }
 
 function renderFichaResumo() {
@@ -2657,28 +2747,31 @@ function renderFichaResumo() {
     mediaDias = Math.round(intervalos.reduce((a, b) => a + b, 0) / intervalos.length) + ' dias';
   }
   document.getElementById('fichaSubpageResumo').innerHTML = `
-    <div class="rel-section">
-      <div class="rel-title">Dados cadastrais</div>
-      <div class="rel-row"><span class="rel-key">Código</span><span class="rel-val">${esc(c.codigo || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${esc(c.cnpj || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${esc(c.tipo || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${esc(c.ie || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${esc(c.endereco || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${esc(c.nome_comprador || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${esc(c.telefone || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${esc(c.distribuidor || '—')}</span></div>
-      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${esc(c.promotor || '—')}</span></div>
+    <div class="card">
+      <div class="ficha-section-title">Indicadores</div>
+      <div class="ficha-kpi-grid">
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Total de visitas</div><div class="ficha-kpi-value">${visitas.length}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Total de pedidos</div><div class="ficha-kpi-value">${pedidos.length}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Valor total comprado</div><div class="ficha-kpi-value">${valorTotal ? valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Pacotes totais</div><div class="ficha-kpi-value">${pacotesTotal.toLocaleString('pt-BR')}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Média entre visitas</div><div class="ficha-kpi-value">${mediaDias}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Última visita</div><div class="ficha-kpi-value">${ultimaVisita ? new Date(ultimaVisita.criado_em).toLocaleDateString('pt-BR') : '—'}</div></div>
+        <div class="ficha-kpi-box"><div class="ficha-kpi-label">Último pedido</div><div class="ficha-kpi-value">${ultimoPedido ? new Date(ultimoPedido.criado_em).toLocaleDateString('pt-BR') : '—'}</div></div>
+      </div>
     </div>
-    <div class="rel-section">
-      <div class="rel-title">Indicadores</div>
-      <div class="rel-row"><span class="rel-key">Total de visitas</span><span class="rel-val">${visitas.length}</span></div>
-      <div class="rel-row"><span class="rel-key">Total de pedidos</span><span class="rel-val">${pedidos.length}</span></div>
-      <div class="rel-row"><span class="rel-key">Valor total comprado</span><span class="rel-val">${valorTotal ? valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Pacotes totais</span><span class="rel-val">${pacotesTotal.toLocaleString('pt-BR')}</span></div>
-      <div class="rel-row"><span class="rel-key">Média entre visitas</span><span class="rel-val">${mediaDias}</span></div>
-      <div class="rel-row"><span class="rel-key">Última visita</span><span class="rel-val">${ultimaVisita ? new Date(ultimaVisita.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
-      <div class="rel-row"><span class="rel-key">Último pedido</span><span class="rel-val">${ultimoPedido ? new Date(ultimoPedido.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
+    <div class="card">
+      <div class="ficha-section-title">Dados cadastrais</div>
+      <div class="ficha-info-grid">
+        <div class="ficha-info-box"><div class="ficha-info-label">Código</div><div class="ficha-info-value">${esc(c.codigo || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">CNPJ</div><div class="ficha-info-value">${esc(c.cnpj || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Tipo</div><div class="ficha-info-value">${esc(c.tipo || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">IE</div><div class="ficha-info-value">${esc(c.ie || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Cidade/UF</div><div class="ficha-info-value">${esc([c.cidade, c.uf].filter(Boolean).join('/') || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Telefone</div><div class="ficha-info-value">${esc(c.telefone || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Comprador</div><div class="ficha-info-value">${esc(c.nome_comprador || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Distribuidor</div><div class="ficha-info-value">${esc(c.distribuidor || '—')}</div></div>
+        <div class="ficha-info-box"><div class="ficha-info-label">Endereço</div><div class="ficha-info-value">${esc(c.endereco || '—')}</div></div>
+      </div>
     </div>
   `;
 }
@@ -2686,23 +2779,45 @@ function renderFichaResumo() {
 function renderFichaPedidos() {
   const pedidos = fichaClienteVisitas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim');
   const el = document.getElementById('fichaSubpagePedidos');
-  if (!pedidos.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div></div>'; return; }
-  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th></tr></thead><tbody>${pedidos.map(v => {
+  if (!pedidos.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div></div>'; return; }
+  el.innerHTML = `<div class="card" style="padding:0;overflow-x:auto;"><table class="data-table"><thead><tr><th>Data</th><th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th></tr></thead><tbody>${pedidos.map(v => {
     const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const status = statusDaVisita(v);
     const val = valorPedido(v);
     return `<tr onclick="abrirDetalheGestor('${esc(v.id)}')"><td>${data}</td><td><span class="status-chip ${statusClass(status)}">${esc(status)}</span></td><td>${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td></tr>`;
-  }).join('')}</tbody></table>`;
+  }).join('')}</tbody></table></div>`;
 }
 
 function renderFichaVisitas() {
   const visitas = fichaClienteVisitas;
   const el = document.getElementById('fichaSubpageVisitas');
-  if (!visitas.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>'; return; }
-  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Promotor</th><th>Pedido</th></tr></thead><tbody>${visitas.map(v => {
+  if (!visitas.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>'; return; }
+  el.innerHTML = `<div class="card" style="padding:0;overflow-x:auto;"><table class="data-table"><thead><tr><th>Data</th><th>Promotor</th><th>Pedido</th></tr></thead><tbody>${visitas.map(v => {
     const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     return `<tr onclick="abrirDetalheGestor('${esc(v.id)}')"><td>${data}</td><td>${esc(v.promotor || '—')}</td><td>${v.dados?.comercial?.pedidoFeito === 'Sim' ? 'Sim' : 'Não'}</td></tr>`;
-  }).join('')}</tbody></table>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+async function renderFichaFotos() {
+  const el = document.getElementById('fichaSubpageFotos');
+  const clienteAoAbrir = fichaClienteAtual;
+  const comFotos = fichaClienteVisitas.filter(v => Number(v.fotos_count) > 0);
+  if (!comFotos.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
+  el.innerHTML = '<div class="card"><div class="spinner-wrap"><div class="spinner"></div></div></div>';
+  const listas = await Promise.all(comFotos.map(async v => {
+    try {
+      const res = await apiFetch(`${API}/api/foto?id=${encodeURIComponent(v.id)}`, { headers: headers() });
+      const data = await res.json();
+      if (!res.ok) return [];
+      return (data.fotos || []).map(foto => ({ visitaId: v.id, foto }));
+    } catch (e) {
+      return [];
+    }
+  }));
+  if (fichaClienteAtual !== clienteAoAbrir) return;
+  const fotos = listas.flat();
+  if (!fotos.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
+  el.innerHTML = `<div class="card"><div class="ficha-fotos-grid">${fotos.map(item => `<button class="ficha-foto-btn" type="button" onclick="abrirDetalheGestor('${esc(item.visitaId)}')" aria-label="Ver visita com esta foto"><img src="${fotoSrc(item.foto)}" alt="Foto da visita" loading="lazy"></button>`).join('')}</div></div>`;
 }
 
 function preencherFiltrosPedidos() {
