@@ -11,3 +11,10 @@ app/node_modules/
 app/android/.idea/
 
 .worktrees/
+
+# Local analysis/tooling artifacts
+.agents/
+graphify-out/
+.superpowers/
+skill-observations/
+releases/
