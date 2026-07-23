@@ -360,6 +360,13 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 /* MISC */
 .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
 .empty-icon { font-size: 44px; margin-bottom: 10px; }
+
+/* FICHA DE CLIENTE */
+.ficha-subtabs { display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid var(--border); }
+.ficha-subtab-btn { background: none; border: none; padding: 10px 4px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.ficha-subtab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+.ficha-subpage { display: none; }
+.ficha-subpage.active { display: block; }
 .spinner-wrap { text-align: center; padding: 48px; }
 .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1349,6 +1356,7 @@ button:active { transform: translateY(1px); }
   <aside class="mobile-menu-drawer" id="mobileMenuDrawerG" aria-label="Menu do gestor">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
+    <button class="nav-btn" data-gestor-page="clientes" onclick="mudarAbaG('clientes'); alternarMenuMobile('G', false)">Clientes</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos'); alternarMenuMobile('G', false)">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance'); alternarMenuMobile('G', false)">Performance</button>
@@ -1363,6 +1371,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn" data-gestor-page="clientes" onclick="mudarAbaG('clientes')">Clientes</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos')">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria')">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance')">Performance</button>
@@ -1534,6 +1543,17 @@ button:active { transform: translateY(1px); }
 
       </div>
 
+    </div>
+  </div>
+
+  <div class="page" id="gClientes">
+    <div class="page-intro"><h1>Clientes</h1><p>Pesquise um cliente para ver dados, pedidos e visitas.</p></div>
+    <div class="gestor-wrap">
+      <div id="clientesBuscaView">
+        <input type="text" class="busca-input" id="gClientesBusca" oninput="renderBuscaClientesGestor()" placeholder="Buscar por nome ou CNPJ...">
+        <div id="gClientesResultados"></div>
+      </div>
+      <div id="clientesFichaView" style="display:none;"></div>
     </div>
   </div>
 
@@ -2519,6 +2539,12 @@ function mudarAbaG(aba) {
   if (aba === 'painel') carregarDashboardResumo();
   if (aba === 'diretoria') { if (!visitasGestor.length) carregarGestor(); else renderDiretoria(); }
   if (aba === 'visitas') { definirPeriodoVisitasHoje(); if (!visitasGestor.length) carregarGestor(); else renderListaGestor(); }
+  if (aba === 'clientes') {
+    document.getElementById('clientesFichaView').style.display = 'none';
+    document.getElementById('clientesBuscaView').style.display = 'block';
+    if (!clientesGestor.length) carregarGestor().then(() => renderBuscaClientesGestor());
+    else renderBuscaClientesGestor();
+  }
   if (aba === 'pedidos') { renderPedidos('G'); if (!visitasGestor.length) carregarGestor().then(() => renderPedidos('G')); }
   if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') carregarPerformance();
@@ -2560,6 +2586,19 @@ function nomeCoordenadorPedido(usuario) {
   if (!usuario) return 'Sem coordenador';
   const p = promotoresAdmin.find(x => x.usuario === usuario);
   return p?.nome || usuario;
+}
+
+function renderBuscaClientesGestor() {
+  const termo = normalizarTexto(document.getElementById('gClientesBusca').value.trim());
+  const el = document.getElementById('gClientesResultados');
+  if (!termo) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Digite um nome ou CNPJ para buscar</div></div>'; return; }
+  const termoDigitos = termo.replace(/\D/g, '');
+  const resultados = clientesGestor.filter(c => {
+    const cnpjDigitos = String(c.cnpj || '').replace(/\D/g, '');
+    return normalizarTexto(c.nome_fantasia).includes(termo) || (termoDigitos && cnpjDigitos.includes(termoDigitos));
+  }).slice(0, 50);
+  if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${c.id}')"><td><strong>${c.nome_fantasia}</strong></td><td>${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</td><td>${c.promotor || '—'}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function preencherFiltrosPedidos() {
