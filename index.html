@@ -2641,6 +2641,70 @@ function mudarSubAbaFichaCliente(aba) {
   if (aba === 'visitas') renderFichaVisitas();
 }
 
+function renderFichaResumo() {
+  const c = fichaClienteAtual;
+  const visitas = fichaClienteVisitas;
+  const pedidos = visitas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim');
+  const valorTotal = pedidos.reduce((sum, v) => sum + valorPedido(v), 0);
+  const pacotesTotal = pedidos.reduce((sum, v) => sum + pacotesPedido(v), 0);
+  const ultimaVisita = visitas[0] || null;
+  const ultimoPedido = pedidos[0] || null;
+  let mediaDias = '—';
+  if (visitas.length > 1) {
+    const datas = visitas.map(v => new Date(v.criado_em).getTime()).sort((a, b) => a - b);
+    const intervalos = [];
+    for (let i = 1; i < datas.length; i++) intervalos.push((datas[i] - datas[i - 1]) / 86400000);
+    mediaDias = Math.round(intervalos.reduce((a, b) => a + b, 0) / intervalos.length) + ' dias';
+  }
+  document.getElementById('fichaSubpageResumo').innerHTML = `
+    <div class="rel-section">
+      <div class="rel-title">Dados cadastrais</div>
+      <div class="rel-row"><span class="rel-key">Código</span><span class="rel-val">${c.codigo || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${c.cnpj || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${c.tipo || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${c.ie || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${c.endereco || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${c.nome_comprador || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${c.telefone || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${c.distribuidor || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${c.promotor || '—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Indicadores</div>
+      <div class="rel-row"><span class="rel-key">Total de visitas</span><span class="rel-val">${visitas.length}</span></div>
+      <div class="rel-row"><span class="rel-key">Total de pedidos</span><span class="rel-val">${pedidos.length}</span></div>
+      <div class="rel-row"><span class="rel-key">Valor total comprado</span><span class="rel-val">${valorTotal ? valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Pacotes totais</span><span class="rel-val">${pacotesTotal.toLocaleString('pt-BR')}</span></div>
+      <div class="rel-row"><span class="rel-key">Média entre visitas</span><span class="rel-val">${mediaDias}</span></div>
+      <div class="rel-row"><span class="rel-key">Última visita</span><span class="rel-val">${ultimaVisita ? new Date(ultimaVisita.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Último pedido</span><span class="rel-val">${ultimoPedido ? new Date(ultimoPedido.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
+    </div>
+  `;
+}
+
+function renderFichaPedidos() {
+  const pedidos = fichaClienteVisitas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim');
+  const el = document.getElementById('fichaSubpagePedidos');
+  if (!pedidos.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th></tr></thead><tbody>${pedidos.map(v => {
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const status = statusDaVisita(v);
+    const val = valorPedido(v);
+    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td><span class="status-chip ${statusClass(status)}">${status}</span></td><td>${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function renderFichaVisitas() {
+  const visitas = fichaClienteVisitas;
+  const el = document.getElementById('fichaSubpageVisitas');
+  if (!visitas.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Promotor</th><th>Pedido</th></tr></thead><tbody>${visitas.map(v => {
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td>${v.promotor || '—'}</td><td>${v.dados?.comercial?.pedidoFeito === 'Sim' ? 'Sim' : 'Não'}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
 function preencherFiltrosPedidos() {
   const promotores = [...new Set(visitasGestor.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim').map(v => v.promotor).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
   const promSel = document.getElementById('gFiltroPedidoPromotor');
