@@ -2685,7 +2685,7 @@ function renderBuscaClientesGestor() {
   }).join('')}</tbody></table>`;
 }
 
-function abrirFichaClienteGestor(id) {
+async function abrirFichaClienteGestor(id) {
   const cliente = clientesGestor.find(c => String(c.id) === String(id));
   if (!cliente) { toast('Cliente não encontrado'); return; }
   fichaClienteAtual = cliente;
@@ -2694,6 +2694,22 @@ function abrirFichaClienteGestor(id) {
   document.getElementById('clientesBuscaView').style.display = 'none';
   document.getElementById('clientesFichaView').style.display = 'block';
   mudarSubAbaFichaCliente('resumo');
+  await carregarHistoricoCompletoCliente(cliente);
+  if (fichaClienteAtual !== cliente) return;
+  renderFichaHeader();
+  const abaAtiva = document.querySelector('.ficha-subtab-btn.active')?.dataset.fichaSubtab || 'resumo';
+  mudarSubAbaFichaCliente(abaAtiva);
+}
+
+async function carregarHistoricoCompletoCliente(cliente) {
+  try {
+    const res = await apiFetch(`${API}/api/listar?promotor=${encodeURIComponent(cliente.promotor)}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao carregar historico do cliente');
+    fichaClienteVisitas = (data.visitas || []).filter(v => clienteMatchesVisita(cliente, v)).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  } catch (e) {
+    toast('Não foi possível carregar o histórico completo deste cliente');
+  }
 }
 
 function fecharFichaClienteGestor() {
