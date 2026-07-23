@@ -383,8 +383,9 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 .ficha-kpi-label { color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
 .ficha-kpi-value { color: var(--purple); font-size: 22px; font-weight: 900; margin-top: 4px; }
 .ficha-fotos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-.ficha-foto-btn { padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; aspect-ratio: 1; background: var(--cream); }
+.ficha-foto-btn { position: relative; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; aspect-ratio: 1; background: var(--cream); }
 .ficha-foto-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ficha-foto-status { position: absolute; left: 4px; right: 4px; bottom: 4px; font-size: 9px; padding: 2px 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .spinner-wrap { text-align: center; padding: 48px; }
 .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -2817,23 +2818,49 @@ function renderFichaVisitas() {
 async function renderFichaFotos() {
   const el = document.getElementById('fichaSubpageFotos');
   const clienteAoAbrir = fichaClienteAtual;
-  const comFotos = fichaClienteVisitas.filter(v => Number(v.fotos_count) > 0);
-  if (!comFotos.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
+  const idsComFotos = new Set(fichaClienteVisitas.filter(v => Number(v.fotos_count) > 0).map(v => String(v.id)));
+  if (!idsComFotos.size) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
   el.innerHTML = '<div class="card"><div class="spinner-wrap"><div class="spinner"></div></div></div>';
-  const listas = await Promise.all(comFotos.map(async v => {
-    try {
-      const res = await apiFetch(`${API}/api/foto?id=${encodeURIComponent(v.id)}`, { headers: headers() });
+  let itens = [];
+  try {
+    let cursor = '';
+    let paginas = 0;
+    do {
+      const url = `${API}/api/validacoes-fotos?promotor=${encodeURIComponent(clienteAoAbrir.promotor)}&limite=48${cursor ? '&cursor=' + encodeURIComponent(cursor) : ''}`;
+      const res = await apiFetch(url, { headers: headers() });
       const data = await res.json();
-      if (!res.ok) return [];
-      return (data.fotos || []).map(foto => ({ visitaId: v.id, foto }));
-    } catch (e) {
-      return [];
-    }
-  }));
+      if (!res.ok) throw new Error(data.erro || 'Erro ao carregar fotos');
+      itens.push(...(data.validacoes || []).filter(item => idsComFotos.has(String(item.visita_id))));
+      cursor = data.tem_mais ? data.proximo_cursor : '';
+      paginas++;
+    } while (cursor && paginas < 15);
+  } catch (e) {
+    if (fichaClienteAtual !== clienteAoAbrir) return;
+    el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Erro ao carregar fotos</div></div>';
+    return;
+  }
   if (fichaClienteAtual !== clienteAoAbrir) return;
-  const fotos = listas.flat();
-  if (!fotos.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
-  el.innerHTML = `<div class="card"><div class="ficha-fotos-grid">${fotos.map(item => `<button class="ficha-foto-btn" type="button" onclick="abrirDetalheGestor('${esc(item.visitaId)}')" aria-label="Ver visita com esta foto"><img src="${fotoSrc(item.foto)}" alt="Foto da visita" loading="lazy"></button>`).join('')}</div></div>`;
+  if (!itens.length) { el.innerHTML = '<div class="card empty"><div class="empty-icon">📷</div><div>Nenhuma foto encontrada</div></div>'; return; }
+  itens.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  el.innerHTML = `<div class="card"><div class="ficha-fotos-grid">${itens.map(item => {
+    const status = statusValidacaoIA(item);
+    return `<button class="ficha-foto-btn" type="button" onclick="abrirDetalheGestor('${esc(item.visita_id)}')" aria-label="Ver visita com esta foto">
+      <img data-ficha-foto-url="${esc(item.miniatura_url)}" loading="lazy" alt="Foto da visita">
+      <span class="ficha-foto-status status-chip ${statusClass(status === 'aprovado' ? 'Pedido entregue' : status === 'reprovado' ? 'Cancelado' : 'Em negociação')}">${labelStatusValidacao(status)}</span>
+    </button>`;
+  }).join('')}</div></div>`;
+  document.querySelectorAll('#fichaSubpageFotos img[data-ficha-foto-url]').forEach(carregarMiniaturaFichaFoto);
+}
+
+async function carregarMiniaturaFichaFoto(img) {
+  try {
+    const res = await apiFetch(`${API}${img.dataset.fichaFotoUrl}`, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok || !data.foto) throw new Error('sem imagem');
+    img.src = fotoSrc(data.foto);
+  } catch (e) {
+    img.alt = 'Foto indisponível';
+  }
 }
 
 function preencherFiltrosPedidos() {
@@ -6689,7 +6716,7 @@ function renderMapaIntegradoVisitas(visitas) {
 }
 
 function abrirDetalheGestor(id) {
-  const v = visitasGestor.find(x => x.id === id);
+  const v = visitasGestor.find(x => x.id === id) || fichaClienteVisitas.find(x => x.id === id);
   if (!v) return;
   visitaDetalheAtual = v;
   renderModal(v, tipoAtual === 'gestor');
