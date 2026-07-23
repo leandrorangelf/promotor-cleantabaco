@@ -157,4 +157,40 @@ const resultadoRevisao = calcularBonificacaoPromotores(
 assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atual, 50);
 assert.strictEqual(resultadoRevisao.Iara.metas.tabelaVisivelBase.atingida, true);
 
+// Meta 3 (Zeca): 200 clientes cadastrados de verdade e visitados (bate a meta) +
+// 50 clientes que só tiveram prospecção (registro rápido, sem formulário completo) —
+// prospecção não deve contar nem como cadastro nem como visita pra essa meta.
+const clientesZeca = [];
+const visitasZeca = [];
+for (let i = 0; i < 200; i++) {
+  const nome = `PDV Completo Zeca ${i}`;
+  clientesZeca.push(cliente({ promotor: 'Zeca', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasZeca.push(visita({ promotor: 'Zeca', data: '2026-07-15T10:00:00Z', pdv: nome }));
+}
+for (let i = 0; i < 50; i++) {
+  const nome = `PDV Prospeccao Zeca ${i}`;
+  clientesZeca.push(cliente({ promotor: 'Zeca', nome_fantasia: nome, criado_em: '2026-01-01T10:00:00Z' }));
+  visitasZeca.push({
+    promotor: 'Zeca',
+    criado_em: '2026-07-15T10:00:00Z',
+    dados: { tipo: 'prospeccao', pdv: { nomeFantasia: nome } }
+  });
+}
+const resultadoZeca = calcularBonificacaoPromotores(visitasZeca, clientesZeca, periodo);
+assert.strictEqual(resultadoZeca.Zeca.metas.baseDuzentosPdvs.atual, 200);
+assert.strictEqual(resultadoZeca.Zeca.metas.baseDuzentosPdvs.atingida, true);
+
+// Se todos os 200 "cadastrados e visitados" fossem só prospecção, a meta nao deveria bater
+const resultadoSoProspeccao = calcularBonificacaoPromotores(
+  Array.from({ length: 200 }, (_, i) => ({
+    promotor: 'Nara',
+    criado_em: '2026-07-15T10:00:00Z',
+    dados: { tipo: 'prospeccao', pdv: { nomeFantasia: `PDV Nara ${i}` } }
+  })),
+  Array.from({ length: 200 }, (_, i) => cliente({ promotor: 'Nara', nome_fantasia: `PDV Nara ${i}`, criado_em: '2026-01-01T10:00:00Z' })),
+  periodo
+);
+assert.strictEqual(resultadoSoProspeccao.Nara.metas.baseDuzentosPdvs.atual, 0);
+assert.strictEqual(resultadoSoProspeccao.Nara.metas.baseDuzentosPdvs.atingida, false);
+
 console.log('bonus.test.js passou');

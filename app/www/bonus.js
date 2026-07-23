@@ -35,6 +35,19 @@
     return normalizarTexto(cliente?.cnpj || cliente?.nome_fantasia);
   }
 
+  function visitaEhProspeccao(visita) {
+    return visita?.dados?.tipo === 'prospeccao';
+  }
+
+  // Prospecção é só nome + foto + GPS (sem formulário completo). Um cliente só conta
+  // como "cadastrado" pra metas se tiver dado cadastral de verdade, ou já tiver tido
+  // ao menos uma visita completa (não-prospecção) associada.
+  function clienteTemCadastroCompleto(cliente, visitasDoPromotor) {
+    if (cliente?.cnpj || cliente?.endereco || cliente?.tipo) return true;
+    const chave = chavePdvCliente(cliente);
+    return visitasDoPromotor.some(v => !visitaEhProspeccao(v) && chavePdvVisita(v) === chave);
+  }
+
   function statusValidacaoFoto(validacao) {
     return validacao?.status_manual || validacao?.status_ia || 'pendente';
   }
@@ -98,6 +111,7 @@
       const resumo = criarResumo(nome, metasConfig);
 
       const visitasNoPeriodo = visitasDoPromotor.filter(v => dentroDoPeriodo(v.criado_em, de, ate));
+      const clientesCadastroCompleto = clientesDoPromotor.filter(c => clienteTemCadastroCompleto(c, visitasDoPromotor));
 
       // Meta 1: R$15 por cliente novo (cadastrado no periodo) positivado (>=1 SKU vendido no periodo), teto R$500
       const clientesNovos = clientesDoPromotor.filter(c => dentroDoPeriodo(c.criado_em, de, ate) && !c.suspeito_duplicata);
@@ -116,8 +130,8 @@
       const chavesTabelaVisivel = new Set(
         visitasDoPromotor.filter(tabelaConfirmadaNaVisita).map(chavePdvVisita).filter(Boolean)
       );
-      const totalBase = clientesDoPromotor.length;
-      const comTabelaVisivel = clientesDoPromotor.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
+      const totalBase = clientesCadastroCompleto.length;
+      const comTabelaVisivel = clientesCadastroCompleto.filter(c => chavesTabelaVisivel.has(chavePdvCliente(c))).length;
       const baseParaPercentual = Math.max(totalBase, resumo.metas.baseDuzentosPdvs.alvo);
       const percentualTabela = baseParaPercentual ? Math.round((comTabelaVisivel / baseParaPercentual) * 100) : 0;
       resumo.metas.tabelaVisivelBase.atual = percentualTabela;
@@ -125,8 +139,9 @@
       resumo.metas.tabelaVisivelBase.valor = resumo.metas.tabelaVisivelBase.atingida ? VALOR_META : 0;
 
       // Meta 3: R$500 quando o promotor tem >=200 PDVs cadastrados e visitados no periodo
-      const chavesVisitadas = new Set(visitasNoPeriodo.map(chavePdvVisita).filter(Boolean));
-      const cadastradosEVisitados = clientesDoPromotor.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
+      // (prospecção não conta como "visitado" aqui — só visita completa)
+      const chavesVisitadas = new Set(visitasNoPeriodo.filter(v => !visitaEhProspeccao(v)).map(chavePdvVisita).filter(Boolean));
+      const cadastradosEVisitados = clientesCadastroCompleto.filter(c => chavesVisitadas.has(chavePdvCliente(c))).length;
       resumo.metas.baseDuzentosPdvs.atual = cadastradosEVisitados;
       resumo.metas.baseDuzentosPdvs.atingida = cadastradosEVisitados >= resumo.metas.baseDuzentosPdvs.alvo;
       resumo.metas.baseDuzentosPdvs.valor = resumo.metas.baseDuzentosPdvs.atingida ? VALOR_META : 0;
