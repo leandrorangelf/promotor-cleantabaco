@@ -681,7 +681,7 @@ button:active { transform: translateY(1px); }
 .bar-track { height: 10px; overflow: hidden; border-radius: 6px; background: #E9EDF5; }
 .bar-fill { height: 100%; border-radius: 6px; background: var(--purple); }
 .mapa-status { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
-.mapa-box { height: 60vh; min-height: 420px; border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--border); }
+.mapa-box { position: relative; z-index: 0; height: 60vh; min-height: 420px; border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--border); }
 .mapa-filtros-grid { display:grid; grid-template-columns:minmax(220px,2fr) repeat(2,minmax(150px,1fr)) minmax(220px,1.3fr); gap:12px; align-items:end; }
 .mapa-checkbox-group { min-height:44px; display:flex; align-items:center; }
 .mapa-checkbox-group label { display:flex; align-items:center; gap:8px; margin:0; font-weight:600; }
@@ -691,8 +691,8 @@ button:active { transform: translateY(1px); }
 .mapa-km-trechos-card { margin-top:12px; }
 @media (max-width: 1050px) { .mapa-filtros-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width: 620px) { .mapa-filtros-grid { grid-template-columns:1fr; } .mapa-filtros-acoes > button { flex:1 1 160px; } }
-.mapa-pin { background: var(--purple); color: #fff; width: 22px; height: 22px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
-.mapa-pin span { transform: rotate(45deg); }
+.mapa-pin { background: var(--purple); color: #fff; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; border: 2px solid #fff; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.mapa-pin span { transform: rotate(45deg); font-size: 13px; font-weight: 800; line-height: 1; }
 .visitas-mapa-integrado { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr); gap:14px; margin:14px 0; }
 .visitas-mapa-pane, .visitas-sequencia-pane { min-width:0; background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
 .visitas-mapa-pane .mapa-box { height:42vh; min-height:320px; }
@@ -5162,8 +5162,8 @@ function renderMapa() {
     const icone = L.divIcon({
       className: '',
       html: `<div class="mapa-pin"><span>${i + 1}</span></div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 22]
+      iconSize: [30, 30],
+      iconAnchor: [15, 30]
     });
     const marcador = L.marker([+loc.latitude, +loc.longitude], { icon: icone })
       .bindPopup(`<b>${nomePdv}</b><br>${promotorFiltrado ? '' : v.promotor + '<br>'}${dataStr}<br>Precisão: ${precisaoTxt}`)
