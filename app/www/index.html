@@ -691,8 +691,8 @@ button:active { transform: translateY(1px); }
 .mapa-km-trechos-card { margin-top:12px; }
 @media (max-width: 1050px) { .mapa-filtros-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width: 620px) { .mapa-filtros-grid { grid-template-columns:1fr; } .mapa-filtros-acoes > button { flex:1 1 160px; } }
-.mapa-pin { background: var(--purple); color: #fff; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; border: 2px solid #fff; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
-.mapa-pin span { transform: rotate(45deg); font-size: 13px; font-weight: 800; line-height: 1; }
+.mapa-pin { background: var(--purple); color: #fff; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.mapa-pin span { font-size: 13px; font-weight: 800; line-height: 1; }
 .visitas-mapa-integrado { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr); gap:14px; margin:14px 0; }
 .visitas-mapa-pane, .visitas-sequencia-pane { min-width:0; background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
 .visitas-mapa-pane .mapa-box { height:42vh; min-height:320px; }
@@ -5163,7 +5163,7 @@ function renderMapa() {
       className: '',
       html: `<div class="mapa-pin"><span>${i + 1}</span></div>`,
       iconSize: [30, 30],
-      iconAnchor: [15, 30]
+      iconAnchor: [15, 15]
     });
     const marcador = L.marker([+loc.latitude, +loc.longitude], { icon: icone })
       .bindPopup(`<b>${nomePdv}</b><br>${promotorFiltrado ? '' : v.promotor + '<br>'}${dataStr}<br>Precisão: ${precisaoTxt}`)
