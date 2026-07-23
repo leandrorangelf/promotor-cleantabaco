@@ -1553,7 +1553,17 @@ button:active { transform: translateY(1px); }
         <input type="text" class="busca-input" id="gClientesBusca" oninput="renderBuscaClientesGestor()" placeholder="Buscar por nome ou CNPJ...">
         <div id="gClientesResultados"></div>
       </div>
-      <div id="clientesFichaView" style="display:none;"></div>
+      <div id="clientesFichaView" style="display:none;">
+        <button class="btn-detalhes" type="button" onclick="fecharFichaClienteGestor()">← Voltar à busca</button>
+        <div class="ficha-subtabs">
+          <button class="ficha-subtab-btn active" type="button" data-ficha-subtab="resumo" onclick="mudarSubAbaFichaCliente('resumo')">Resumo</button>
+          <button class="ficha-subtab-btn" type="button" data-ficha-subtab="pedidos" onclick="mudarSubAbaFichaCliente('pedidos')">Pedidos</button>
+          <button class="ficha-subtab-btn" type="button" data-ficha-subtab="visitas" onclick="mudarSubAbaFichaCliente('visitas')">Visitas</button>
+        </div>
+        <div class="ficha-subpage active" id="fichaSubpageResumo"></div>
+        <div class="ficha-subpage" id="fichaSubpagePedidos"></div>
+        <div class="ficha-subpage" id="fichaSubpageVisitas"></div>
+      </div>
     </div>
   </div>
 
@@ -1848,6 +1858,8 @@ let authToken = '';
 let visitasPromotor = [];
 let visitasGestor = [];
 let clientesGestor = [];
+let fichaClienteAtual = null;
+let fichaClienteVisitas = [];
 let metasSistema = [];
 let secaoAtual = 0;
 let skusSelecionados = [];
@@ -2599,6 +2611,34 @@ function renderBuscaClientesGestor() {
   }).slice(0, 50);
   if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
   el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${c.id}')"><td><strong>${c.nome_fantasia}</strong></td><td>${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</td><td>${c.promotor || '—'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function abrirFichaClienteGestor(id) {
+  const cliente = clientesGestor.find(c => String(c.id) === String(id));
+  if (!cliente) { toast('Cliente não encontrado'); return; }
+  fichaClienteAtual = cliente;
+  fichaClienteVisitas = visitasGestor.filter(v => clienteMatchesVisita(cliente, v)).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  document.getElementById('clientesBuscaView').style.display = 'none';
+  document.getElementById('clientesFichaView').style.display = 'block';
+  mudarSubAbaFichaCliente('resumo');
+}
+
+function fecharFichaClienteGestor() {
+  fichaClienteAtual = null;
+  fichaClienteVisitas = [];
+  document.getElementById('clientesFichaView').style.display = 'none';
+  document.getElementById('clientesBuscaView').style.display = 'block';
+}
+
+function mudarSubAbaFichaCliente(aba) {
+  document.querySelectorAll('.ficha-subtab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ficha-subpage').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.ficha-subtab-btn[data-ficha-subtab="${aba}"]`).classList.add('active');
+  const idPage = 'fichaSubpage' + aba.charAt(0).toUpperCase() + aba.slice(1);
+  document.getElementById(idPage).classList.add('active');
+  if (aba === 'resumo') renderFichaResumo();
+  if (aba === 'pedidos') renderFichaPedidos();
+  if (aba === 'visitas') renderFichaVisitas();
 }
 
 function preencherFiltrosPedidos() {
