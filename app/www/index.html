@@ -360,6 +360,13 @@ body { font-family: -apple-system, 'Segoe UI', sans-serif; background: var(--cre
 /* MISC */
 .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
 .empty-icon { font-size: 44px; margin-bottom: 10px; }
+
+/* FICHA DE CLIENTE */
+.ficha-subtabs { display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid var(--border); }
+.ficha-subtab-btn { background: none; border: none; padding: 10px 4px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+.ficha-subtab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+.ficha-subpage { display: none; }
+.ficha-subpage.active { display: block; }
 .spinner-wrap { text-align: center; padding: 48px; }
 .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -1349,6 +1356,7 @@ button:active { transform: translateY(1px); }
   <aside class="mobile-menu-drawer" id="mobileMenuDrawerG" aria-label="Menu do gestor">
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel'); alternarMenuMobile('G', false)">Visão geral</button>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas'); alternarMenuMobile('G', false)">Visitas</button>
+    <button class="nav-btn" data-gestor-page="clientes" onclick="mudarAbaG('clientes'); alternarMenuMobile('G', false)">Clientes</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos'); alternarMenuMobile('G', false)">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria'); alternarMenuMobile('G', false)">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance'); alternarMenuMobile('G', false)">Performance</button>
@@ -1363,6 +1371,7 @@ button:active { transform: translateY(1px); }
     <button class="nav-btn active" data-gestor-page="painel" onclick="mudarAbaG('painel')">Visão geral</button>
     <div class="nav-group-label">GESTÃO</div>
     <button class="nav-btn" data-gestor-page="visitas" onclick="mudarAbaG('visitas')">Visitas</button>
+    <button class="nav-btn" data-gestor-page="clientes" onclick="mudarAbaG('clientes')">Clientes</button>
     <button class="nav-btn" data-gestor-page="pedidos" onclick="mudarAbaG('pedidos')">Pedidos</button>
     <button class="nav-btn" data-gestor-page="galeria" onclick="mudarAbaG('galeria')">Galeria</button>
     <button class="nav-btn" data-gestor-page="performance" onclick="mudarAbaG('performance')">Performance</button>
@@ -1534,6 +1543,27 @@ button:active { transform: translateY(1px); }
 
       </div>
 
+    </div>
+  </div>
+
+  <div class="page" id="gClientes">
+    <div class="page-intro"><h1>Clientes</h1><p>Pesquise um cliente para ver dados, pedidos e visitas.</p></div>
+    <div class="gestor-wrap">
+      <div id="clientesBuscaView">
+        <input type="text" class="busca-input" id="gClientesBusca" oninput="renderBuscaClientesGestor()" placeholder="Buscar por nome ou CNPJ...">
+        <div id="gClientesResultados"></div>
+      </div>
+      <div id="clientesFichaView" style="display:none;">
+        <button class="btn-detalhes" type="button" onclick="fecharFichaClienteGestor()">← Voltar à busca</button>
+        <div class="ficha-subtabs">
+          <button class="ficha-subtab-btn active" type="button" data-ficha-subtab="resumo" onclick="mudarSubAbaFichaCliente('resumo')">Resumo</button>
+          <button class="ficha-subtab-btn" type="button" data-ficha-subtab="pedidos" onclick="mudarSubAbaFichaCliente('pedidos')">Pedidos</button>
+          <button class="ficha-subtab-btn" type="button" data-ficha-subtab="visitas" onclick="mudarSubAbaFichaCliente('visitas')">Visitas</button>
+        </div>
+        <div class="ficha-subpage active" id="fichaSubpageResumo"></div>
+        <div class="ficha-subpage" id="fichaSubpagePedidos"></div>
+        <div class="ficha-subpage" id="fichaSubpageVisitas"></div>
+      </div>
     </div>
   </div>
 
@@ -1828,6 +1858,8 @@ let authToken = '';
 let visitasPromotor = [];
 let visitasGestor = [];
 let clientesGestor = [];
+let fichaClienteAtual = null;
+let fichaClienteVisitas = [];
 let metasSistema = [];
 let secaoAtual = 0;
 let skusSelecionados = [];
@@ -2519,6 +2551,12 @@ function mudarAbaG(aba) {
   if (aba === 'painel') carregarDashboardResumo();
   if (aba === 'diretoria') { if (!visitasGestor.length) carregarGestor(); else renderDiretoria(); }
   if (aba === 'visitas') { definirPeriodoVisitasHoje(); if (!visitasGestor.length) carregarGestor(); else renderListaGestor(); }
+  if (aba === 'clientes') {
+    document.getElementById('clientesFichaView').style.display = 'none';
+    document.getElementById('clientesBuscaView').style.display = 'block';
+    if (!clientesGestor.length) carregarGestor().then(() => renderBuscaClientesGestor());
+    else renderBuscaClientesGestor();
+  }
   if (aba === 'pedidos') { renderPedidos('G'); if (!visitasGestor.length) carregarGestor().then(() => renderPedidos('G')); }
   if (aba === 'galeria') carregarGaleria();
   if (aba === 'performance') carregarPerformance();
@@ -2560,6 +2598,111 @@ function nomeCoordenadorPedido(usuario) {
   if (!usuario) return 'Sem coordenador';
   const p = promotoresAdmin.find(x => x.usuario === usuario);
   return p?.nome || usuario;
+}
+
+function renderBuscaClientesGestor() {
+  const termo = normalizarTexto(document.getElementById('gClientesBusca').value.trim());
+  const el = document.getElementById('gClientesResultados');
+  if (!termo) { el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div>Digite um nome ou CNPJ para buscar</div></div>'; return; }
+  const termoDigitos = termo.replace(/\D/g, '');
+  const resultados = clientesGestor.filter(c => {
+    const cnpjDigitos = String(c.cnpj || '').replace(/\D/g, '');
+    return normalizarTexto(c.nome_fantasia).includes(termo) || (termoDigitos && cnpjDigitos.includes(termoDigitos));
+  }).slice(0, 50);
+  if (!resultados.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏪</div><div>Nenhum cliente encontrado</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Cliente</th><th>Cidade/UF</th><th>Promotor</th></tr></thead><tbody>${resultados.map(c => `<tr onclick="abrirFichaClienteGestor('${c.id}')"><td><strong>${c.nome_fantasia}</strong></td><td>${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</td><td>${c.promotor || '—'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function abrirFichaClienteGestor(id) {
+  const cliente = clientesGestor.find(c => String(c.id) === String(id));
+  if (!cliente) { toast('Cliente não encontrado'); return; }
+  fichaClienteAtual = cliente;
+  fichaClienteVisitas = visitasGestor.filter(v => clienteMatchesVisita(cliente, v)).sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+  document.getElementById('clientesBuscaView').style.display = 'none';
+  document.getElementById('clientesFichaView').style.display = 'block';
+  mudarSubAbaFichaCliente('resumo');
+}
+
+function fecharFichaClienteGestor() {
+  fichaClienteAtual = null;
+  fichaClienteVisitas = [];
+  document.getElementById('clientesFichaView').style.display = 'none';
+  document.getElementById('clientesBuscaView').style.display = 'block';
+}
+
+function mudarSubAbaFichaCliente(aba) {
+  document.querySelectorAll('.ficha-subtab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ficha-subpage').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.ficha-subtab-btn[data-ficha-subtab="${aba}"]`).classList.add('active');
+  const idPage = 'fichaSubpage' + aba.charAt(0).toUpperCase() + aba.slice(1);
+  document.getElementById(idPage).classList.add('active');
+  if (aba === 'resumo') renderFichaResumo();
+  if (aba === 'pedidos') renderFichaPedidos();
+  if (aba === 'visitas') renderFichaVisitas();
+}
+
+function renderFichaResumo() {
+  const c = fichaClienteAtual;
+  const visitas = fichaClienteVisitas;
+  const pedidos = visitas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim');
+  const valorTotal = pedidos.reduce((sum, v) => sum + valorPedido(v), 0);
+  const pacotesTotal = pedidos.reduce((sum, v) => sum + pacotesPedido(v), 0);
+  const ultimaVisita = visitas[0] || null;
+  const ultimoPedido = pedidos[0] || null;
+  let mediaDias = '—';
+  if (visitas.length > 1) {
+    const datas = visitas.map(v => new Date(v.criado_em).getTime()).sort((a, b) => a - b);
+    const intervalos = [];
+    for (let i = 1; i < datas.length; i++) intervalos.push((datas[i] - datas[i - 1]) / 86400000);
+    mediaDias = Math.round(intervalos.reduce((a, b) => a + b, 0) / intervalos.length) + ' dias';
+  }
+  document.getElementById('fichaSubpageResumo').innerHTML = `
+    <div class="rel-section">
+      <div class="rel-title">Dados cadastrais</div>
+      <div class="rel-row"><span class="rel-key">Código</span><span class="rel-val">${c.codigo || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">CNPJ</span><span class="rel-val">${c.cnpj || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Tipo</span><span class="rel-val">${c.tipo || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">IE</span><span class="rel-val">${c.ie || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Endereço</span><span class="rel-val">${c.endereco || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Cidade/UF</span><span class="rel-val">${[c.cidade, c.uf].filter(Boolean).join('/') || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Comprador</span><span class="rel-val">${c.nome_comprador || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Telefone</span><span class="rel-val">${c.telefone || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Distribuidor</span><span class="rel-val">${c.distribuidor || '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Promotor</span><span class="rel-val">${c.promotor || '—'}</span></div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title">Indicadores</div>
+      <div class="rel-row"><span class="rel-key">Total de visitas</span><span class="rel-val">${visitas.length}</span></div>
+      <div class="rel-row"><span class="rel-key">Total de pedidos</span><span class="rel-val">${pedidos.length}</span></div>
+      <div class="rel-row"><span class="rel-key">Valor total comprado</span><span class="rel-val">${valorTotal ? valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Pacotes totais</span><span class="rel-val">${pacotesTotal.toLocaleString('pt-BR')}</span></div>
+      <div class="rel-row"><span class="rel-key">Média entre visitas</span><span class="rel-val">${mediaDias}</span></div>
+      <div class="rel-row"><span class="rel-key">Última visita</span><span class="rel-val">${ultimaVisita ? new Date(ultimaVisita.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
+      <div class="rel-row"><span class="rel-key">Último pedido</span><span class="rel-val">${ultimoPedido ? new Date(ultimoPedido.criado_em).toLocaleDateString('pt-BR') : '—'}</span></div>
+    </div>
+  `;
+}
+
+function renderFichaPedidos() {
+  const pedidos = fichaClienteVisitas.filter(v => v.dados?.comercial?.pedidoFeito === 'Sim');
+  const el = document.getElementById('fichaSubpagePedidos');
+  if (!pedidos.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Nenhum pedido encontrado</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Status</th><th>Produtos</th><th>Pacotes</th><th>Valor</th></tr></thead><tbody>${pedidos.map(v => {
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const status = statusDaVisita(v);
+    const val = valorPedido(v);
+    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td><span class="status-chip ${statusClass(status)}">${status}</span></td><td>${textoProdutosPedido(v)}</td><td>${pacotesPedido(v).toLocaleString('pt-BR')}</td><td>${val ? val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—'}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function renderFichaVisitas() {
+  const visitas = fichaClienteVisitas;
+  const el = document.getElementById('fichaSubpageVisitas');
+  if (!visitas.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div>Nenhuma visita encontrada</div></div>'; return; }
+  el.innerHTML = `<table class="data-table"><thead><tr><th>Data</th><th>Promotor</th><th>Pedido</th></tr></thead><tbody>${visitas.map(v => {
+    const data = new Date(v.criado_em).toLocaleDateString('pt-BR') + ' às ' + new Date(v.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `<tr onclick="abrirDetalheGestor('${v.id}')"><td>${data}</td><td>${v.promotor || '—'}</td><td>${v.dados?.comercial?.pedidoFeito === 'Sim' ? 'Sim' : 'Não'}</td></tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 function preencherFiltrosPedidos() {
